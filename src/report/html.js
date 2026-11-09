@@ -11,6 +11,8 @@
  * assumption to see which assets fall inside the exposure window.
  */
 
+import { buildCbom } from './cbom.js';
+
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -294,12 +296,22 @@ function renderRoadmap(roadmap) {
 // ---------------------------------------------------------------------------
 
 /**
- * @param {{analysis:object, meta:object, endpoints?:object[], projectName?:string, toolVersion?:string}} input
+ * @param {{analysis:object, meta:object, endpoints?:object[], projectName?:string, toolVersion?:string, cbom?:object}} input
  */
-export function buildHtmlReport({ analysis, meta, endpoints = [], projectName = 'project', toolVersion = '1.0.0' }) {
+export function buildHtmlReport({ analysis, meta, endpoints = [], projectName = 'project', toolVersion = '1.0.0', cbom = null }) {
   const s = analysis.summary;
   const v = verdict(s.quantumReadinessIndex);
   const generated = new Date(s.generatedAt);
+  // The footer offers the CBOM as a download. Embed the same document the CLI
+  // writes, so a report shared on its own still carries a machine-readable
+  // bill of materials instead of an empty object.
+  const cbomDoc =
+    cbom ||
+    buildCbom({
+      analysis: analysis.endpoints?.length || !endpoints.length ? analysis : { ...analysis, endpoints },
+      projectName,
+      toolVersion,
+    });
   const data = {
     summary: s,
     items: analysis.items.map((i) => ({
@@ -701,6 +713,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 </main>
 
 <script id="mosca-data" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
+<script id="mosca-cbom" type="application/json">${JSON.stringify(cbomDoc).replace(/</g, '\\u003c')}</script>
 <script>
 (function(){
   var data = JSON.parse(document.getElementById('mosca-data').textContent);
@@ -790,7 +803,10 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
   if (dl) {
     dl.addEventListener('click', function(e){
       e.preventDefault();
-      var blob = new Blob([JSON.stringify(window.__MOSCA_CBOM__ || {}, null, 2)], { type: 'application/json' });
+      var el = document.getElementById('mosca-cbom');
+      var doc = {};
+      try { doc = el ? JSON.parse(el.textContent) : {}; } catch (err) { doc = {}; }
+      var blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'bom.cdx.json';

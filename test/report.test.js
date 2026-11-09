@@ -181,6 +181,20 @@ test('HTML report is self-contained', () => {
   assert.ok(!/url\(\s*["']?https?:/i.test(html), 'must not load external resources from CSS');
 });
 
+test('HTML report embeds a downloadable CycloneDX CBOM', () => {
+  const a = analysis();
+  const html = buildHtmlReport({ analysis: a, meta: { durationMs: 42 }, projectName: 'demo' });
+  assert.ok(html.includes('id="mosca-cbom"'), 'CBOM payload script missing');
+  assert.ok(!html.includes('__MOSCA_CBOM__'), 'download handler must read the embedded CBOM');
+
+  const match = html.match(/<script id="mosca-cbom" type="application\/json">([\s\S]*?)<\/script>/);
+  assert.ok(match, 'CBOM script tag is malformed');
+  const cbom = JSON.parse(match[1]);
+  assert.equal(cbom.bomFormat, 'CycloneDX');
+  assert.equal(cbom.specVersion, '1.6');
+  assert.ok(Array.isArray(cbom.components) && cbom.components.length > 0);
+});
+
 test('HTML escapes user-controlled project names', () => {
   const html = buildHtmlReport({
     analysis: analysis(),

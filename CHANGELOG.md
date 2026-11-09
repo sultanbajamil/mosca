@@ -59,6 +59,8 @@ First release.
 - RSA replacements are chosen by usage: ML-KEM-768 for encryption, ML-DSA-65
   for signatures.
 - A key-generation call is reported once, with the more specific key size.
+- The HTML report's CBOM download now embeds the real CycloneDX document
+  instead of producing an empty object.
 
 [Unreleased]: https://github.com/sultanbajamil/mosca/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/sultanbajamil/mosca/releases/tag/v1.0.0
