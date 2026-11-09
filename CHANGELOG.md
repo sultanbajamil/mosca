@@ -41,7 +41,7 @@ First release.
 - **Inline suppressions** (`mosca-ignore-line`, `mosca-ignore-next-line`,
   `mosca-ignore-file`) with mandatory-reason convention and an auditable
   suppressed count in the terminal report.
-- **90 tests** covering the registry, rules, wire format, DER parsing, risk
+- **91 tests** covering the registry, rules, wire format, DER parsing, risk
   model, report schemas and end-to-end scans.
 - Synthetic vulnerable estate in `examples/vulnerable-app/` for evaluation.
 

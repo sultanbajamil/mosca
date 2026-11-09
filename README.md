@@ -2,6 +2,12 @@
 
 **Post-quantum exposure scanner for code, configuration and live TLS endpoints.**
 
+[![CI](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml/badge.svg)](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml)
+[![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen)](scripts/check-zero-deps.js)
+[![tests: 91](https://img.shields.io/badge/tests-91-brightgreen)](test/)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![live report](https://img.shields.io/badge/live%20report-open-8b5cf6)](https://sultanbajamil.github.io/mosca/)
+
 MOSCA answers one question that most security tools avoid:
 
 > If an adversary records my traffic today, when does the data become readable?
@@ -74,13 +80,18 @@ ServerHello. It never completes a handshake or exchanges application data.
 ## Install and run
 
 ```bash
-# no install required
-npx mosca-pqc scan .
+# run directly from GitHub — no clone, no npm publish required
+npx github:sultanbajamil/mosca scan .
 
-# or install the CLI
-npm install -g mosca-pqc
-mosca scan /path/to/repo --tls example.com,github.com --out report
+# or clone and run the source
+git clone https://github.com/sultanbajamil/mosca.git
+cd mosca
+node bin/mosca.js scan /path/to/repo --tls example.com,github.com --out report
 ```
+
+An npm release (`npx mosca-pqc`) is planned; until then the GitHub form above
+is the canonical one-liner. A generated example report is published at
+**https://sultanbajamil.github.io/mosca/**.
 
 The scan writes `mosca-report/mosca-report.html` by default. Open it in any
 browser: it is a single file with no external fonts, scripts or images, so it
@@ -249,7 +260,7 @@ node bin/mosca.js demo --tls cloudflare.com,github.com,en.wikipedia.org,example.
 ## Development
 
 ```bash
-npm run check   # zero-dependency guard + 90 tests
+npm run check   # zero-dependency guard + 91 tests
 npm test        # node:test only
 npm run demo
 ```
