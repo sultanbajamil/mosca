@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import { scanSourceDirectory } from './scan/source.js';
 import { scanConfigDirectory } from './scan/config.js';
 import { inspectEndpoint } from './net/tls.js';
+import { probeSsh, deriveSshFindings, parseSshTarget } from './net/ssh.js';
 import { analyse } from './analysis/risk.js';
 import { buildCbom } from './report/cbom.js';
 import { buildSarif } from './report/sarif.js';
@@ -19,10 +20,16 @@ import { c } from './util/log.js';
 
 /**
  * Run a complete MOSCA scan.
- * @param {{root?:string, config?:object, endpoints?:string[], quiet?:boolean}} opts
+ * @param {{root?:string, config?:object, endpoints?:string[], ssh?:string[], quiet?:boolean}} opts
  */
 export async function scan(opts = {}) {
-  const { root = process.cwd(), config: userConfig = {}, endpoints: extraEndpoints = [], quiet = false } = opts;
+  const {
+    root = process.cwd(),
+    config: userConfig = {},
+    endpoints: extraEndpoints = [],
+    ssh: extraSsh = [],
+    quiet = false,
+  } = opts;
 
   const started = Date.now();
   const { config, path: configPath } = loadConfig(path.join(root, 'mosca.json'));
@@ -69,10 +76,48 @@ export async function scan(opts = {}) {
   }
   if (!quiet && process.stderr.isTTY) process.stderr.write(' '.repeat(40) + '\r');
 
+  // -------------------------------------------------------------- SSH scan
+  const requestedSsh = Array.isArray(extraSsh) ? extraSsh : [];
+  const allSsh = [...(mergedConfig.ssh || []), ...requestedSsh].filter(Boolean);
+  let sshResults = [];
+  if (allSsh.length > 0) {
+    progress(`inspecting ${allSsh.length} SSH endpoint(s)…`);
+    sshResults = await Promise.all(
+      allSsh.map(async (target) => {
+        const { host, port } = parseSshTarget(target);
+        try {
+          const result = await probeSsh({ host, port, timeout: 8000 });
+          return { ...result, findings: deriveSshFindings(result) };
+        } catch (err) {
+          return {
+            target: String(target),
+            host,
+            port,
+            reachable: false,
+            error: err.message,
+            kexAlgorithms: [],
+            serverHostKeyAlgorithms: [],
+            encryption: [],
+            macs: [],
+            hybrid: false,
+            findings: [],
+          };
+        }
+      }),
+    );
+  }
+  if (!quiet && process.stderr.isTTY) process.stderr.write(' '.repeat(40) + '\r');
+
   // ----------------------------------------------------------- analysis
-  const allFindings = [...sourceResult.findings, ...configResult.findings, ...endpointResults.flatMap((e) => e.findings || [])];
-  const analysis = analyse({ findings: allFindings, endpoints: endpointResults, config: mergedConfig });
+  const allFindings = [
+    ...sourceResult.findings,
+    ...configResult.findings,
+    ...endpointResults.flatMap((e) => e.findings || []),
+    ...sshResults.flatMap((e) => e.findings || []),
+  ];
+  const analysis = analyse({ findings: allFindings, endpoints: endpointResults, sshEndpoints: sshResults, config: mergedConfig });
   analysis.endpoints = endpointResults;
+  analysis.sshEndpoints = sshResults;
 
   const meta = {
     root,
@@ -82,16 +127,19 @@ export async function scan(opts = {}) {
     configPath,
   };
 
-  return { analysis, meta, endpoints: endpointResults };
+  return { analysis, meta, endpoints: endpointResults, sshEndpoints: sshResults };
 }
 
 /** Determine the process exit code from the analysis and a threshold. */
-export function exitCode(analysis, failOn) {
+export function exitCode(analysis, failOn, { newOnly = false } = {}) {
   if (!failOn) return 0;
   const order = { info: 0, low: 1, medium: 2, high: 3, critical: 4 };
   const threshold = order[failOn];
   if (threshold === undefined) return 0;
-  const worst = Math.max(...analysis.items.filter((i) => !i.positive).map((i) => order[i.severity] ?? 0), 0);
+  const considered = analysis.items.filter(
+    (i) => !i.positive && (!newOnly || i.baselineStatus === 'new'),
+  );
+  const worst = Math.max(...considered.map((i) => order[i.severity] ?? 0), 0);
   return worst >= threshold ? 1 : 0;
 }
 
@@ -105,3 +153,4 @@ function isDirectory(p) {
 }
 
 export { buildHtmlReport, buildCbom, buildSarif, analyse };
+export { buildBaseline, loadBaseline, applyBaseline, fingerprint } from './analysis/baseline.js';

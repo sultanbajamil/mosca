@@ -155,14 +155,17 @@ function renderFindings(items) {
   if (!actionable.length) {
     return `<div class="empty">No findings. Either the estate is clean or the scan did not reach the code.</div>`;
   }
+  const compared = actionable.some((i) => i.baselineStatus === 'new' || i.baselineStatus === 'existing');
+  const newCount = actionable.filter((i) => i.baselineStatus === 'new').length;
   const rows = actionable
     .map((i) => {
       const loc = i.location?.file ? `${i.location.file}:${i.location.line}` : `${i.location?.host}:${i.location?.port}`;
       const replacement = i.replacement ? i.replacement : null;
       const search = `${i.title} ${i.algorithmLabel} ${loc} ${i.note || ''}`.toLowerCase();
+      const isNew = i.baselineStatus === 'new';
       return `
-      <tr class="finding ${sevClass(i.severity)}" data-sev="${i.severity}" data-text="${esc(search)}">
-        <td><span class="pill ${sevClass(i.severity)}">${esc(i.severity)}</span></td>
+      <tr class="finding ${sevClass(i.severity)}" data-sev="${i.severity}" data-new="${isNew ? '1' : '0'}" data-text="${esc(search)}">
+        <td><span class="pill ${sevClass(i.severity)}">${esc(i.severity)}</span>${isNew ? ' <span class="pill new">new</span>' : ''}</td>
         <td class="mono prio">${esc(i.priority)}</td>
         <td>
           <div class="f-title">${esc(i.title)}</div>
@@ -184,6 +187,7 @@ function renderFindings(items) {
   <div class="toolbar">
     <div class="filters">
       <button class="chip active" data-filter="all">All <span>${actionable.length}</span></button>
+      ${compared ? `<button class="chip new" data-filter="new">New <span>${newCount}</span></button>` : ''}
       ${['critical', 'high', 'medium', 'low']
         .filter((s) => counts[s])
         .map((s) => `<button class="chip ${sevClass(s)}" data-filter="${s}">${s} <span>${counts[s]}</span></button>`)
@@ -246,6 +250,56 @@ function renderEndpoints(endpoints) {
   return `<div class="ep-grid">${cards}</div>`;
 }
 
+function renderSshEndpoints(endpoints) {
+  if (!endpoints?.length) return '';
+  const cards = endpoints
+    .map((ep) => {
+      if (!ep.reachable) {
+        return `
+        <article class="ep-card down">
+          <header>
+            <span class="ep-host mono">${esc(ep.host)}${ep.port !== 22 ? `:${ep.port}` : ''}</span>
+            <span class="pill sev-critical">unreachable</span>
+          </header>
+          <p class="muted">${esc(ep.error || 'connection failed')}</p>
+        </article>`;
+      }
+      const kexBadge = ep.hybrid
+        ? `<span class="pill sev-safe">hybrid KEX · ${esc(ep.hybridAlgorithm)}</span>`
+        : `<span class="pill sev-high">classical · ${esc(ep.kexAlgorithms?.[0] || 'unknown')}</span>`;
+      return `
+      <article class="ep-card">
+        <header>
+          <span class="ep-host mono">${esc(ep.host)}${ep.port !== 22 ? `:${ep.port}` : ''}</span>
+          ${kexBadge}
+        </header>
+        <dl>
+          <div><dt>Banner</dt><dd class="mono">${esc(ep.banner || '—')}</dd></div>
+          <div><dt>Host key</dt><dd class="mono">${esc(ep.serverHostKeyAlgorithms?.[0] || '—')}</dd></div>
+          <div><dt>Ciphers</dt><dd class="mono">${esc((ep.encryption || []).slice(0, 3).join(', ') || '—')}</dd></div>
+          <div><dt>MACs</dt><dd class="mono">${esc((ep.macs || []).slice(0, 3).join(', ') || '—')}</dd></div>
+        </dl>
+        <div class="ep-verdict">${ep.hybrid ? 'The server advertises a hybrid KEM for SSH sessions.' : 'No hybrid KEM advertised. Enable mlkem768x25519-sha256 or sntrup761x25519-sha512@openssh.com.'}</div>
+      </article>`;
+    })
+    .join('');
+  return `<div class="ep-grid">${cards}</div>`;
+}
+
+function renderSensitivity(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return '';
+  const cells = rows
+    .map(
+      (r) => `<div class="sens-cell">
+        <div class="sens-year mono">${r.year}</div>
+        <div class="sens-value mono ${r.exposedItems > 0 ? 'sev-high' : 'sev-safe'}">${r.exposedItems}</div>
+        <div class="sens-sub">${r.yearsToCRQC} years · ${r.exposedShare.toFixed(1)}%</div>
+      </div>`,
+    )
+    .join('');
+  return `<div class="sens">${cells}<div class="sens-note">Findings inside the Mosca window under each CRQC assumption.</div></div>`;
+}
+
 function renderAlgorithms(algorithms) {
   if (!algorithms.length) return '';
   const max = Math.max(...algorithms.map((a) => a.count), 1);
@@ -300,6 +354,7 @@ function renderRoadmap(roadmap) {
  */
 export function buildHtmlReport({ analysis, meta, endpoints = [], projectName = 'project', toolVersion = '1.0.0', cbom = null }) {
   const s = analysis.summary;
+  const sshEndpoints = analysis.sshEndpoints || [];
   const v = verdict(s.quantumReadinessIndex);
   const generated = new Date(s.generatedAt);
   // The footer offers the CBOM as a download. Embed the same document the CLI
@@ -327,6 +382,9 @@ export function buildHtmlReport({ analysis, meta, endpoints = [], projectName = 
       primitive: i.primitive,
       kind: i.kind,
       location: i.location,
+      fingerprint: i.fingerprint,
+      baselineStatus: i.baselineStatus || null,
+      isNew: Boolean(i.isNew),
     })),
   };
 
@@ -515,6 +573,16 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 .sev-low{background:rgba(34,211,238,.10);color:#67e8f9;border:1px solid rgba(34,211,238,.25)}
 .sev-info{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
 .sev-safe{background:rgba(52,211,153,.12);color:#6ee7b7;border:1px solid rgba(52,211,153,.3)}
+.pill.new{background:rgba(167,139,250,.18);color:#d8b4fe;border:1px solid rgba(167,139,250,.45);margin-left:4px}
+.baseline-note{margin:18px 0 0;padding:13px 16px;border-radius:12px;font-size:12.5px;border:1px solid var(--border);background:var(--panel);color:var(--muted)}
+.baseline-note.good{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.06)}
+.baseline-note.bad{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
+.sens{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
+.sens-cell{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:14px 16px;text-align:center}
+.sens-year{font-size:11px;color:var(--faint);letter-spacing:.12em}
+.sens-value{font-size:28px;font-weight:700;line-height:1.15;margin:4px 0}
+.sens-sub{font-size:10.5px;color:var(--faint)}
+.sens-note{grid-column:1/-1;font-size:11px;color:var(--faint);padding:2px 2px 0}
 .repl{color:var(--green)}
 .empty{padding:40px;text-align:center;color:var(--faint);border:1px dashed var(--border-2);border-radius:14px;font-size:13px}
 
@@ -602,6 +670,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <a href="#timeline">Timeline</a>
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
+      ${sshEndpoints.length ? '<a href="#ssh">SSH</a>' : ''}
       <a href="#roadmap">Roadmap</a>
       <a href="#methodology">Method</a>
     </nav>
@@ -625,6 +694,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     ${renderGauge(s.quantumReadinessIndex)}
   </section>
 
+  ${s.baseline?.supplied ? `<div class="baseline-note ${s.baseline.newFindings > 0 ? 'bad' : 'good'}">
+    <b>Baseline comparison.</b>
+    ${s.baseline.newFindings} new finding${s.baseline.newFindings === 1 ? '' : 's'} since ${esc(s.baseline.createdAt || 'the recorded baseline')} ·
+    ${s.baseline.existingFindings} existing ·
+    ${s.baseline.resolvedFindings} resolved.
+    ${s.baseline.newFindings > 0 ? 'Regressions are marked <span class="pill new">new</span>.' : 'No regressions.'}
+  </div>` : ''}
+
   <div class="kpis">
     ${renderKpi('Harvest-now-decrypt-later', s.hndlApplicable ? `${s.hndlExposure}%` : 'n/a', s.hndlApplicable ? 'of internet-facing key exchange is classical-only' : 'no live endpoints inspected', s.hndlApplicable ? (s.hndlExposure > 50 ? 'bad' : s.hndlExposure > 0 ? 'warn' : 'good') : '')}
     ${renderKpi('Inside the Mosca window', String(s.exposedItems), `of ${s.totalFindings} findings are already exposed`, s.exposedItems > 0 ? 'warn' : 'good')}
@@ -638,6 +715,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <p>Each bar is an algorithm in use. The solid section is how long the data it protects must stay secret; the hatched section is the time a migration is expected to take. When the bar crosses the red line, the data is already exposed — an adversary who recorded it today can read it later. Move the line to test the assumption.</p>
     </div>
     ${renderTimeline(analysis.items, s)}
+    ${renderSensitivity(s.sensitivity)}
   </section>
 
   <section id="findings">
@@ -655,6 +733,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     </div>
     ${renderEndpoints(endpoints)}
   </section>
+
+  ${sshEndpoints.length ? `<section id="ssh">
+    <div class="sec-head">
+      <h2>Live SSH endpoints</h2>
+      <p>Each server was asked for its <span class="mono">SSH_MSG_KEXINIT</span> with a minimal RFC 4253 exchange. The probe never authenticates and never completes key exchange; the advertised algorithm lists are the evidence.</p>
+    </div>
+    ${renderSshEndpoints(sshEndpoints)}
+  </section>` : ''}
 
   <section id="algorithms">
     <div class="sec-head">
@@ -778,7 +864,8 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     var q = (search && search.value || '').toLowerCase().trim();
     var visible = 0;
     Array.prototype.forEach.call(body.querySelectorAll('tr.finding'), function(row){
-      var sevOk = activeFilter === 'all' || row.dataset.sev === activeFilter;
+      var sevOk = activeFilter === 'all'
+        || (activeFilter === 'new' ? row.dataset.new === '1' : row.dataset.sev === activeFilter);
       var textOk = !q || (row.dataset.text || '').indexOf(q) !== -1;
       var show = sevOk && textOk;
       row.style.display = show ? '' : 'none';

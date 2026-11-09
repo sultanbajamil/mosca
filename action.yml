@@ -1,0 +1,91 @@
+name: MOSCA post-quantum scan
+description: >-
+  Scan source, configuration, live TLS and SSH endpoints for post-quantum
+  exposure. Fails the job only on findings at or above the chosen severity,
+  or only on regressions when a baseline is supplied.
+author: sultanbajamil
+
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  path:
+    description: Path to scan.
+    required: false
+    default: .
+  tls:
+    description: Comma-separated TLS endpoints to probe.
+    required: false
+    default: ''
+  ssh:
+    description: Comma-separated SSH targets to probe (host or host:port).
+    required: false
+    default: ''
+  baseline:
+    description: Baseline file to compare against.
+    required: false
+    default: ''
+  write-baseline:
+    description: Write the current findings as a baseline file.
+    required: false
+    default: ''
+  fail-on:
+    description: 'Severity that fails the job: low, medium, high, critical, or empty to never fail.'
+    required: false
+    default: high
+  format:
+    description: Comma-separated report formats (html,json,cbom,sarif,term).
+    required: false
+    default: html,sarif,json,cbom
+  out:
+    description: Output directory.
+    required: false
+    default: mosca-report
+  node-version:
+    description: Node.js version used to run MOSCA.
+    required: false
+    default: '20'
+
+outputs:
+  report:
+    description: Path to the generated HTML report.
+    value: ${{ steps.scan.outputs.report }}
+  exit-code:
+    description: MOSCA process exit code.
+    value: ${{ steps.scan.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Scan with MOSCA
+      id: scan
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_TLS: ${{ inputs.tls }}
+        INPUT_SSH: ${{ inputs.ssh }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_WRITE_BASELINE: ${{ inputs.write-baseline }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_OUT: ${{ inputs.out }}
+      run: |
+        set +e
+        args=(scan "$INPUT_PATH" --format "$INPUT_FORMAT" --out "$INPUT_OUT")
+        [ -n "$INPUT_TLS" ] && args+=(--tls "$INPUT_TLS")
+        [ -n "$INPUT_SSH" ] && args+=(--ssh "$INPUT_SSH")
+        [ -n "$INPUT_BASELINE" ] && args+=(--baseline "$INPUT_BASELINE")
+        [ -n "$INPUT_WRITE_BASELINE" ] && args+=(--write-baseline "$INPUT_WRITE_BASELINE")
+        [ -n "$INPUT_FAIL_ON" ] && args+=(--fail-on "$INPUT_FAIL_ON")
+
+        node "${{ github.action_path }}/bin/mosca.js" "${args[@]}"
+        code=$?
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        echo "report=$INPUT_OUT/mosca-report.html" >> "$GITHUB_OUTPUT"
+        exit $code

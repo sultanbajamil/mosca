@@ -37,6 +37,19 @@ jobs:
       - name: Verify the package contents
         run: npm pack --dry-run
 
+      - name: Baseline differential smoke test
+        shell: bash
+        run: |
+          mkdir -p baseline-smoke
+          printf "const h = require('crypto').createHash('md5');\n" > baseline-smoke/app.js
+          node bin/mosca.js scan baseline-smoke --quiet --format json --out baseline-out --write-baseline baseline.json
+          printf "const h = require('crypto').createHash('sha1');\n" > baseline-smoke/new.js
+          set +e
+          node bin/mosca.js scan baseline-smoke --quiet --format json --out baseline-out2 --baseline baseline.json --fail-on critical
+          code=$?
+          set -e
+          test "$code" -eq 1
+
   self-scan:
     name: self-scan (no critical exposure)
     runs-on: ubuntu-latest

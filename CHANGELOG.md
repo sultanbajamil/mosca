@@ -6,6 +6,43 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-11-09
+
+The release that turns MOSCA from a scanner into a CI-native platform.
+
+### Added
+
+- **Baseline and differential mode.** `--write-baseline` records a run;
+  `--baseline` compares against it. Findings are matched with stable,
+  line-independent fingerprints, marked `new` or `existing`, and `--fail-on`
+  gates only on regressions when a baseline is supplied.
+- **Raw SSH prober.** A minimal RFC 4253 exchange sends `SSH_MSG_KEXINIT` and
+  parses the server's advertised KEX, host-key, cipher and MAC name-lists.
+  Detects `mlkem768x25519-sha256` and
+  `sntrup761x25519-sha512@openssh.com`, plus `ssh-rsa`, `ssh-dss`, SHA-1 KEX,
+  CBC ciphers and MD5/SHA-1 MACs. New `mosca ssh` command and
+  `scan --ssh`.
+- **Composite GitHub Action** (`action.yml`) with inputs for TLS, SSH,
+  baseline, formats and severity gate.
+- **`mosca explain <algorithm>`** — registry-backed migration brief with an
+  optional `--json` form.
+- **CRQC sensitivity analysis** across 2029, 2033, 2038 and 2045 in the JSON,
+  terminal and HTML report.
+- **SSH findings in HNDL exposure** — TLS and SSH key exchange now share one
+  internet-facing exposure ratio.
+- **SSH protocol assets in the CBOM**, and SSH cards in the HTML report.
+- **`new` badges and a "new since baseline" filter** in the HTML findings
+  table; SARIF results carry `baselineState`.
+- **34 new tests** (112 total) for baseline behaviour, SSH wire parsing and
+  classification, sensitivity, SSH-aware HNDL, SARIF and CBOM.
+
+### Changed
+
+- SARIF `partialFingerprints.moscaFingerprint` is now line-independent, so
+  moving code does not re-open an alert.
+- The terminal summary splits inspected endpoints into TLS and SSH.
+- `--fail-on` evaluates only new findings when a baseline is present.
+
 ## [1.0.0] — 2026-11-04
 
 First release.
@@ -62,5 +99,6 @@ First release.
 - The HTML report's CBOM download now embeds the real CycloneDX document
   instead of producing an empty object.
 
-[Unreleased]: https://github.com/sultanbajamil/mosca/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/sultanbajamil/mosca/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/sultanbajamil/mosca/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/sultanbajamil/mosca/releases/tag/v1.0.0

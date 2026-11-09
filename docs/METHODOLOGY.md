@@ -165,11 +165,28 @@ organisation's exposure does not respect those boundaries.
 HNDL = 100 × classical key-exchange findings / all key-exchange findings
 ```
 
-Only endpoint findings with primitive `key-agreement` participate. When no
-endpoint was inspected the value is reported as **n/a**, not 0%, because "we
-did not look" and "we looked and found nothing" are different statements. This
-distinction is enforced in the terminal report, the HTML report and the CBOM
+Only endpoint findings with primitive `key-agreement` participate, from TLS
+and SSH alike: a recorded SSH session is as readable after a CRQC as a
+recorded TLS session. When no endpoint was inspected the value is reported as
+**n/a**, not 0%, because "we did not look" and "we looked and found nothing"
+are different statements. This distinction is enforced in the terminal report,
+the HTML report and the CBOM
 (`mosca:harvestNowDecryptLaterExposure = "n/a"`).
+
+## 7a. CRQC sensitivity
+
+The headline number uses one planning assumption. The sensitivity table
+recomputes the exposed set for 2029, 2033, 2038 and 2045:
+
+```
+exposed(year) = findings where shelfLife + migrationLeadTime > (year - currentYear)
+```
+
+The purpose is to separate robust decisions from assumption-dependent ones. A
+finding that is exposed under every date is a present-day migration problem; a
+finding that only appears under the 2029 scenario is a bet on an aggressive
+timeline. The table is emitted in JSON (`summary.sensitivity`), printed as a
+compact strip in the terminal and rendered as cards in the HTML report.
 
 ## 8. Effort estimate
 

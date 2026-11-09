@@ -53,6 +53,8 @@ export const DEFAULT_CONFIG = {
   ignore: [],
   /** Endpoints to inspect on every scan. */
   endpoints: [],
+  /** SSH targets to inspect on every scan (`host` or `host:port`). */
+  ssh: [],
   /** Exit non-zero when a finding at or above this severity exists. */
   failOn: null,
 };

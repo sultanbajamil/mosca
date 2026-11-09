@@ -183,6 +183,16 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 .sev-low{background:rgba(34,211,238,.10);color:#67e8f9;border:1px solid rgba(34,211,238,.25)}
 .sev-info{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
 .sev-safe{background:rgba(52,211,153,.12);color:#6ee7b7;border:1px solid rgba(52,211,153,.3)}
+.pill.new{background:rgba(167,139,250,.18);color:#d8b4fe;border:1px solid rgba(167,139,250,.45);margin-left:4px}
+.baseline-note{margin:18px 0 0;padding:13px 16px;border-radius:12px;font-size:12.5px;border:1px solid var(--border);background:var(--panel);color:var(--muted)}
+.baseline-note.good{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.06)}
+.baseline-note.bad{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.06)}
+.sens{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
+.sens-cell{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:14px 16px;text-align:center}
+.sens-year{font-size:11px;color:var(--faint);letter-spacing:.12em}
+.sens-value{font-size:28px;font-weight:700;line-height:1.15;margin:4px 0}
+.sens-sub{font-size:10.5px;color:var(--faint)}
+.sens-note{grid-column:1/-1;font-size:11px;color:var(--faint);padding:2px 2px 0}
 .repl{color:var(--green)}
 .empty{padding:40px;text-align:center;color:var(--faint);border:1px dashed var(--border-2);border-radius:14px;font-size:13px}
 
@@ -270,6 +280,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <a href="#timeline">Timeline</a>
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
+      <a href="#ssh">SSH</a>
       <a href="#roadmap">Roadmap</a>
       <a href="#methodology">Method</a>
     </nav>
@@ -284,15 +295,15 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h1>vulnerable-app is <em>critically exposed</em>.</h1>
       <p class="lede">Most of the cryptographic estate falls to a quantum computer, and some of it is already broken.</p>
       <div class="hero-meta">
-        <span>Generated <b>2026-11-09 13:25:25 UTC</b></span>
+        <span>Generated <b>2026-11-09 13:50:28 UTC</b></span>
         <span>Scope <b>53 code findings</b></span>
         <span>CRQC <b>2033</b></span>
-        <span>Actionable <b>62</b></span>
+        <span>Actionable <b>63</b></span>
       </div>
     </div>
     
   <div class="gauge-wrap tone-bad">
-    <svg class="gauge" viewBox="0 0 200 200" role="img" aria-label="Quantum readiness index 28.6 out of 100">
+    <svg class="gauge" viewBox="0 0 200 200" role="img" aria-label="Quantum readiness index 29.6 out of 100">
       <defs>
         <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="var(--accent)"/>
@@ -302,38 +313,40 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <circle class="gauge-track" cx="100" cy="100" r="84"/>
       <circle class="gauge-value" cx="100" cy="100" r="84"
         stroke-dasharray="527.79"
-        stroke-dashoffset="376.84"/>
+        stroke-dashoffset="371.56"/>
     </svg>
     <div class="gauge-center">
-      <div class="gauge-score">28.6</div>
+      <div class="gauge-score">29.6</div>
       <div class="gauge-unit">/ 100</div>
     </div>
     <div class="gauge-label">Critically exposed</div>
   </div>
   </section>
 
+  
+
   <div class="kpis">
     
   <div class="kpi warn">
-    <div class="kpi-value">33.3%</div>
+    <div class="kpi-value">28.6%</div>
     <div class="kpi-label">Harvest-now-decrypt-later</div>
     <div class="kpi-sub">of internet-facing key exchange is classical-only</div>
   </div>
     
   <div class="kpi warn">
-    <div class="kpi-value">62</div>
+    <div class="kpi-value">63</div>
     <div class="kpi-label">Inside the Mosca window</div>
-    <div class="kpi-sub">of 71 findings are already exposed</div>
+    <div class="kpi-sub">of 73 findings are already exposed</div>
   </div>
     
   <div class="kpi bad">
-    <div class="kpi-value">28</div>
+    <div class="kpi-value">29</div>
     <div class="kpi-label">Critical findings</div>
     <div class="kpi-sub">23 high · 11 medium</div>
   </div>
     
   <div class="kpi ">
-    <div class="kpi-value">61d</div>
+    <div class="kpi-value">64d</div>
     <div class="kpi-label">Migration effort</div>
     <div class="kpi-sub">estimated engineer-days</div>
   </div>
@@ -377,6 +390,20 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
           <span class="tl-verdict"></span>
         </div>
       </div>
+      <div class="tl-row" data-shelf="7" data-lead="1.8">
+        <div class="tl-label">
+          <span class="tl-name">ssh-rsa (RSA/SHA-1)</span>
+          <span class="tl-meta">7y data · 1.8y migration</span>
+        </div>
+        <div class="tl-track">
+          <div class="tl-bar">
+            <div class="tl-seg tl-data" style="width:31.96%"></div>
+            <div class="tl-seg tl-migrate" style="width:8.22%"></div>
+          </div>
+          <div class="tl-crqc" style="left:0%"></div>
+          <span class="tl-verdict"></span>
+        </div>
+      </div>
       <div class="tl-row" data-shelf="7" data-lead="2.2">
         <div class="tl-label">
           <span class="tl-name">MD5</span>
@@ -394,20 +421,6 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <div class="tl-row" data-shelf="7" data-lead="1.5">
         <div class="tl-label">
           <span class="tl-name">RC4</span>
-          <span class="tl-meta">7y data · 1.5y migration</span>
-        </div>
-        <div class="tl-track">
-          <div class="tl-bar">
-            <div class="tl-seg tl-data" style="width:31.96%"></div>
-            <div class="tl-seg tl-migrate" style="width:6.85%"></div>
-          </div>
-          <div class="tl-crqc" style="left:0%"></div>
-          <span class="tl-verdict"></span>
-        </div>
-      </div>
-      <div class="tl-row" data-shelf="7" data-lead="1.5">
-        <div class="tl-label">
-          <span class="tl-name">ssh-rsa (RSA/SHA-1)</span>
           <span class="tl-meta">7y data · 1.5y migration</span>
         </div>
         <div class="tl-track">
@@ -496,6 +509,23 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     <span><i class="sw sw-crqc"></i> cryptographically relevant quantum computer</span>
     <span class="tl-summary" id="tl-summary"></span>
   </div>
+    <div class="sens"><div class="sens-cell">
+        <div class="sens-year mono">2029</div>
+        <div class="sens-value mono sev-high">63</div>
+        <div class="sens-sub">3 years · 100.0%</div>
+      </div><div class="sens-cell">
+        <div class="sens-year mono">2033</div>
+        <div class="sens-value mono sev-high">63</div>
+        <div class="sens-sub">7 years · 100.0%</div>
+      </div><div class="sens-cell">
+        <div class="sens-year mono">2038</div>
+        <div class="sens-value mono sev-high">8</div>
+        <div class="sens-sub">12 years · 12.7%</div>
+      </div><div class="sens-cell">
+        <div class="sens-year mono">2045</div>
+        <div class="sens-value mono sev-safe">0</div>
+        <div class="sens-sub">19 years · 0.0%</div>
+      </div><div class="sens-note">Findings inside the Mosca window under each CRQC assumption.</div></div>
   </section>
 
   <section id="findings">
@@ -506,8 +536,9 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     
   <div class="toolbar">
     <div class="filters">
-      <button class="chip active" data-filter="all">All <span>62</span></button>
-      <button class="chip sev-critical" data-filter="critical">critical <span>28</span></button><button class="chip sev-high" data-filter="high">high <span>23</span></button><button class="chip sev-medium" data-filter="medium">medium <span>11</span></button>
+      <button class="chip active" data-filter="all">All <span>63</span></button>
+      
+      <button class="chip sev-critical" data-filter="critical">critical <span>29</span></button><button class="chip sev-high" data-filter="high">high <span>23</span></button><button class="chip sev-medium" data-filter="medium">medium <span>11</span></button>
     </div>
     <input class="search" id="search" type="search" placeholder="Filter by file, algorithm, note…" aria-label="Search findings">
   </div>
@@ -519,7 +550,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         </tr>
       </thead>
       <tbody id="finding-body">
-      <tr class="finding sev-critical" data-sev="critical" data-text="sha-1 — hashing sha-1 services\identity\main.go:30 shattered (2017) and chosen-prefix collisions (2020).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="sha-1 — hashing sha-1 services\identity\main.go:30 shattered (2017) and chosen-prefix collisions (2020).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -530,7 +561,18 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">15 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="sha-1 — digest policy sha-1 infra\openssl.cnf:6 shattered (2017) and chosen-prefix collisions (2020).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="legacy ssh host key offered (ssh-rsa) ssh-rsa (rsa/sha-1) github.com:22 ssh-rsa uses sha-1 and ssh-dss uses dsa; both are withdrawn. remove them and publish an ed25519 plus an ml-dsa host key.">
+        <td><span class="pill sev-critical">critical</span></td>
+        <td class="mono prio">P0</td>
+        <td>
+          <div class="f-title">Legacy SSH host key offered (ssh-rsa)</div>
+          <div class="f-note">ssh-rsa uses SHA-1 and ssh-dss uses DSA; both are withdrawn. Remove them and publish an Ed25519 plus an ML-DSA host key.</div>
+        </td>
+        <td class="mono loc">github.com:22</td>
+        <td class="mono"><span class="repl">ml-dsa-65</span></td>
+        <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
+      </tr>
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="sha-1 — digest policy sha-1 infra\openssl.cnf:6 shattered (2017) and chosen-prefix collisions (2020).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -541,7 +583,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="sha-1 — hashing sha-1 src\finance\treasury-report.js:12 shattered (2017) and chosen-prefix collisions (2020).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="sha-1 — hashing sha-1 src\finance\treasury-report.js:12 shattered (2017) and chosen-prefix collisions (2020).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -552,7 +594,18 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">10 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="sha-1 — hashing sha-1 deploy\tls.sh:27 shattered (2017) and chosen-prefix collisions (2020).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="ssh-rsa (rsa/sha-1) — signature policy ssh-rsa (rsa/sha-1) infra\sshd_config:14 disabled by default in openssh 8.8+. sha-1 signature.">
+        <td><span class="pill sev-critical">critical</span></td>
+        <td class="mono prio">P0</td>
+        <td>
+          <div class="f-title">ssh-rsa (RSA/SHA-1) — signature policy</div>
+          <div class="f-note">Disabled by default in OpenSSH 8.8+. SHA-1 signature.</div>
+        </td>
+        <td class="mono loc">infra\sshd_config:14</td>
+        <td class="mono"><span class="repl">ml-dsa-65</span></td>
+        <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
+      </tr>
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="sha-1 — hashing sha-1 deploy\tls.sh:27 shattered (2017) and chosen-prefix collisions (2020).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -563,7 +616,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="md5 — hashing md5 services\gateway\signatureservice.java:36 practical collisions since 2004. never use for security.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="md5 — hashing md5 services\gateway\signatureservice.java:36 practical collisions since 2004. never use for security.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -574,7 +627,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="md5 — hashing md5 services\ledger\main.py:29 practical collisions since 2004. never use for security.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="md5 — hashing md5 services\ledger\main.py:29 practical collisions since 2004. never use for security.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -585,7 +638,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="md5 — hashing md5 src\api\auth.js:34 practical collisions since 2004. never use for security.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="md5 — hashing md5 src\api\auth.js:34 practical collisions since 2004. never use for security.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -596,7 +649,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="md5 — hashing md5 src\crypto\legacy.js:9 practical collisions since 2004. never use for security.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="md5 — hashing md5 src\crypto\legacy.js:9 practical collisions since 2004. never use for security.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -607,7 +660,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="rc4 — cipher policy rc4 infra\nginx.conf:18 biased keystream. prohibited by rfc 7465.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="rc4 — cipher policy rc4 infra\nginx.conf:18 biased keystream. prohibited by rfc 7465.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -618,18 +671,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="ssh-rsa (rsa/sha-1) — signature policy ssh-rsa (rsa/sha-1) infra\sshd_config:14 disabled by default in openssh 8.8+. sha-1 signature.">
-        <td><span class="pill sev-critical">critical</span></td>
-        <td class="mono prio">P0</td>
-        <td>
-          <div class="f-title">ssh-rsa (RSA/SHA-1) — signature policy</div>
-          <div class="f-note">Disabled by default in OpenSSH 8.8+. SHA-1 signature.</div>
-        </td>
-        <td class="mono loc">infra\sshd_config:14</td>
-        <td class="mono"><span class="repl">ml-dsa-65</span></td>
-        <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
-      </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="hmac-md5 — message authentication hmac-md5 src\crypto\legacy.js:13 ">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="hmac-md5 — message authentication hmac-md5 src\crypto\legacy.js:13 ">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -640,7 +682,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">hmac-sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate signed with ecdsa-with-sha256 ecdsa cloudflare.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate signed with ecdsa-with-sha256 ecdsa cloudflare.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -651,7 +693,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate public key is ecdsa (256 bits) ecdsa cloudflare.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate public key is ecdsa (256 bits) ecdsa cloudflare.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -662,7 +704,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate signed with ecdsa-with-sha384 ecdsa en.wikipedia.org:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate signed with ecdsa-with-sha384 ecdsa en.wikipedia.org:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -673,7 +715,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate public key is ecdsa (256 bits) ecdsa en.wikipedia.org:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate public key is ecdsa (256 bits) ecdsa en.wikipedia.org:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -684,7 +726,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate signed with ecdsa-with-sha256 ecdsa example.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate signed with ecdsa-with-sha256 ecdsa example.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -695,7 +737,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate public key is ecdsa (256 bits) ecdsa example.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate public key is ecdsa (256 bits) ecdsa example.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -706,7 +748,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate signed with ecdsa-with-sha256 ecdsa github.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate signed with ecdsa-with-sha256 ecdsa github.com:443 the certificate signature is quantum-vulnerable. migrate to ml-dsa-65 (fips 204) or a hybrid certificate.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -717,7 +759,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="certificate public key is ecdsa (256 bits) ecdsa github.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="certificate public key is ecdsa (256 bits) ecdsa github.com:443 public-key cryptography on this certificate falls to shor&#39;s algorithm.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -728,7 +770,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="classical-only key exchange (x25519) x25519 en.wikipedia.org:443 server selected x25519. a recorded session can be decrypted once a crqc exists. enable x25519mlkem768 (group 0x11ec).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="classical-only key exchange (x25519) x25519 en.wikipedia.org:443 server selected x25519. a recorded session can be decrypted once a crqc exists. enable x25519mlkem768 (group 0x11ec).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -739,7 +781,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">x25519mlkem768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="classical-only key exchange (x25519) x25519 github.com:443 server selected x25519. a recorded session can be decrypted once a crqc exists. enable x25519mlkem768 (group 0x11ec).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="classical-only key exchange (x25519) x25519 github.com:443 server selected x25519. a recorded session can be decrypted once a crqc exists. enable x25519mlkem768 (group 0x11ec).">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -750,7 +792,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">x25519mlkem768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="server still accepts tls 1.1 tls 1.1 cloudflare.com:443 rfc 8996 deprecates tls 1.0 and 1.1. disable them at the terminator.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="server still accepts tls 1.1 tls 1.1 cloudflare.com:443 rfc 8996 deprecates tls 1.0 and 1.1. disable them at the terminator.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -761,7 +803,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="server still accepts tls 1.1 tls 1.1 example.com:443 rfc 8996 deprecates tls 1.0 and 1.1. disable them at the terminator.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="server still accepts tls 1.1 tls 1.1 example.com:443 rfc 8996 deprecates tls 1.0 and 1.1. disable them at the terminator.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -772,7 +814,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="tls 1.0 — protocol configuration tls 1.0 services\identity\main.go:41 tls 1.0/1.1 floor.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="tls 1.0 — protocol configuration tls 1.0 services\identity\main.go:41 tls 1.0/1.1 floor.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -783,7 +825,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">15 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="tls 1.0 — protocol policy tls 1.0 infra\nginx.conf:17 legacy tls versions enabled in the server block.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="tls 1.0 — protocol policy tls 1.0 infra\nginx.conf:17 legacy tls versions enabled in the server block.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -794,7 +836,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="tls 1.0 — protocol policy tls 1.0 infra\openssl.cnf:23 a tls 1.0/1.1 floor. raise it to tls 1.2 and let the server prefer 1.3.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="tls 1.0 — protocol policy tls 1.0 infra\openssl.cnf:23 a tls 1.0/1.1 floor. raise it to tls 1.2 and let the server prefer 1.3.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -805,7 +847,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="tls 1.0 — protocol configuration tls 1.0 services\gateway\signatureservice.java:42 rfc 8996 deprecates tls 1.0 and 1.1. beast, poodle-adjacent issues.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="tls 1.0 — protocol configuration tls 1.0 services\gateway\signatureservice.java:42 rfc 8996 deprecates tls 1.0 and 1.1. beast, poodle-adjacent issues.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -816,7 +858,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-text="tls 1.1 — protocol configuration tls 1.1 src\crypto\legacy.js:28 a tls 1.0/1.1 floor. raise it to tls 1.2 and let the server prefer 1.3.">
+      <tr class="finding sev-critical" data-sev="critical" data-new="0" data-text="tls 1.1 — protocol configuration tls 1.1 src\crypto\legacy.js:28 a tls 1.0/1.1 floor. raise it to tls 1.2 and let the server prefer 1.3.">
         <td><span class="pill sev-critical">critical</span></td>
         <td class="mono prio">P0</td>
         <td>
@@ -827,7 +869,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — public-key encryption rsa services\identity\main.go:20 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — public-key encryption rsa services\identity\main.go:20 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -838,7 +880,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">15 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — signature policy rsa infra\sshd_config:9 host key type. rsa and ecdsa host keys are quantum-vulnerable.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — signature policy rsa infra\sshd_config:9 host key type. rsa and ecdsa host keys are quantum-vulnerable.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -849,7 +891,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\billing\invoice.js:25 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\billing\invoice.js:25 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -860,7 +902,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">10 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\finance\treasury-report.js:13 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\finance\treasury-report.js:13 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -871,7 +913,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">10 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa deploy\tls.sh:24 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa deploy\tls.sh:24 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -882,7 +924,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa services\gateway\signatureservice.java:22 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa services\gateway\signatureservice.java:22 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -893,7 +935,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa services\gateway\signatureservice.java:28 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa services\gateway\signatureservice.java:28 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -904,7 +946,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\api\auth.js:11 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\api\auth.js:11 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -915,7 +957,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\api\auth.js:21 jwt signing algorithm.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\api\auth.js:21 jwt signing algorithm.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -926,7 +968,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\api\auth.js:26 jwt signing algorithm.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\api\auth.js:26 jwt signing algorithm.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -937,7 +979,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\crypto\transport.js:23 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\crypto\transport.js:23 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -948,7 +990,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa — digital signature rsa src\crypto\transport.js:30 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa — digital signature rsa src\crypto\transport.js:30 shor factors the modulus in polynomial time. key size is irrelevant: rsa-16384 falls as fast as rsa-2048.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -959,7 +1001,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.9 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="ecdsa — signature policy ecdsa infra\sshd_config:10 host key type. rsa and ecdsa host keys are quantum-vulnerable.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="ecdsa — signature policy ecdsa infra\sshd_config:10 host key type. rsa and ecdsa host keys are quantum-vulnerable.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -970,7 +1012,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-dsa-65</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.7 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa-2048 — public-key encryption rsa-2048 deploy\tls.sh:12 classically fine today, but nist deprecates it for new use after 2030 and disallows it after 2035.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa-2048 — public-key encryption rsa-2048 deploy\tls.sh:12 classically fine today, but nist deprecates it for new use after 2030 and disallows it after 2035.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -981,7 +1023,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.3 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa-2048 — public-key encryption rsa-2048 services\ledger\main.py:20 classically fine today, but nist deprecates it for new use after 2030 and disallows it after 2035.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa-2048 — public-key encryption rsa-2048 services\ledger\main.py:20 classically fine today, but nist deprecates it for new use after 2030 and disallows it after 2035.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -992,7 +1034,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.3 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa-2048 — public-key encryption rsa-2048 src\api\auth.js:12 rsa modulus length declared in a key-generation options object.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa-2048 — public-key encryption rsa-2048 src\api\auth.js:12 rsa modulus length declared in a key-generation options object.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1003,7 +1045,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.3 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="rsa-2048 — public-key encryption rsa-2048 src\crypto\transport.js:31 rsa modulus length declared in a key-generation options object.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="rsa-2048 — public-key encryption rsa-2048 src\crypto\transport.js:31 rsa modulus length declared in a key-generation options object.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1014,7 +1056,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.3 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="diffie-hellman (finite field) — key exchange policy diffie-hellman (finite field) infra\sshd_config:17 ssh key exchange list; hybrid sntrup761x25519 or mlkem768x25519 is the post-quantum option.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="diffie-hellman (finite field) — key exchange policy diffie-hellman (finite field) infra\sshd_config:17 ssh key exchange list; hybrid sntrup761x25519 or mlkem768x25519 is the post-quantum option.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1025,7 +1067,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">x25519mlkem768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="ecdh — key exchange policy ecdh infra\nginx.conf:22 no hybrid post-quantum group configured.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="ecdh — key exchange policy ecdh infra\nginx.conf:22 no hybrid post-quantum group configured.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1036,7 +1078,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">x25519mlkem768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="triple des — cipher policy triple des infra\nginx.conf:18 64-bit block: sweet32. nist disallowed after 2023.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="triple des — cipher policy triple des infra\nginx.conf:18 64-bit block: sweet32. nist disallowed after 2023.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1047,7 +1089,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="triple des — cipher policy triple des infra\sshd_config:20 64-bit block: sweet32. nist disallowed after 2023.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="triple des — cipher policy triple des infra\sshd_config:20 64-bit block: sweet32. nist disallowed after 2023.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1058,7 +1100,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="aes-128 session cipher (tls_aes_128_gcm_sha256) aes-128 en.wikipedia.org:443 grover&#39;s algorithm reduces aes-128 to ~64-bit security. prefer aes-256-gcm or chacha20-poly1305.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="aes-128 session cipher (tls_aes_128_gcm_sha256) aes-128 en.wikipedia.org:443 grover&#39;s algorithm reduces aes-128 to ~64-bit security. prefer aes-256-gcm or chacha20-poly1305.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1069,7 +1111,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-high" data-sev="high" data-text="aes-128 session cipher (tls_aes_128_gcm_sha256) aes-128 github.com:443 grover&#39;s algorithm reduces aes-128 to ~64-bit security. prefer aes-256-gcm or chacha20-poly1305.">
+      <tr class="finding sev-high" data-sev="high" data-new="0" data-text="aes-128 session cipher (tls_aes_128_gcm_sha256) aes-128 github.com:443 grover&#39;s algorithm reduces aes-128 to ~64-bit security. prefer aes-256-gcm or chacha20-poly1305.">
         <td><span class="pill sev-high">high</span></td>
         <td class="mono prio">P1</td>
         <td>
@@ -1080,7 +1122,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="rsa-2048 — public-key encryption rsa-2048 services\gateway\signatureservice.java:23 integer key size; confirm it belongs to an rsa keypairgenerator.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="rsa-2048 — public-key encryption rsa-2048 services\gateway\signatureservice.java:23 integer key size; confirm it belongs to an rsa keypairgenerator.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1091,7 +1133,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">ml-kem-768</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.3 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="hmac-sha1 — mac policy hmac-sha1 infra\sshd_config:23 ">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="hmac-sha1 — mac policy hmac-sha1 infra\sshd_config:23 ">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1102,7 +1144,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">hmac-sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="triple des — symmetric encryption triple des src\api\payments.js:33 64-bit block: sweet32. nist disallowed after 2023.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="triple des — symmetric encryption triple des src\api\payments.js:33 64-bit block: sweet32. nist disallowed after 2023.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1113,7 +1155,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="triple des — symmetric encryption triple des src\crypto\legacy.js:17 64-bit block: sweet32. nist disallowed after 2023.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="triple des — symmetric encryption triple des src\crypto\legacy.js:17 64-bit block: sweet32. nist disallowed after 2023.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1124,7 +1166,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2.2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="hmac-sha1 — message authentication hmac-sha1 src\api\auth.js:46 ">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="hmac-sha1 — message authentication hmac-sha1 src\api\auth.js:46 ">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1135,7 +1177,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">hmac-sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="tls 1.2 — protocol configuration tls 1.2 services\identity\main.go:42 capping the maximum version prevents tls 1.3 and therefore hybrid post-quantum key exchange.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="tls 1.2 — protocol configuration tls 1.2 services\identity\main.go:42 capping the maximum version prevents tls 1.3 and therefore hybrid post-quantum key exchange.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1146,7 +1188,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">15 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="tls 1.2 — protocol configuration tls 1.2 services\identity\main.go:44 static-rsa or legacy cipher suite.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="tls 1.2 — protocol configuration tls 1.2 services\identity\main.go:44 static-rsa or legacy cipher suite.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1157,7 +1199,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">tls-1.3</span></td>
         <td class="num mono" title="Mosca inequality">15 + 1.8 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="aes-128-cbc — symmetric encryption aes-128-cbc services\ledger\main.py:40 grover&#39;s algorithm gives ~2^64 quantum work against aes-128. move to aes-256 for data that must outlive the machine.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="aes-128-cbc — symmetric encryption aes-128-cbc services\ledger\main.py:40 grover&#39;s algorithm gives ~2^64 quantum work against aes-128. move to aes-256 for data that must outlive the machine.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1168,7 +1210,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="aes-128-cbc — symmetric encryption aes-128-cbc src\api\payments.js:11 cbc without an aead is vulnerable to padding oracles when not authenticated.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="aes-128-cbc — symmetric encryption aes-128-cbc src\api\payments.js:11 cbc without an aead is vulnerable to padding oracles when not authenticated.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1179,7 +1221,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="aes-128-cbc — symmetric encryption aes-128-cbc src\api\payments.js:16 cbc without an aead is vulnerable to padding oracles when not authenticated.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="aes-128-cbc — symmetric encryption aes-128-cbc src\api\payments.js:16 cbc without an aead is vulnerable to padding oracles when not authenticated.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1190,7 +1232,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">aes-256-gcm</span></td>
         <td class="num mono" title="Mosca inequality">7 + 2 &gt; 7</td>
       </tr>
-      <tr class="finding sev-medium" data-sev="medium" data-text="fernet (aes-128-cbc + hmac-sha256) — symmetric encryption fernet (aes-128-cbc + hmac-sha256) services\ledger\main.py:34 python cryptography fernet uses a 128-bit aes key.">
+      <tr class="finding sev-medium" data-sev="medium" data-new="0" data-text="fernet (aes-128-cbc + hmac-sha256) — symmetric encryption fernet (aes-128-cbc + hmac-sha256) services\ledger\main.py:34 python cryptography fernet uses a 128-bit aes key.">
         <td><span class="pill sev-medium">medium</span></td>
         <td class="mono prio">P2</td>
         <td>
@@ -1278,6 +1320,27 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       </article></div>
   </section>
 
+  <section id="ssh">
+    <div class="sec-head">
+      <h2>Live SSH endpoints</h2>
+      <p>Each server was asked for its <span class="mono">SSH_MSG_KEXINIT</span> with a minimal RFC 4253 exchange. The probe never authenticates and never completes key exchange; the advertised algorithm lists are the evidence.</p>
+    </div>
+    <div class="ep-grid">
+      <article class="ep-card">
+        <header>
+          <span class="ep-host mono">github.com</span>
+          <span class="pill sev-safe">hybrid KEX · mlkem768x25519-sha256</span>
+        </header>
+        <dl>
+          <div><dt>Banner</dt><dd class="mono">SSH-2.0-9bd49d50</dd></div>
+          <div><dt>Host key</dt><dd class="mono">ssh-ed25519</dd></div>
+          <div><dt>Ciphers</dt><dd class="mono">chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com</dd></div>
+          <div><dt>MACs</dt><dd class="mono">hmac-sha2-512-etm@openssh.com, hmac-sha2-256-etm@openssh.com, hmac-sha2-512</dd></div>
+        </dl>
+        <div class="ep-verdict">The server advertises a hybrid KEM for SSH sessions.</div>
+      </article></div>
+  </section>
+
   <section id="algorithms">
     <div class="sec-head">
       <h2>Cryptographic inventory</h2>
@@ -1318,6 +1381,12 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <div class="algo-repl mono">tls-1.3</div>
     </div>
     <div class="algo-row">
+      <div class="algo-name mono">ssh-rsa (RSA/SHA-1)</div>
+      <div class="algo-bar"><span class="sev-critical" style="width:16.7%"></span></div>
+      <div class="algo-count mono">2</div>
+      <div class="algo-repl mono">ml-dsa-65</div>
+    </div>
+    <div class="algo-row">
       <div class="algo-name mono">X25519</div>
       <div class="algo-bar"><span class="sev-critical" style="width:16.7%"></span></div>
       <div class="algo-count mono">2</div>
@@ -1328,12 +1397,6 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <div class="algo-bar"><span class="sev-critical" style="width:8.3%"></span></div>
       <div class="algo-count mono">1</div>
       <div class="algo-repl mono">aes-256-gcm</div>
-    </div>
-    <div class="algo-row">
-      <div class="algo-name mono">ssh-rsa (RSA/SHA-1)</div>
-      <div class="algo-bar"><span class="sev-critical" style="width:8.3%"></span></div>
-      <div class="algo-count mono">1</div>
-      <div class="algo-repl mono">ml-dsa-65</div>
     </div>
     <div class="algo-row">
       <div class="algo-name mono">HMAC-MD5</div>
@@ -1414,6 +1477,12 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <div class="algo-repl mono"><span class="muted">—</span></div>
     </div>
     <div class="algo-row">
+      <div class="algo-name mono">mlkem768x25519-sha256</div>
+      <div class="algo-bar"><span class="sev-info" style="width:8.3%"></span></div>
+      <div class="algo-count mono">1</div>
+      <div class="algo-repl mono"><span class="muted">—</span></div>
+    </div>
+    <div class="algo-row">
       <div class="algo-name mono">HMAC-SHA256</div>
       <div class="algo-bar"><span class="sev-info" style="width:8.3%"></span></div>
       <div class="algo-count mono">1</div>
@@ -1448,8 +1517,8 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         </header>
         <p>Remove primitives that are broken *today*, independent of quantum computing.</p>
         <div class="phase-meta">
-          <span class="mono">28 items</span>
-          <span class="mono">~47 engineer-days</span>
+          <span class="mono">29 items</span>
+          <span class="mono">~50 engineer-days</span>
           <span class="tag">RFC 8996</span><span class="tag">NIST SP 800-131A Rev.2</span>
         </div>
       </div>
@@ -1551,13 +1620,13 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 
   <footer>
     <div class="footer-brand"><span class="brand-mark" style="width:16px;height:16px"></span> MOSCA</div>
-    <div>Generated by MOSCA v1.0.0 · 71 findings · scan completed in 833 ms</div>
+    <div>Generated by MOSCA v2.0.0 · 73 findings · scan completed in 1786 ms</div>
     <div><a href="#" id="download-cbom">Download CBOM (CycloneDX 1.6)</a></div>
   </footer>
 </main>
 
-<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-09T13:25:25.285Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":71,"actionable":62,"bySeverity":{"critical":28,"high":23,"medium":11,"low":0,"info":9},"byPrimitive":{"hash":10,"symmetric":12,"signature":21,"mac":4,"key-agreement":8,"protocol":9,"pke":6,"kdf":1},"byKind":{"source":41,"config":12,"endpoint":18},"quantumReadinessIndex":28.6,"hndlExposure":33.3,"hndlApplicable":true,"endpointsInspected":4,"endpointsWithPqc":2,"exposedItems":62,"effortDays":61,"topRisk":{"id":"go-hash","kind":"source","title":"SHA-1 — hashing","algorithm":"sha1","algorithmLabel":"SHA-1","primitive":"hash","location":{"file":"services\\identity\\main.go","line":30,"column":7},"snippet":"h := sha1.New()","matched":"sha1.New(","confidence":"high","note":"SHAttered (2017) and chosen-prefix collisions (2020).","language":"go","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":4,"shelfLife":15,"dataClass":"identity data","leadTime":2.2,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":15,"leadTime":2.2,"yearsToCRQC":7,"inequality":"15 + 2.2 > 7","kind":"integrity"},"positive":false,"score":73.8,"severity":"critical","priority":"P0","replacementLabel":"SHA-256"}},"items":[{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":73.8,"shelfLife":15,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\identity\\main.go","line":30,"column":7}},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":71.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"config","location":{"file":"infra\\openssl.cnf","line":6,"column":1}},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":70.5,"shelfLife":10,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\finance\\treasury-report.js","line":12,"column":25}},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"deploy\\tls.sh","line":27,"column":1}},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":36,"column":32}},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\ledger\\main.py","line":29,"column":12}},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\api\\auth.js","line":34,"column":17}},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":9,"column":17}},{"algorithm":"rc4","algorithmLabel":"RC4","quantum":"broken","classical":"broken","severity":"critical","score":68.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"symmetric","kind":"config","location":{"file":"infra\\nginx.conf","line":18,"column":1}},{"algorithm":"ssh-rsa","algorithmLabel":"ssh-rsa (RSA/SHA-1)","quantum":"broken","classical":"broken","severity":"critical","score":68.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":14,"column":1}},{"algorithm":"hmac-md5","algorithmLabel":"HMAC-MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"mac","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":13,"column":17}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"}},{"algorithm":"x25519","algorithmLabel":"X25519","quantum":"broken","classical":"strong","severity":"critical","score":58.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"key-agreement","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"}},{"algorithm":"x25519","algorithmLabel":"X25519","quantum":"broken","classical":"strong","severity":"critical","score":58.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"key-agreement","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"}},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":54.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"}},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":54.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"}},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":53.8,"shelfLife":15,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":41,"column":3}},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":51.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"config","location":{"file":"infra\\nginx.conf","line":17,"column":1}},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":51.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"config","location":{"file":"infra\\openssl.cnf","line":23,"column":1}},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":48.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":42,"column":16}},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":47.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":28,"column":3}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":65.3,"shelfLife":15,"leadTime":2.9,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"services\\identity\\main.go","line":20,"column":14}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":62.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":9,"column":1}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":61.9,"shelfLife":10,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\billing\\invoice.js","line":25,"column":25}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":61.9,"shelfLife":10,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\finance\\treasury-report.js","line":13,"column":28}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"deploy\\tls.sh","line":24,"column":1}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":22,"column":38}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":28,"column":31}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":11,"column":42}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":21,"column":7}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":26,"column":41}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\crypto\\transport.js","line":23,"column":25}},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\crypto\\transport.js","line":30,"column":17}},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"high","score":59,"shelfLife":7,"leadTime":2.7,"priority":"P1","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":10,"column":1}},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"deploy\\tls.sh","line":12,"column":1}},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"services\\ledger\\main.py","line":20,"column":12}},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"src\\api\\auth.js","line":12,"column":3}},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"src\\crypto\\transport.js","line":31,"column":5}},{"algorithm":"dh","algorithmLabel":"Diffie-Hellman (finite field)","quantum":"broken","classical":"acceptable","severity":"high","score":56.2,"shelfLife":7,"leadTime":1.5,"priority":"P1","primitive":"key-agreement","kind":"config","location":{"file":"infra\\sshd_config","line":17,"column":1}},{"algorithm":"ecdh","algorithmLabel":"ECDH","quantum":"broken","classical":"strong","severity":"high","score":53.2,"shelfLife":7,"leadTime":1.5,"priority":"P1","primitive":"key-agreement","kind":"config","location":{"file":"infra\\nginx.conf","line":22,"column":1}},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"high","score":45.5,"shelfLife":7,"leadTime":2.2,"priority":"P1","primitive":"symmetric","kind":"config","location":{"file":"infra\\nginx.conf","line":18,"column":1}},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"high","score":45.5,"shelfLife":7,"leadTime":2.2,"priority":"P1","primitive":"symmetric","kind":"config","location":{"file":"infra\\sshd_config","line":20,"column":1}},{"algorithm":"aes-128","algorithmLabel":"AES-128","quantum":"weakened","classical":"strong","severity":"high","score":38.6,"shelfLife":7,"leadTime":1.8,"priority":"P1","primitive":"symmetric","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"}},{"algorithm":"aes-128","algorithmLabel":"AES-128","quantum":"weakened","classical":"strong","severity":"high","score":38.6,"shelfLife":7,"leadTime":1.8,"priority":"P1","primitive":"symmetric","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"}},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"medium","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P2","primitive":"pke","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":23,"column":19}},{"algorithm":"hmac-sha1","algorithmLabel":"HMAC-SHA1","quantum":"weakened","classical":"weak","severity":"medium","score":43.6,"shelfLife":7,"leadTime":1.8,"priority":"P2","primitive":"mac","kind":"config","location":{"file":"infra\\sshd_config","line":23,"column":1}},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"medium","score":42.5,"shelfLife":7,"leadTime":2.2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":33,"column":25}},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"medium","score":42.5,"shelfLife":7,"leadTime":2.2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":17,"column":25}},{"algorithm":"hmac-sha1","algorithmLabel":"HMAC-SHA1","quantum":"weakened","classical":"weak","severity":"medium","score":40.6,"shelfLife":7,"leadTime":1.8,"priority":"P2","primitive":"mac","kind":"source","location":{"file":"src\\api\\auth.js","line":46,"column":17}},{"algorithm":"tls-1.2","algorithmLabel":"TLS 1.2","quantum":"weakened","classical":"acceptable","severity":"medium","score":40,"shelfLife":15,"leadTime":1.8,"priority":"P2","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":42,"column":3}},{"algorithm":"tls-1.2","algorithmLabel":"TLS 1.2","quantum":"weakened","classical":"acceptable","severity":"medium","score":40,"shelfLife":15,"leadTime":1.8,"priority":"P2","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":44,"column":4}},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"services\\ledger\\main.py","line":40,"column":21}},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":11,"column":25}},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":16,"column":27}},{"algorithm":"fernet","algorithmLabel":"Fernet (AES-128-CBC + HMAC-SHA256)","quantum":"weakened","classical":"strong","severity":"medium","score":30.2,"shelfLife":7,"leadTime":1.5,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"services\\ledger\\main.py","line":34,"column":12}},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"}},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"}},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"}},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"}},{"algorithm":"sha256","algorithmLabel":"SHA-256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":1.8,"priority":"—","primitive":"hash","kind":"source","location":{"file":"services\\ledger\\main.py","line":24,"column":50}},{"algorithm":"hmac-sha256","algorithmLabel":"HMAC-SHA256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":1.5,"priority":"—","primitive":"mac","kind":"source","location":{"file":"src\\api\\payments.js","line":24,"column":17}},{"algorithm":"sha256","algorithmLabel":"SHA-256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":10,"leadTime":1.8,"priority":"—","primitive":"hash","kind":"source","location":{"file":"src\\billing\\invoice.js","line":17,"column":17}},{"algorithm":"aes-256-cbc","algorithmLabel":"AES-256-CBC","quantum":"safe","classical":"acceptable","severity":"info","score":0,"shelfLife":10,"leadTime":1.5,"priority":"—","primitive":"symmetric","kind":"source","location":{"file":"src\\billing\\invoice.js","line":11,"column":25}},{"algorithm":"pbkdf2","algorithmLabel":"PBKDF2","quantum":"safe","classical":"acceptable","severity":"info","score":0,"shelfLife":7,"leadTime":1.5,"priority":"—","primitive":"kdf","kind":"source","location":{"file":"src\\crypto\\transport.js","line":41,"column":17}}]}</script>
-<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:a529c33a-65df-4044-8304-30f5a8b2ebe3","version":1,"metadata":{"timestamp":"2026-11-09T13:25:25.285Z","tools":{"components":[{"type":"application","name":"mosca","version":"1.0.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","name":"vulnerable-app","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"28.6"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"33.3%"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"15 + 2.2 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\openssl.cnf"},{"name":"mosca:location","value":"src\\finance\\treasury-report.js"},{"name":"mosca:location","value":"deploy\\tls.sh"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"java","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rc4","name":"RC4","description":"Biased keystream. Prohibited by RFC 7465.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"RC4"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ssh-rsa","name":"ssh-rsa (RSA/SHA-1)","description":"Disabled by default in OpenSSH 8.8+. SHA-1 signature.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"signature"},{"name":"mosca:replacement","value":"ml-dsa-65"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"ssh-rsa (RSA/SHA-1)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-md5","name":"HMAC-MD5","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:replacement","value":"hmac-sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ecdsa","name":"ECDSA","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","parameterSetIdentifier":"256","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"signature"},{"name":"mosca:replacement","value":"ml-dsa-65"},{"name":"mosca:standard","value":"FIPS 204"},{"name":"mosca:moscaInequality","value":"7 + 2.7 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":9,"identity":{"field":"name","confidence":0.9,"concludedValue":"ECDSA"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/x25519","name":"X25519","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","parameterSetIdentifier":"253","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203 + draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"X25519"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.1","name":"TLS 1.1","description":"RFC 8996 deprecates TLS 1.1.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"7 + 2 > 7"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":3,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.0","name":"TLS 1.0","description":"RFC 8996 deprecates TLS 1.0 and 1.1. BEAST, POODLE-adjacent issues.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"15 + 2.2 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\nginx.conf"},{"name":"mosca:location","value":"infra\\openssl.cnf"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.0"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rsa","name":"RSA","description":"Shor factors the modulus in polynomial time. Key size is irrelevant: RSA-16384 falls as fast as RSA-2048.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"pke","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"pke"},{"name":"mosca:replacement","value":"ml-kem-768"},{"name":"mosca:standard","value":"FIPS 203 (ML-KEM) / FIPS 204 (ML-DSA)"},{"name":"mosca:moscaInequality","value":"15 + 2.9 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\billing\\invoice.js"},{"name":"mosca:location","value":"src\\finance\\treasury-report.js"},{"name":"mosca:location","value":"deploy\\tls.sh"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\transport.js"}],"evidence":{"occurrences":12,"identity":{"field":"name","confidence":0.9,"concludedValue":"RSA"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rsa-2048","name":"RSA-2048","description":"Classically fine today, but NIST deprecates it for new use after 2030 and disallows it after 2035.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"pke","parameterSetIdentifier":"2048","executionEnvironment":"software-plain-software","implementationPlatform":"shell","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"pke"},{"name":"mosca:replacement","value":"ml-kem-768"},{"name":"mosca:standard","value":"FIPS 203"},{"name":"mosca:moscaInequality","value":"7 + 2.3 > 7"},{"name":"mosca:location","value":"deploy\\tls.sh"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\transport.js"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"}],"evidence":{"occurrences":5,"identity":{"field":"name","confidence":0.9,"concludedValue":"RSA-2048"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/dh","name":"Diffie-Hellman (finite field)","description":"Shor solves the discrete logarithm problem over finite fields.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"Diffie-Hellman (finite field)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ecdh","name":"ECDH","description":"Shor solves ECDLP. Curve size does not help; P-521 is as dead as P-256.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203 + draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"ECDH"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/3des","name":"Triple DES","description":"64-bit block: Sweet32. NIST disallowed after 2023.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"weak"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\api\\payments.js"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"Triple DES"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-128","name":"AES-128","description":"Grover's algorithm gives ~2^64 quantum work against AES-128. Move to AES-256 for data that must outlive the machine.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"128","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"classicalSecurityLevel":128,"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-128"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-sha1","name":"HMAC-SHA1","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"weak"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:replacement","value":"hmac-sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\api\\auth.js"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-SHA1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.2","name":"TLS 1.2","description":"Acceptable if the cipher suite is AEAD and the key exchange is hybrid.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"15 + 1.8 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.2"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-128-cbc","name":"AES-128-CBC","description":"CBC without an AEAD is vulnerable to padding oracles when not authenticated.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"128","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"mode":"cbc","padding":"pkcs7","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 2 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\payments.js"}],"evidence":{"occurrences":3,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-128-CBC"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/fernet","name":"Fernet (AES-128-CBC + HMAC-SHA256)","description":"Python cryptography Fernet uses a 128-bit AES key.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"Fernet (AES-128-CBC + HMAC-SHA256)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/x25519mlkem768","name":"X25519MLKEM768 (hybrid)","description":"Hybrid: survives a break of either X25519 or ML-KEM. Deployed by Chrome, Firefox, Cloudflare, Google, AWS.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":3}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"X25519MLKEM768 (hybrid)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha256","name":"SHA-256","description":"~128-bit post-quantum preimage security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":128,"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\billing\\invoice.js"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-256"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-sha256","name":"HMAC-SHA256","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\api\\payments.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-SHA256"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-256-cbc","name":"AES-256-CBC","description":"Prefer an AEAD mode (GCM or ChaCha20-Poly1305).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"256","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"mode":"cbc","padding":"pkcs7","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":5}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"10 + 1.5 > 7"},{"name":"mosca:location","value":"src\\billing\\invoice.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-256-CBC"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/pbkdf2","name":"PBKDF2","description":"Weak if the iteration count is low. Prefer Argon2id for passwords.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-derivation","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"kdf"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\crypto\\transport.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"PBKDF2"}}},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/cloudflare.com:443","name":"Certificate cloudflare.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"cloudflare.com","issuerName":"Google Trust Services","notValidBefore":"2026-11-03T22:47:56.000Z","notValidAfter":"2027-02-01T23:47:08.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"cloudflare.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/github.com:443","name":"Certificate github.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"github.com","issuerName":"Sectigo Limited","notValidBefore":"2026-10-30T00:00:00.000Z","notValidAfter":"2027-01-27T23:59:59.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"github.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/en.wikipedia.org:443","name":"Certificate *.wikipedia.org","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"*.wikipedia.org","issuerName":"Let's Encrypt","notValidBefore":"2026-10-04T18:34:51.000Z","notValidAfter":"2027-01-02T18:34:50.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"en.wikipedia.org:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA384"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/example.com:443","name":"Certificate example.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"example.com","issuerName":"SSL Corporation","notValidBefore":"2026-09-26T22:49:11.000Z","notValidAfter":"2026-12-25T22:56:35.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"example.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/protocol/tls-1.3","name":"TLS 1.3","cryptoProperties":{"assetType":"protocol","protocolProperties":{"type":"tls","version":"1.3","cipherSuites":[{"name":"TLS_AES_256_GCM_SHA384","algorithms":[{"ref":"crypto/algorithm/aes-128-gcm"}]}]}},"properties":[{"name":"mosca:keyExchangeGroup","value":"X25519MLKEM768"},{"name":"mosca:hybridKeyExchange","value":"true"}]}]}</script>
+<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-09T13:50:28.949Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":73,"actionable":63,"bySeverity":{"critical":29,"high":23,"medium":11,"low":0,"info":10},"byPrimitive":{"hash":10,"signature":22,"symmetric":12,"mac":4,"key-agreement":9,"protocol":9,"pke":6,"kdf":1},"byKind":{"source":41,"config":12,"endpoint":20},"quantumReadinessIndex":29.6,"hndlExposure":28.6,"hndlApplicable":true,"endpointsInspected":5,"tlsEndpoints":4,"sshEndpoints":1,"endpointsWithPqc":3,"exposedItems":63,"effortDays":64,"sensitivity":[{"year":2029,"yearsToCRQC":3,"exposedItems":63,"exposedShare":100,"totalActionable":63},{"year":2033,"yearsToCRQC":7,"exposedItems":63,"exposedShare":100,"totalActionable":63},{"year":2038,"yearsToCRQC":12,"exposedItems":8,"exposedShare":12.7,"totalActionable":63},{"year":2045,"yearsToCRQC":19,"exposedItems":0,"exposedShare":0,"totalActionable":63}],"topRisk":{"id":"go-hash","kind":"source","title":"SHA-1 — hashing","algorithm":"sha1","algorithmLabel":"SHA-1","primitive":"hash","location":{"file":"services\\identity\\main.go","line":30,"column":7},"snippet":"h := sha1.New()","matched":"sha1.New(","confidence":"high","note":"SHAttered (2017) and chosen-prefix collisions (2020).","language":"go","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":4,"shelfLife":15,"dataClass":"identity data","leadTime":2.2,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":15,"leadTime":2.2,"yearsToCRQC":7,"inequality":"15 + 2.2 > 7","kind":"integrity"},"fingerprint":"38943edea0d97880a20840f45819c64e","positive":false,"score":73.8,"severity":"critical","priority":"P0","replacementLabel":"SHA-256"}},"items":[{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":73.8,"shelfLife":15,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\identity\\main.go","line":30,"column":7},"fingerprint":"38943edea0d97880a20840f45819c64e","baselineStatus":null,"isNew":false},{"algorithm":"ssh-rsa","algorithmLabel":"ssh-rsa (RSA/SHA-1)","quantum":"broken","classical":"broken","severity":"critical","score":73.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"github.com","port":22,"target":"github.com:22"},"fingerprint":"24a4854d067ccfcaa9c985306750e576","baselineStatus":null,"isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":71.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"config","location":{"file":"infra\\openssl.cnf","line":6,"column":1},"fingerprint":"04a6d22c129f3207c24fc9bff1e85ce8","baselineStatus":null,"isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":70.5,"shelfLife":10,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\finance\\treasury-report.js","line":12,"column":25},"fingerprint":"cbedc23e6c98bbe9f95d363c47423b4b","baselineStatus":null,"isNew":false},{"algorithm":"ssh-rsa","algorithmLabel":"ssh-rsa (RSA/SHA-1)","quantum":"broken","classical":"broken","severity":"critical","score":69.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":14,"column":1},"fingerprint":"5e78cc0bb105f22f0628eb62ff28c12c","baselineStatus":null,"isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"deploy\\tls.sh","line":27,"column":1},"fingerprint":"1a347b7971d81bd006bf7b1e0cee1c58","baselineStatus":null,"isNew":false},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":36,"column":32},"fingerprint":"e1c49811a98027444149ec0571273454","baselineStatus":null,"isNew":false},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"services\\ledger\\main.py","line":29,"column":12},"fingerprint":"6bb4893ff17279850ee4f3542755d277","baselineStatus":null,"isNew":false},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\api\\auth.js","line":34,"column":17},"fingerprint":"1257a2047a8062f7461ab2e3fd92d510","baselineStatus":null,"isNew":false},{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":68.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":9,"column":17},"fingerprint":"4f47facdf6a6b30bd03ff23b7456f61f","baselineStatus":null,"isNew":false},{"algorithm":"rc4","algorithmLabel":"RC4","quantum":"broken","classical":"broken","severity":"critical","score":68.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"symmetric","kind":"config","location":{"file":"infra\\nginx.conf","line":18,"column":1},"fingerprint":"517c73b8c80d161e3f035ecef70a38be","baselineStatus":null,"isNew":false},{"algorithm":"hmac-md5","algorithmLabel":"HMAC-MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"mac","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":13,"column":17},"fingerprint":"0dfacb06e30932c7c56a202f5f80fe57","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"},"fingerprint":"f8dc481f44d20d6e52933093ce0a74f5","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"},"fingerprint":"30fc03b7ea341608f4591475dfa41476","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"},"fingerprint":"c3a6852147d9fc3d36fb6995c0dc330a","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"},"fingerprint":"9b99c66f8b54179ad5d74f5e15c892e2","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"},"fingerprint":"21b681eb407dff9a18e6d6d185df1283","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"},"fingerprint":"8d6376f4037a29bd22245b135949c71f","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"},"fingerprint":"9c9efe82c90c52282da246987ff53f3f","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"critical","score":63,"shelfLife":7,"leadTime":2.7,"priority":"P0","primitive":"signature","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"},"fingerprint":"118185090dd91863aa0b0b921d9a6fb1","baselineStatus":null,"isNew":false},{"algorithm":"x25519","algorithmLabel":"X25519","quantum":"broken","classical":"strong","severity":"critical","score":58.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"key-agreement","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"},"fingerprint":"7ce0115a04fe428acc39714e19782c24","baselineStatus":null,"isNew":false},{"algorithm":"x25519","algorithmLabel":"X25519","quantum":"broken","classical":"strong","severity":"critical","score":58.6,"shelfLife":7,"leadTime":1.8,"priority":"P0","primitive":"key-agreement","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"},"fingerprint":"6fff7983eb0f059ab2c4cd1dc79216f0","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":54.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"},"fingerprint":"1b6b668305c258d38a3837705aa7da49","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":54.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"},"fingerprint":"8ebd1ba04f1fde3f560c8663a08ab6fa","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":53.8,"shelfLife":15,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":41,"column":3},"fingerprint":"e801bf49fc5a23375cc8ff346b11cb07","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":51.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"config","location":{"file":"infra\\nginx.conf","line":17,"column":1},"fingerprint":"246096352456a884144df6e2156bbaf4","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":51.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"config","location":{"file":"infra\\openssl.cnf","line":23,"column":1},"fingerprint":"d50cc506d96e51294e6c6468b6001013","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.0","algorithmLabel":"TLS 1.0","quantum":"weakened","classical":"broken","severity":"critical","score":48.5,"shelfLife":7,"leadTime":2.2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":42,"column":16},"fingerprint":"fcc9e01f5ef8a01c29052c4986b85312","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.1","algorithmLabel":"TLS 1.1","quantum":"weakened","classical":"broken","severity":"critical","score":47.7,"shelfLife":7,"leadTime":2,"priority":"P0","primitive":"protocol","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":28,"column":3},"fingerprint":"0f2c50b12876aa32771e3b0d85e749dc","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":65.3,"shelfLife":15,"leadTime":2.9,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"services\\identity\\main.go","line":20,"column":14},"fingerprint":"d76c9884a4903f43c3586cb614d6c3de","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":62.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":9,"column":1},"fingerprint":"eb1c3ef52d959c77641a98c1be59d2ea","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":61.9,"shelfLife":10,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\billing\\invoice.js","line":25,"column":25},"fingerprint":"6aa1462ccf0a286f6ed8b7b0be022b80","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":61.9,"shelfLife":10,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\finance\\treasury-report.js","line":13,"column":28},"fingerprint":"87d1e9f0f1966ee9a569ea5b6614b4cb","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"deploy\\tls.sh","line":24,"column":1},"fingerprint":"f962520f5f0844a1fc4dd795cfcf37fe","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":22,"column":38},"fingerprint":"22e550332b3a7f224ad8339d23ecfdae","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":28,"column":31},"fingerprint":"eec7600e52abf3d09c6e408bfc5ffc94","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":11,"column":42},"fingerprint":"9869163a2eaaf65c0c08d60bc98fe9f5","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":21,"column":7},"fingerprint":"4f2d636cf4db67fd45bbc6a65d662d5d","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\api\\auth.js","line":26,"column":41},"fingerprint":"af1eba15f83e52fef0f3d6430c63033d","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\crypto\\transport.js","line":23,"column":25},"fingerprint":"f1cd7be274ca34678043dc4ca1869f7d","baselineStatus":null,"isNew":false},{"algorithm":"rsa","algorithmLabel":"RSA","quantum":"broken","classical":"acceptable","severity":"high","score":59.9,"shelfLife":7,"leadTime":2.9,"priority":"P1","primitive":"signature","kind":"source","location":{"file":"src\\crypto\\transport.js","line":30,"column":17},"fingerprint":"482faedf15d9f4b65eaef1c5f3d169bd","baselineStatus":null,"isNew":false},{"algorithm":"ecdsa","algorithmLabel":"ECDSA","quantum":"broken","classical":"strong","severity":"high","score":59,"shelfLife":7,"leadTime":2.7,"priority":"P1","primitive":"signature","kind":"config","location":{"file":"infra\\sshd_config","line":10,"column":1},"fingerprint":"6e148143096775a226bbb4545f19e2cb","baselineStatus":null,"isNew":false},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"deploy\\tls.sh","line":12,"column":1},"fingerprint":"1c30fd3350744f1cda79d3832bd61802","baselineStatus":null,"isNew":false},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"services\\ledger\\main.py","line":20,"column":12},"fingerprint":"c3bcb54682a3437c8997a847fa2377b6","baselineStatus":null,"isNew":false},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"src\\api\\auth.js","line":12,"column":3},"fingerprint":"a0301d48cf572c93660c892c5ca2d834","baselineStatus":null,"isNew":false},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"high","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P1","primitive":"pke","kind":"source","location":{"file":"src\\crypto\\transport.js","line":31,"column":5},"fingerprint":"6b8e897d9db7ed6b8be8ef51714c2baa","baselineStatus":null,"isNew":false},{"algorithm":"dh","algorithmLabel":"Diffie-Hellman (finite field)","quantum":"broken","classical":"acceptable","severity":"high","score":56.2,"shelfLife":7,"leadTime":1.5,"priority":"P1","primitive":"key-agreement","kind":"config","location":{"file":"infra\\sshd_config","line":17,"column":1},"fingerprint":"52b9b0e5d069b56547f70afd4b583908","baselineStatus":null,"isNew":false},{"algorithm":"ecdh","algorithmLabel":"ECDH","quantum":"broken","classical":"strong","severity":"high","score":53.2,"shelfLife":7,"leadTime":1.5,"priority":"P1","primitive":"key-agreement","kind":"config","location":{"file":"infra\\nginx.conf","line":22,"column":1},"fingerprint":"4aec6258cfc1d8006e70cd6584ffadf1","baselineStatus":null,"isNew":false},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"high","score":45.5,"shelfLife":7,"leadTime":2.2,"priority":"P1","primitive":"symmetric","kind":"config","location":{"file":"infra\\nginx.conf","line":18,"column":1},"fingerprint":"59de8c6d6449844d7a114d981c0f2ab0","baselineStatus":null,"isNew":false},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"high","score":45.5,"shelfLife":7,"leadTime":2.2,"priority":"P1","primitive":"symmetric","kind":"config","location":{"file":"infra\\sshd_config","line":20,"column":1},"fingerprint":"3968a2f2ec345589782f5c58c3806e12","baselineStatus":null,"isNew":false},{"algorithm":"aes-128","algorithmLabel":"AES-128","quantum":"weakened","classical":"strong","severity":"high","score":38.6,"shelfLife":7,"leadTime":1.8,"priority":"P1","primitive":"symmetric","kind":"endpoint","location":{"host":"en.wikipedia.org","port":443,"target":"en.wikipedia.org"},"fingerprint":"0b2a2cdb84a38fd022d3011fc54a11b3","baselineStatus":null,"isNew":false},{"algorithm":"aes-128","algorithmLabel":"AES-128","quantum":"weakened","classical":"strong","severity":"high","score":38.6,"shelfLife":7,"leadTime":1.8,"priority":"P1","primitive":"symmetric","kind":"endpoint","location":{"host":"github.com","port":443,"target":"github.com"},"fingerprint":"df68eae382dba5811aa16652cbfa0dd8","baselineStatus":null,"isNew":false},{"algorithm":"rsa-2048","algorithmLabel":"RSA-2048","quantum":"broken","classical":"acceptable","severity":"medium","score":57.1,"shelfLife":7,"leadTime":2.3,"priority":"P2","primitive":"pke","kind":"source","location":{"file":"services\\gateway\\SignatureService.java","line":23,"column":19},"fingerprint":"4a5b236626084a213a5fa8965500d1a8","baselineStatus":null,"isNew":false},{"algorithm":"hmac-sha1","algorithmLabel":"HMAC-SHA1","quantum":"weakened","classical":"weak","severity":"medium","score":43.6,"shelfLife":7,"leadTime":1.8,"priority":"P2","primitive":"mac","kind":"config","location":{"file":"infra\\sshd_config","line":23,"column":1},"fingerprint":"e3c2d949003ae7dfc128e8b25a981a4d","baselineStatus":null,"isNew":false},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"medium","score":42.5,"shelfLife":7,"leadTime":2.2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":33,"column":25},"fingerprint":"ac3cb27e89f147e88301e142c09f85dc","baselineStatus":null,"isNew":false},{"algorithm":"3des","algorithmLabel":"Triple DES","quantum":"weakened","classical":"weak","severity":"medium","score":42.5,"shelfLife":7,"leadTime":2.2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\crypto\\legacy.js","line":17,"column":25},"fingerprint":"5041aeef754519e2b3ec42caa73ae9c4","baselineStatus":null,"isNew":false},{"algorithm":"hmac-sha1","algorithmLabel":"HMAC-SHA1","quantum":"weakened","classical":"weak","severity":"medium","score":40.6,"shelfLife":7,"leadTime":1.8,"priority":"P2","primitive":"mac","kind":"source","location":{"file":"src\\api\\auth.js","line":46,"column":17},"fingerprint":"3597c976be610e012428dc4809871276","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.2","algorithmLabel":"TLS 1.2","quantum":"weakened","classical":"acceptable","severity":"medium","score":40,"shelfLife":15,"leadTime":1.8,"priority":"P2","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":42,"column":3},"fingerprint":"7a7a62b79564649bb8d47f5ffe016ff6","baselineStatus":null,"isNew":false},{"algorithm":"tls-1.2","algorithmLabel":"TLS 1.2","quantum":"weakened","classical":"acceptable","severity":"medium","score":40,"shelfLife":15,"leadTime":1.8,"priority":"P2","primitive":"protocol","kind":"source","location":{"file":"services\\identity\\main.go","line":44,"column":4},"fingerprint":"8367e72848d5a1388acbc3121d99b7ef","baselineStatus":null,"isNew":false},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"services\\ledger\\main.py","line":40,"column":21},"fingerprint":"3ec11336d449056077df2c1a76522f2a","baselineStatus":null,"isNew":false},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":11,"column":25},"fingerprint":"be5af587d2d38c02a145be0c9bd31122","baselineStatus":null,"isNew":false},{"algorithm":"aes-128-cbc","algorithmLabel":"AES-128-CBC","quantum":"weakened","classical":"acceptable","severity":"medium","score":35.7,"shelfLife":7,"leadTime":2,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"src\\api\\payments.js","line":16,"column":27},"fingerprint":"9f5267b6d5c1cb895fda1bc83ace8d1c","baselineStatus":null,"isNew":false},{"algorithm":"fernet","algorithmLabel":"Fernet (AES-128-CBC + HMAC-SHA256)","quantum":"weakened","classical":"strong","severity":"medium","score":30.2,"shelfLife":7,"leadTime":1.5,"priority":"P2","primitive":"symmetric","kind":"source","location":{"file":"services\\ledger\\main.py","line":34,"column":12},"fingerprint":"a14b9340c4315430fff21cc37cc276af","baselineStatus":null,"isNew":false},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"},"fingerprint":"fa9bb249c4c3f6599e9ace259365708c","baselineStatus":null,"isNew":false},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"cloudflare.com","port":443,"target":"cloudflare.com"},"fingerprint":"b8079ccc1fdac87b5f90a575434d1e9f","baselineStatus":null,"isNew":false},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"},"fingerprint":"b55b904e478b60b6537bf3b25af29bfa","baselineStatus":null,"isNew":false},{"algorithm":"x25519mlkem768","algorithmLabel":"X25519MLKEM768 (hybrid)","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":2.2,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"example.com","port":443,"target":"example.com"},"fingerprint":"48577f59a421072e253c89f177e00ef0","baselineStatus":null,"isNew":false},{"algorithm":"mlkem768x25519-sha256","algorithmLabel":"mlkem768x25519-sha256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":1.5,"priority":"—","primitive":"key-agreement","kind":"endpoint","location":{"host":"github.com","port":22,"target":"github.com:22"},"fingerprint":"344472d6b99981ab73ab0fc9dcee41d0","baselineStatus":null,"isNew":false},{"algorithm":"sha256","algorithmLabel":"SHA-256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":1.8,"priority":"—","primitive":"hash","kind":"source","location":{"file":"services\\ledger\\main.py","line":24,"column":50},"fingerprint":"bf545acbd204fe8414aca6671670bb70","baselineStatus":null,"isNew":false},{"algorithm":"hmac-sha256","algorithmLabel":"HMAC-SHA256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":7,"leadTime":1.5,"priority":"—","primitive":"mac","kind":"source","location":{"file":"src\\api\\payments.js","line":24,"column":17},"fingerprint":"9cdd4324513e31f8bb0058fb8483ae9b","baselineStatus":null,"isNew":false},{"algorithm":"sha256","algorithmLabel":"SHA-256","quantum":"safe","classical":"strong","severity":"info","score":0,"shelfLife":10,"leadTime":1.8,"priority":"—","primitive":"hash","kind":"source","location":{"file":"src\\billing\\invoice.js","line":17,"column":17},"fingerprint":"81b360f242b6d00ee5a04b917ac5414d","baselineStatus":null,"isNew":false},{"algorithm":"aes-256-cbc","algorithmLabel":"AES-256-CBC","quantum":"safe","classical":"acceptable","severity":"info","score":0,"shelfLife":10,"leadTime":1.5,"priority":"—","primitive":"symmetric","kind":"source","location":{"file":"src\\billing\\invoice.js","line":11,"column":25},"fingerprint":"d13bead2b2c657d8fc5132b4f9f4a090","baselineStatus":null,"isNew":false},{"algorithm":"pbkdf2","algorithmLabel":"PBKDF2","quantum":"safe","classical":"acceptable","severity":"info","score":0,"shelfLife":7,"leadTime":1.5,"priority":"—","primitive":"kdf","kind":"source","location":{"file":"src\\crypto\\transport.js","line":41,"column":17},"fingerprint":"f34bbfb5efd65c86fa6fabe026be2155","baselineStatus":null,"isNew":false}]}</script>
+<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:95f7d722-1a20-4eb4-9926-c0ba084f0d1c","version":1,"metadata":{"timestamp":"2026-11-09T13:50:28.949Z","tools":{"components":[{"type":"application","name":"mosca","version":"2.0.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","name":"vulnerable-app","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"29.6"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"28.6%"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"15 + 2.2 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\openssl.cnf"},{"name":"mosca:location","value":"src\\finance\\treasury-report.js"},{"name":"mosca:location","value":"deploy\\tls.sh"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ssh-rsa","name":"ssh-rsa (RSA/SHA-1)","description":"Disabled by default in OpenSSH 8.8+. SHA-1 signature.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"signature"},{"name":"mosca:replacement","value":"ml-dsa-65"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"ssh-rsa (RSA/SHA-1)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"java","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rc4","name":"RC4","description":"Biased keystream. Prohibited by RFC 7465.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"RC4"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-md5","name":"HMAC-MD5","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:replacement","value":"hmac-sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ecdsa","name":"ECDSA","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","parameterSetIdentifier":"256","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"signature"},{"name":"mosca:replacement","value":"ml-dsa-65"},{"name":"mosca:standard","value":"FIPS 204"},{"name":"mosca:moscaInequality","value":"7 + 2.7 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":9,"identity":{"field":"name","confidence":0.9,"concludedValue":"ECDSA"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/x25519","name":"X25519","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","parameterSetIdentifier":"253","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203 + draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"X25519"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.1","name":"TLS 1.1","description":"RFC 8996 deprecates TLS 1.1.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"7 + 2 > 7"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":3,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.0","name":"TLS 1.0","description":"RFC 8996 deprecates TLS 1.0 and 1.1. BEAST, POODLE-adjacent issues.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"15 + 2.2 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\nginx.conf"},{"name":"mosca:location","value":"infra\\openssl.cnf"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.0"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rsa","name":"RSA","description":"Shor factors the modulus in polynomial time. Key size is irrelevant: RSA-16384 falls as fast as RSA-2048.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"pke","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"pke"},{"name":"mosca:replacement","value":"ml-kem-768"},{"name":"mosca:standard","value":"FIPS 203 (ML-KEM) / FIPS 204 (ML-DSA)"},{"name":"mosca:moscaInequality","value":"15 + 2.9 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\billing\\invoice.js"},{"name":"mosca:location","value":"src\\finance\\treasury-report.js"},{"name":"mosca:location","value":"deploy\\tls.sh"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\transport.js"}],"evidence":{"occurrences":12,"identity":{"field":"name","confidence":0.9,"concludedValue":"RSA"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/rsa-2048","name":"RSA-2048","description":"Classically fine today, but NIST deprecates it for new use after 2030 and disallows it after 2035.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"pke","parameterSetIdentifier":"2048","executionEnvironment":"software-plain-software","implementationPlatform":"shell","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"pke"},{"name":"mosca:replacement","value":"ml-kem-768"},{"name":"mosca:standard","value":"FIPS 203"},{"name":"mosca:moscaInequality","value":"7 + 2.3 > 7"},{"name":"mosca:location","value":"deploy\\tls.sh"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\auth.js"},{"name":"mosca:location","value":"src\\crypto\\transport.js"},{"name":"mosca:location","value":"services\\gateway\\SignatureService.java"}],"evidence":{"occurrences":5,"identity":{"field":"name","confidence":0.9,"concludedValue":"RSA-2048"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/dh","name":"Diffie-Hellman (finite field)","description":"Shor solves the discrete logarithm problem over finite fields.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"Diffie-Hellman (finite field)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/ecdh","name":"ECDH","description":"Shor solves ECDLP. Curve size does not help; P-521 is as dead as P-256.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":["fips140-2"],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"FIPS 203 + draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"ECDH"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/3des","name":"Triple DES","description":"64-bit block: Sweet32. NIST disallowed after 2023.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"weak"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"},{"name":"mosca:location","value":"infra\\nginx.conf"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\api\\payments.js"},{"name":"mosca:location","value":"src\\crypto\\legacy.js"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"Triple DES"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-128","name":"AES-128","description":"Grover's algorithm gives ~2^64 quantum work against AES-128. Move to AES-256 for data that must outlive the machine.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"128","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"classicalSecurityLevel":128,"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"high"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-128"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-sha1","name":"HMAC-SHA1","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"weak"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:replacement","value":"hmac-sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"},{"name":"mosca:location","value":"infra\\sshd_config"},{"name":"mosca:location","value":"src\\api\\auth.js"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-SHA1"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/tls-1.2","name":"TLS 1.2","description":"Acceptable if the cipher suite is AEAD and the key exchange is hybrid.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"other","executionEnvironment":"software-plain-software","implementationPlatform":"go","certificationLevel":[],"padding":"none","cryptoFunctions":[],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"protocol"},{"name":"mosca:replacement","value":"tls-1.3"},{"name":"mosca:moscaInequality","value":"15 + 1.8 > 7"},{"name":"mosca:location","value":"services\\identity\\main.go"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"TLS 1.2"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-128-cbc","name":"AES-128-CBC","description":"CBC without an AEAD is vulnerable to padding oracles when not authenticated.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"128","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"mode":"cbc","padding":"pkcs7","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 2 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\api\\payments.js"}],"evidence":{"occurrences":3,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-128-CBC"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/fernet","name":"Fernet (AES-128-CBC + HMAC-SHA256)","description":"Python cryptography Fernet uses a 128-bit AES key.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"padding":"none","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"weakened"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"medium"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"Fernet (AES-128-CBC + HMAC-SHA256)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/x25519mlkem768","name":"X25519MLKEM768 (hybrid)","description":"Hybrid: survives a break of either X25519 or ML-KEM. Deployed by Chrome, Firefox, Cloudflare, Google, AWS.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":3}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:replacement","value":"x25519mlkem768"},{"name":"mosca:standard","value":"draft-ietf-tls-ecdhe-mlkem"},{"name":"mosca:moscaInequality","value":"7 + 2.2 > 7"}],"evidence":{"occurrences":4,"identity":{"field":"name","confidence":0.9,"concludedValue":"X25519MLKEM768 (hybrid)"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/mlkem768x25519-sha256","name":"mlkem768x25519-sha256","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agreement","executionEnvironment":"software-plain-software","implementationPlatform":"unknown","certificationLevel":[],"padding":"none","cryptoFunctions":["keygen","derive"],"nistQuantumSecurityLevel":3}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"key-agreement"},{"name":"mosca:standard","value":"OpenSSH 9.9+"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"mlkem768x25519-sha256"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha256","name":"SHA-256","description":"~128-bit post-quantum preimage security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"python","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":128,"nistQuantumSecurityLevel":1}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:moscaInequality","value":"7 + 1.8 > 7"},{"name":"mosca:location","value":"services\\ledger\\main.py"},{"name":"mosca:location","value":"src\\billing\\invoice.js"}],"evidence":{"occurrences":2,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-256"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/hmac-sha256","name":"HMAC-SHA256","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["sign","verify"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"strong"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"mac"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\api\\payments.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"HMAC-SHA256"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/aes-256-cbc","name":"AES-256-CBC","description":"Prefer an AEAD mode (GCM or ChaCha20-Poly1305).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"block-cipher","parameterSetIdentifier":"256","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"mode":"cbc","padding":"pkcs7","cryptoFunctions":["encrypt","decrypt"],"nistQuantumSecurityLevel":5}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"symmetric"},{"name":"mosca:replacement","value":"aes-256-gcm"},{"name":"mosca:moscaInequality","value":"10 + 1.5 > 7"},{"name":"mosca:location","value":"src\\billing\\invoice.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"AES-256-CBC"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/pbkdf2","name":"PBKDF2","description":"Weak if the iteration count is low. Prefer Argon2id for passwords.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-derivation","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["derive"],"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"safe"},{"name":"mosca:classicalStatus","value":"acceptable"},{"name":"mosca:severity","value":"info"},{"name":"mosca:primitive","value":"kdf"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\crypto\\transport.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"PBKDF2"}}},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/cloudflare.com:443","name":"Certificate cloudflare.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"cloudflare.com","issuerName":"Google Trust Services","notValidBefore":"2026-11-03T22:47:56.000Z","notValidAfter":"2027-02-01T23:47:08.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"cloudflare.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/github.com:443","name":"Certificate github.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"github.com","issuerName":"Sectigo Limited","notValidBefore":"2026-10-30T00:00:00.000Z","notValidAfter":"2027-01-27T23:59:59.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"github.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/en.wikipedia.org:443","name":"Certificate *.wikipedia.org","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"*.wikipedia.org","issuerName":"Let's Encrypt","notValidBefore":"2026-10-04T18:34:51.000Z","notValidAfter":"2027-01-02T18:34:50.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"en.wikipedia.org:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA384"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/certificate/example.com:443","name":"Certificate example.com","cryptoProperties":{"assetType":"certificate","certificateProperties":{"subjectName":"example.com","issuerName":"SSL Corporation","notValidBefore":"2026-09-26T22:49:11.000Z","notValidAfter":"2026-12-25T22:56:35.000Z","signatureAlgorithmRef":"crypto/algorithm/ecdsa","subjectPublicKeyRef":"crypto/algorithm/ecdsa","certificateFormat":"X.509"}},"properties":[{"name":"mosca:endpoint","value":"example.com:443"},{"name":"mosca:signatureAlgorithm","value":"ecdsa-with-SHA256"},{"name":"mosca:publicKeyAlgorithm","value":"ECDSA 256"}]},{"type":"cryptographic-asset","bom-ref":"crypto/protocol/tls-1.3","name":"TLS 1.3","cryptoProperties":{"assetType":"protocol","protocolProperties":{"type":"tls","version":"1.3","cipherSuites":[{"name":"TLS_AES_256_GCM_SHA384","algorithms":[{"ref":"crypto/algorithm/aes-128-gcm"}]}]}},"properties":[{"name":"mosca:keyExchangeGroup","value":"X25519MLKEM768"},{"name":"mosca:hybridKeyExchange","value":"true"}]},{"type":"cryptographic-asset","bom-ref":"crypto/protocol/ssh-github.com-22","name":"SSH 9bd49d50 on github.com:22","description":"SSH-2.0-9bd49d50","cryptoProperties":{"assetType":"protocol","protocolProperties":{"type":"ssh","version":"2.0","cipherSuites":[{"name":"chacha20-poly1305@openssh.com","algorithms":[]},{"name":"aes256-gcm@openssh.com","algorithms":[]},{"name":"aes128-gcm@openssh.com","algorithms":[]},{"name":"aes256-ctr","algorithms":[]},{"name":"aes192-ctr","algorithms":[]},{"name":"aes128-ctr","algorithms":[]}]}},"properties":[{"name":"mosca:endpoint","value":"github.com:22"},{"name":"mosca:keyExchange","value":"mlkem768x25519-sha256,sntrup761x25519-sha512,sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,kex-strict-s-v00@openssh.com"},{"name":"mosca:hybridKeyExchange","value":"true"},{"name":"mosca:hostKeyAlgorithms","value":"ssh-ed25519,ecdsa-sha2-nistp256,rsa-sha2-512,rsa-sha2-256,ssh-rsa"},{"name":"mosca:macs","value":"hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"}]}]}</script>
 <script>
 (function(){
   var data = JSON.parse(document.getElementById('mosca-data').textContent);
@@ -1622,7 +1691,8 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     var q = (search && search.value || '').toLowerCase().trim();
     var visible = 0;
     Array.prototype.forEach.call(body.querySelectorAll('tr.finding'), function(row){
-      var sevOk = activeFilter === 'all' || row.dataset.sev === activeFilter;
+      var sevOk = activeFilter === 'all'
+        || (activeFilter === 'new' ? row.dataset.new === '1' : row.dataset.sev === activeFilter);
       var textOk = !q || (row.dataset.text || '').indexOf(q) !== -1;
       var show = sevOk && textOk;
       row.style.display = show ? '' : 'none';

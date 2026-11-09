@@ -34,6 +34,23 @@ if (json) {
   if (json.analysis.summary.totalFindings !== json.analysis.items.length) {
     failures.push('summary.totalFindings does not match the item count');
   }
+  if (!Array.isArray(json.analysis.summary.sensitivity) || json.analysis.summary.sensitivity.length !== 4) {
+    failures.push('summary.sensitivity must contain four CRQC scenarios');
+  }
+  for (const item of json.analysis.items) {
+    if (!item.positive && !item.fingerprint) failures.push(`finding ${item.id} has no stable fingerprint`);
+  }
+  for (const ep of json.sshEndpoints || []) {
+    if (ep.reachable && !Array.isArray(ep.kexAlgorithms)) {
+      failures.push(`SSH endpoint ${ep.host} has no kexAlgorithms`);
+    }
+  }
+  if (json.analysis.summary.baseline?.supplied) {
+    const b = json.analysis.summary.baseline;
+    if (typeof b.newFindings !== 'number' || typeof b.resolvedFindings !== 'number') {
+      failures.push('baseline summary is incomplete');
+    }
+  }
 }
 
 if (cbom) {

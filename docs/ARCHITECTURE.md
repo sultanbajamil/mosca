@@ -51,7 +51,9 @@ what makes the tool auditable and the tests fast.
 | `src/net/clienthello.js` | Raw TLS ClientHello builder and ServerHello parser |
 | `src/net/x509.js` | Dependency-free DER/X.509 parser |
 | `src/net/tls.js` | Endpoint inspection and endpoint finding derivation |
-| `src/analysis/risk.js` | Mosca inequality, scoring, aggregates, roadmap |
+| `src/net/ssh.js` | Raw RFC 4253 banner exchange, KEXINIT parser, SSH findings |
+| `src/analysis/risk.js` | Mosca inequality, scoring, aggregates, sensitivity, roadmap |
+| `src/analysis/baseline.js` | Stable fingerprints, baseline build/load/apply, diff status |
 | `src/report/terminal.js` | ANSI terminal report |
 | `src/report/html.js` | Self-contained interactive report |
 | `src/report/cbom.js` | CycloneDX 1.6 CBOM |
@@ -63,8 +65,8 @@ what makes the tool auditable and the tests fast.
 
 1. `cli.js` parses arguments and builds overrides.
 2. `index.js` loads `mosca.json`, then runs the source scanner, the config
-   scanner and endpoint inspection. Endpoint inspection is parallelised with
-   `Promise.allSettled`; one unreachable host never fails the scan.
+   scanner, TLS endpoint inspection and SSH endpoint inspection. Network work
+   is parallelised with `Promise.all`; one unreachable host never fails the scan.
 3. Every scanner emits the same finding shape:
 
 ```js
@@ -155,6 +157,59 @@ Two details make the difference between a useful probe and a server alert:
 
 The socket is destroyed as soon as the ServerHello is available. No
 application data is sent or received.
+
+## The raw SSH probe
+
+`src/net/ssh.js` implements the smallest useful subset of RFC 4253:
+
+```
+TCP connect
+  ◀  server identification   "SSH-2.0-OpenSSH_9.9p1 ..."
+  ▶  client identification   "SSH-2.0-MOSCA_2.0"
+  ▶  SSH_MSG_KEXINIT          type 20, random cookie, 10 name-lists
+  ◀  SSH_MSG_KEXINIT          parse the server's 10 name-lists
+  ■  close                    no authentication, no key exchange
+```
+
+The binary packet is `uint32 packet_length | uint8 padding_length | payload |
+padding`. The probe aligns the packet to the 8-byte block that applies before
+negotiation and emits at least four padding bytes. `parseKexInit()` reads the
+ten name-lists in order:
+
+1. key exchange
+2. server host key
+3. encryption client→server
+4. encryption server→client
+5. MAC client→server
+6. MAC server→client
+7. compression client→server
+8. compression server→client
+9. languages client→server
+10. languages server→client
+
+The advertised lists are classified through the same registry as every other
+finding. `mlkem768x25519-sha256` and
+`sntrup761x25519-sha512@openssh.com` are positive findings; `ssh-rsa`,
+`ssh-dss`, SHA-1 group exchange, CBC ciphers and MD5/SHA-1 MACs are exposure.
+SSH key-exchange findings participate in the same HNDL ratio as TLS, because a
+recorded SSH session is just as readable after a CRQC as a recorded TLS one.
+
+## Baseline model
+
+`src/analysis/baseline.js` gives every actionable finding a stable identity:
+
+```
+sha256(id | kind | algorithm | primitive | file-or-host:port | normalised line)
+```
+
+Line and column are deliberately absent. Moving code, reformatting it or
+renumbering a file must not create a "new" finding; changing the call must.
+The baseline file stores fingerprints, not raw findings, so it contains no
+source snippets and no secrets. `applyBaseline()` marks each item `new` or
+`existing`, records resolved fingerprints, and adds a `summary.baseline`
+block. `exitCode()` then evaluates only `new` items when a baseline was
+supplied. The same fingerprint is written to SARIF as
+`partialFingerprints.moscaFingerprint` and to `baselineState`.
 
 ## The X.509 parser
 
@@ -254,6 +309,9 @@ because they have no file location; they appear in the CBOM and HTML instead.
 | `test/endpoint.test.js` | Target parsing, protocol normalisation, certificate summary, finding derivation |
 | `test/risk.test.js` | Every scoring direction, Mosca inequality, QRI, HNDL n/a semantics, roadmap phases |
 | `test/report.test.js` | CycloneDX shape, SARIF shape, HTML self-containment and escaping |
+| `test/baseline.test.js` | Line-independent fingerprints, build/apply, new/existing/resolved, file validation |
+| `test/ssh.test.js` | SSH packets, KEXINIT parsing, banner parsing, KEX/cipher/MAC classification |
+| `test/v2.test.js` | Sensitivity, SSH-aware HNDL, registry aliases, SARIF baseline state, SSH CBOM assets |
 | `test/fs.test.js` | Globs, ignore files, binary rejection, comment stripping |
 | `test/config.test.js` | Merge semantics, scenarios, data classes |
 | `test/scan.test.js` | End-to-end scan, determinism, exit codes |

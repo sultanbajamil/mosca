@@ -215,6 +215,34 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
     });
   }
 
+  // SSH servers observed by the raw KEXINIT probe.
+  for (const ep of analysis.sshEndpoints || []) {
+    if (!ep.reachable) continue;
+    const host = `${ep.host}:${ep.port}`;
+    const ref = `crypto/protocol/ssh-${ep.host}-${ep.port}`;
+    components.push({
+      type: 'cryptographic-asset',
+      'bom-ref': ref,
+      name: `SSH ${ep.software || 'server'} on ${host}`,
+      description: ep.banner || undefined,
+      cryptoProperties: {
+        assetType: 'protocol',
+        protocolProperties: {
+          type: 'ssh',
+          version: '2.0',
+          cipherSuites: (ep.encryption || []).slice(0, 12).map((name) => ({ name, algorithms: [] })),
+        },
+      },
+      properties: [
+        { name: 'mosca:endpoint', value: host },
+        { name: 'mosca:keyExchange', value: (ep.kexAlgorithms || []).join(',') },
+        { name: 'mosca:hybridKeyExchange', value: String(Boolean(ep.hybrid)) },
+        { name: 'mosca:hostKeyAlgorithms', value: (ep.serverHostKeyAlgorithms || []).join(',') },
+        { name: 'mosca:macs', value: (ep.macs || []).join(',') },
+      ],
+    });
+  }
+
   const bom = {
     bomFormat: 'CycloneDX',
     specVersion: '1.6',

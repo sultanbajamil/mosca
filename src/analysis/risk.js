@@ -27,6 +27,7 @@
 
 import { lookup, replacementFor, QUANTUM, CLASSICAL } from '../rules/algorithms.js';
 import { shelfLifeFor, resolveCrqcYear } from '../config.js';
+import { fingerprint } from './baseline.js';
 
 export const SEVERITY_ORDER = { info: 0, low: 1, medium: 2, high: 3, critical: 4 };
 export const SEVERITY_LABEL = { 0: 'info', 1: 'low', 2: 'medium', 3: 'high', 4: 'critical' };
@@ -89,13 +90,14 @@ function shift(severity, delta) {
 /**
  * The main analysis entry point.
  *
- * @param {{findings:object[], endpoints:object[], config:object, now?:Date}} input
+ * @param {{findings:object[], endpoints:object[], sshEndpoints?:object[], config:object, now?:Date}} input
  */
-export function analyse({ findings, endpoints = [], config, now = new Date() }) {
+export function analyse({ findings, endpoints = [], sshEndpoints = [], config, now = new Date() }) {
   const crqcYear = resolveCrqcYear(config);
   const currentYear = now.getUTCFullYear();
   const yearsToCRQC = Math.max(0, crqcYear - currentYear);
   const weights = config.weights;
+  const liveEndpoints = [...endpoints, ...sshEndpoints];
 
   // ------------------------------------------------------------------ counts
   const algorithmCounts = new Map();
@@ -138,6 +140,9 @@ export function analyse({ findings, endpoints = [], config, now = new Date() }) 
         kind: confidentiality ? 'confidentiality' : 'integrity',
       },
     };
+    // Stable identity for baseline diffs and SARIF deduplication. Computed
+    // before sorting so it never depends on presentation order.
+    enriched.fingerprint = fingerprint(enriched);
 
     const inherentlySafe =
       enriched.quantum === 'safe' && (enriched.classical === 'strong' || enriched.classical === 'acceptable');
@@ -226,12 +231,14 @@ export function analyse({ findings, endpoints = [], config, now = new Date() }) 
 
   const quantumReadinessIndex = weightedTotal === 0 ? 100 : Math.round((weightedSafe / weightedTotal) * 1000) / 10;
 
-  // HNDL exposure: share of inspected endpoints whose key exchange is classical-only.
+  // HNDL exposure: share of inspected endpoints (TLS and SSH) whose key
+  // exchange is classical-only. One recording of a classical handshake is
+  // enough, whichever protocol carried it.
   const kexItems = items.filter((i) => i.kind === 'endpoint' && i.primitive === 'key-agreement');
   const classicalKex = kexItems.filter((i) => i.quantum === 'broken');
   const hndlExposure = kexItems.length === 0 ? 0 : Math.round((classicalKex.length / kexItems.length) * 1000) / 10;
 
-  const endpointsWithPqc = endpoints.filter((e) => e.hybrid).length;
+  const endpointsWithPqc = liveEndpoints.filter((e) => e.hybrid).length;
 
   const summary = {
     generatedAt: now.toISOString(),
@@ -245,11 +252,14 @@ export function analyse({ findings, endpoints = [], config, now = new Date() }) 
     byKind,
     quantumReadinessIndex,
     hndlExposure,
-    hndlApplicable: endpoints.length > 0,
-    endpointsInspected: endpoints.length,
+    hndlApplicable: liveEndpoints.length > 0,
+    endpointsInspected: liveEndpoints.length,
+    tlsEndpoints: endpoints.length,
+    sshEndpoints: sshEndpoints.length,
     endpointsWithPqc,
     exposedItems: items.filter((i) => i.mosca?.exposed && !i.positive).length,
     effortDays: Math.round(effortDays),
+    sensitivity: computeSensitivity(items, currentYear),
     topRisk: items.find((i) => !i.positive) || null,
   };
 
@@ -267,6 +277,33 @@ export function analyse({ findings, endpoints = [], config, now = new Date() }) 
     roadmap: buildRoadmap(items),
     config,
   };
+}
+
+/**
+ * Sensitivity analysis across plausible CRQC dates.
+ *
+ * The point is not to predict the date. It is to show which decisions are
+ * robust: if a migration only looks urgent under the most aggressive
+ * assumption, that is a very different conversation from an exposure that
+ * exists under every assumption.
+ *
+ * @param {object[]} items enriched findings
+ * @param {number} currentYear
+ */
+export function computeSensitivity(items, currentYear) {
+  const years = [2029, 2033, 2038, 2045];
+  const actionable = items.filter((i) => !i.positive && i.severity !== 'info');
+  return years.map((year) => {
+    const yearsToCRQC = Math.max(0, year - currentYear);
+    const exposed = actionable.filter((i) => i.shelfLife + i.leadTime > yearsToCRQC).length;
+    return {
+      year,
+      yearsToCRQC,
+      exposedItems: exposed,
+      exposedShare: actionable.length === 0 ? 0 : Math.round((exposed / actionable.length) * 1000) / 10,
+      totalActionable: actionable.length,
+    };
+  });
 }
 
 function priorityFor(severity, score) {

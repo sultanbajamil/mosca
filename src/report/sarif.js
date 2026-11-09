@@ -88,8 +88,11 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
         },
       ],
       partialFingerprints: {
-        moscaFingerprint: `${item.id}:${uri}:${item.location.line || 0}`,
+        // Line-independent: moving code must not make SARIF treat the same
+        // defect as a brand-new alert.
+        moscaFingerprint: item.fingerprint || `${item.id}:${uri}`,
       },
+      baselineState: item.baselineStatus === 'new' ? 'new' : 'unchanged',
       properties: {
         algorithm: item.algorithm,
         quantum: item.quantum,
@@ -98,6 +101,7 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
         moscaExposed: item.mosca?.exposed ?? null,
         moscaInequality: item.mosca?.inequality ?? null,
         priority: item.priority,
+        baselineStatus: item.baselineStatus || 'not-compared',
       },
     });
   }

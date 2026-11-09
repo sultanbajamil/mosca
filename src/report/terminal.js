@@ -15,13 +15,13 @@ const WORDMARK = `
   ██║ ╚═╝ ██║╚██████╔╝███████║╚██████╗██║  ██║
   ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝`;
 
-export function printBanner() {
+export function printBanner(version = '2.0.0') {
   const lines = WORDMARK.split('\n');
   for (const line of lines) {
     // Vertical gradient from cyan to magenta.
     process.stdout.write(c.brightCyan(line) + '\n');
   }
-  process.stdout.write(c.gray('  post-quantum exposure scanner') + c.gray('  ·  ') + c.gray('v1.0.0') + '\n\n');
+  process.stdout.write(c.gray('  post-quantum exposure scanner') + c.gray('  ·  ') + c.gray(`v${version}`) + '\n\n');
 }
 
 /**
@@ -41,12 +41,17 @@ export function printSummary(analysis, meta) {
     ? `${s.hndlExposure > 0 ? c.red(`${s.hndlExposure}%`) : c.green('0%')} of internet-facing key exchange is classical-only`
     : c.gray('n/a — no endpoints inspected (add --tls <host>)');
   const suppressed = meta.sourceStats?.suppressed || 0;
+  const surface = `${s.tlsEndpoints ?? s.endpointsInspected} TLS · ${s.sshEndpoints ?? 0} SSH`;
+  const baselineLine = s.baseline?.supplied
+    ? `  ${c.gray('Baseline')}       ${c.bold(String(s.baseline.newFindings))} new · ${s.baseline.existingFindings} existing · ${s.baseline.resolvedFindings} resolved${s.baseline.newFindings > 0 ? c.yellow('  ← regressions') : c.green('  ← no regressions')}\n`
+    : '';
   process.stdout.write(
     `  ${c.gray('Mosca window')}   ${c.bold(String(s.yearsToCRQC))} years to a CRQC (${s.crqcYear})\n` +
       `  ${c.gray('HNDL exposure')}   ${hndlLine}\n` +
       `  ${c.gray('Findings')}        ${c.bold(String(s.totalFindings))} total · ${s.actionable} actionable · ${s.exposedItems} inside the Mosca window\n` +
-      `  ${c.gray('Surface')}         ${meta.sourceStats?.filesScanned || 0} source files · ${meta.configStats?.filesScanned || 0} config files · ${s.endpointsInspected} endpoints${suppressed ? ` · ${suppressed} suppressed` : ''}\n` +
-      `  ${c.gray('Estimated effort')} ${c.bold(String(s.effortDays))} engineer-days across the roadmap\n`,
+      `  ${c.gray('Surface')}         ${meta.sourceStats?.filesScanned || 0} source files · ${meta.configStats?.filesScanned || 0} config files · ${surface}${suppressed ? ` · ${suppressed} suppressed` : ''}\n` +
+      `  ${c.gray('Estimated effort')} ${c.bold(String(s.effortDays))} engineer-days across the roadmap\n` +
+      baselineLine,
   );
   process.stdout.write('\n' + rule(width) + '\n\n');
 
@@ -60,7 +65,18 @@ export function printSummary(analysis, meta) {
   for (const [sev, count] of rows) {
     process.stdout.write(`${severityColor(sev)} ${c.bold(String(count))}   `);
   }
-  process.stdout.write('\n\n');
+  process.stdout.write('\n');
+
+  if (Array.isArray(s.sensitivity) && s.sensitivity.length) {
+    process.stdout.write(`\n  ${c.gray('CRQC sensitivity')}  `);
+    process.stdout.write(
+      s.sensitivity
+        .map((row) => `${c.bold(String(row.year))}: ${row.exposedItems > 0 ? c.yellow(String(row.exposedItems)) : c.green('0')}`)
+        .join(c.gray('  ·  ')),
+    );
+    process.stdout.write(c.gray('  exposed findings\n'));
+  }
+  process.stdout.write('\n');
 }
 
 /**
@@ -75,9 +91,9 @@ export function printFindings(items, { limit = 20 } = {}) {
   process.stdout.write(c.bold('  TOP FINDINGS') + c.gray(`  (${Math.min(limit, items.filter((i) => !i.positive).length)} of ${items.filter((i) => !i.positive).length})`) + '\n\n');
 
   process.stdout.write(
-    `  ${padEnd(c.gray('SEV'), 12)}${padEnd(c.gray('PRI'), 5)}${padEnd(c.gray('ALGORITHM'), 22)}${padEnd(c.gray('LOCATION'), 34)}${c.gray('REPLACE WITH')}\n`,
+    `  ${padEnd(c.gray('SEV'), 12)}${padEnd(c.gray('PRI'), 5)}${padEnd(c.gray('NEW'), 5)}${padEnd(c.gray('ALGORITHM'), 22)}${padEnd(c.gray('LOCATION'), 34)}${c.gray('REPLACE WITH')}\n`,
   );
-  process.stdout.write('  ' + c.gray('─'.repeat(96)) + '\n');
+  process.stdout.write('  ' + c.gray('─'.repeat(101)) + '\n');
 
   for (const item of shown) {
     const loc = item.location?.file
@@ -85,7 +101,7 @@ export function printFindings(items, { limit = 20 } = {}) {
       : `${item.location?.host}:${item.location?.port}`;
     const repl = item.replacement ? lookup(item.replacement).label : '—';
     process.stdout.write(
-      `  ${padEnd(severityColor(item.severity), 12)}${padEnd(c.gray(item.priority), 5)}${padEnd(item.algorithmLabel || item.algorithm, 22)}${padEnd(truncate(loc, 32), 34)}${c.green(repl)}\n`,
+      `  ${padEnd(severityColor(item.severity), 12)}${padEnd(c.gray(item.priority), 5)}${padEnd(item.baselineStatus === 'new' ? c.magenta('NEW') : '', 5)}${padEnd(item.algorithmLabel || item.algorithm, 22)}${padEnd(truncate(loc, 32), 34)}${c.green(repl)}\n`,
     );
   }
   process.stdout.write('\n');
@@ -108,6 +124,28 @@ export function printEndpoints(endpoints) {
     const posture = ep.hybrid ? c.green('● hybrid PQC') : c.red('○ classical');
     process.stdout.write(
       `  ${padEnd(host, 30)}${padEnd(ep.protocol || '?', 10)}${padEnd(ep.groupLabel || '—', 24)}${padEnd(ep.certificate?.signature?.name || '—', 24)}${posture}\n`,
+    );
+  }
+  process.stdout.write('\n');
+}
+
+/** Print the SSH endpoint matrix. */
+export function printSshEndpoints(endpoints) {
+  if (!endpoints?.length) return;
+  process.stdout.write(c.bold('  SSH ENDPOINTS') + '\n\n');
+  process.stdout.write(
+    `  ${padEnd(c.gray('HOST'), 30)}${padEnd(c.gray('BANNER'), 30)}${padEnd(c.gray('KEY EXCHANGE'), 32)}${c.gray('HOST KEY')}\n`,
+  );
+  process.stdout.write('  ' + c.gray('─'.repeat(110)) + '\n');
+  for (const ep of endpoints) {
+    const host = `${ep.host}${ep.port !== 22 ? `:${ep.port}` : ''}`;
+    if (!ep.reachable) {
+      process.stdout.write(`  ${padEnd(host, 30)}${c.red('unreachable')} ${c.gray(truncate(ep.error || '', 60))}\n`);
+      continue;
+    }
+    const posture = ep.hybrid ? c.green(`● ${ep.hybridAlgorithm || 'hybrid'}`) : c.red(`○ ${ep.kexAlgorithms?.[0] || 'classical'}`);
+    process.stdout.write(
+      `  ${padEnd(host, 30)}${padEnd(truncate(ep.software || '—', 28), 30)}${padEnd(posture, 32)}${c.gray(ep.serverHostKeyAlgorithms?.[0] || '—')}\n`,
     );
   }
   process.stdout.write('\n');

@@ -1,7 +1,7 @@
 {
   "name": "mosca-pqc",
-  "version": "1.0.0",
-  "description": "MOSCA — post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source code, config files and live TLS endpoints, scores harvest-now-decrypt-later risk with Mosca's inequality, and emits a CycloneDX CBOM.",
+  "version": "2.0.0",
+  "description": "MOSCA — CI-native post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source, config, live TLS and SSH endpoints, diffs against a baseline, scores harvest-now-decrypt-later risk with Mosca's inequality, and emits CycloneDX CBOM + SARIF.",
   "type": "module",
   "bin": {
     "mosca": "bin/mosca.js"
@@ -13,6 +13,7 @@
   "files": [
     "bin",
     "src",
+    "action.yml",
     "docs/METHODOLOGY.md",
     "docs/ARCHITECTURE.md",
     "README.md",
@@ -36,6 +37,8 @@
     "demo": "node bin/mosca.js demo",
     "scan": "node bin/mosca.js scan",
     "tls": "node bin/mosca.js tls",
+    "ssh": "node bin/mosca.js ssh",
+    "explain": "node bin/mosca.js explain",
     "validate": "node scripts/validate-artifacts.js",
     "check": "node scripts/check-zero-deps.js && node --test"
   },
@@ -53,6 +56,9 @@
     "ml-kem",
     "ml-dsa",
     "tls",
+    "ssh",
+    "baseline",
+    "github-actions",
     "scanner",
     "compliance",
     "cnsa-2.0"
