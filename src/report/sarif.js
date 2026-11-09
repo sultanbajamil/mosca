@@ -112,7 +112,7 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
             name: 'MOSCA',
             fullName: 'MOSCA Post-Quantum Cryptography Exposure Scanner',
             version: toolVersion,
-            informationUri: 'https://github.com/mosca-pqc/mosca',
+            informationUri: 'https://github.com/sultanbajamil/mosca',
             rules: [...rules.values()],
           },
         },

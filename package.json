@@ -20,13 +20,13 @@
     "SECURITY.md",
     "LICENSE"
   ],
-  "homepage": "https://github.com/mosca-pqc/mosca#readme",
+  "homepage": "https://github.com/sultanbajamil/mosca#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mosca-pqc/mosca.git"
+    "url": "git+https://github.com/sultanbajamil/mosca.git"
   },
   "bugs": {
-    "url": "https://github.com/mosca-pqc/mosca/issues"
+    "url": "https://github.com/sultanbajamil/mosca/issues"
   },
   "engines": {
     "node": ">=20.0.0"

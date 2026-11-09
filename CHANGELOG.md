@@ -60,5 +60,5 @@ First release.
   for signatures.
 - A key-generation call is reported once, with the more specific key size.
 
-[Unreleased]: https://github.com/mosca-pqc/mosca/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/mosca-pqc/mosca/releases/tag/v1.0.0
+[Unreleased]: https://github.com/sultanbajamil/mosca/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/sultanbajamil/mosca/releases/tag/v1.0.0
