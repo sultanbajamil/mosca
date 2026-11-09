@@ -1,0 +1,14 @@
+node_modules/
+out/
+demo-report/
+mosca-report/
+selfscan/
+*.tgz
+*.log
+.DS_Store
+Thumbs.db
+.env
+.idea/
+.vscode/
+coverage/
+tmp/

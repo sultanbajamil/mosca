@@ -1,0 +1,63 @@
+name: Bug report
+description: Something scanned wrong, crashed, or produced an invalid artefact.
+title: 'bug: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not paste production source code or
+        private host names; a minimal snippet is enough.
+
+  - type: input
+    id: version
+    attributes:
+      label: MOSCA version
+      description: Output of `mosca --version`.
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version and platform
+      placeholder: v22.17.1 on Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran.
+      render: shell
+      placeholder: mosca scan . --tls example.com --format html
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Include the relevant terminal output or a sanitised report excerpt.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: |
+        A short snippet, a `mosca.json`, or a public host name we can probe.
+        This is the difference between a fix this week and a bug that stays open.
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,64 @@
+{
+  "name": "mosca-pqc",
+  "version": "1.0.0",
+  "description": "MOSCA — post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source code, config files and live TLS endpoints, scores harvest-now-decrypt-later risk with Mosca's inequality, and emits a CycloneDX CBOM.",
+  "type": "module",
+  "bin": {
+    "mosca": "bin/mosca.js"
+  },
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs/METHODOLOGY.md",
+    "docs/ARCHITECTURE.md",
+    "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "homepage": "https://github.com/mosca-pqc/mosca#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mosca-pqc/mosca.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mosca-pqc/mosca/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node bin/mosca.js demo",
+    "scan": "node bin/mosca.js scan",
+    "tls": "node bin/mosca.js tls",
+    "validate": "node scripts/validate-artifacts.js",
+    "check": "node scripts/check-zero-deps.js && node --test"
+  },
+  "keywords": [
+    "post-quantum",
+    "pqc",
+    "cryptography",
+    "cbom",
+    "cyclonedx",
+    "harvest-now-decrypt-later",
+    "hndl",
+    "mosca",
+    "security",
+    "sbom",
+    "ml-kem",
+    "ml-dsa",
+    "tls",
+    "scanner",
+    "compliance",
+    "cnsa-2.0"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

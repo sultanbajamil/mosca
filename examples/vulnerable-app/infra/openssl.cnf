@@ -1,0 +1,24 @@
+# OpenSSL configuration for the Nimbus estate.
+# The default digest is still SHA-1 because the internal CA signs with it.
+
+[ req ]
+default_bits       = 2048
+default_md         = sha1
+prompt             = no
+distinguished_name = req_distinguished_name
+x509_extensions    = v3_ca
+
+[ req_distinguished_name ]
+C  = US
+O  = Nimbus Payments
+OU = Platform Security
+CN = internal.nimbus.example
+
+[ v3_ca ]
+basicConstraints       = critical, CA:TRUE
+keyUsage               = critical, keyCertSign, cRLSign
+subjectKeyIdentifier   = hash
+
+[ system_default_sect ]
+MinProtocol = TLSv1
+CipherString = DEFAULT@SECLEVEL=1

@@ -1,0 +1,14 @@
+{
+  "name": "nimbus-payments",
+  "version": "2.4.1",
+  "private": true,
+  "description": "Demo estate for MOSCA. Intentionally uses legacy cryptography.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/api/auth.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Zero-dependency guard and tests
+        run: npm run check
+
+      - name: Scan the demo estate
+        run: node bin/mosca.js demo --quiet --format html,json,cbom,sarif --out out
+
+      - name: Validate generated artefacts
+        run: node scripts/validate-artifacts.js out
+
+      - name: Verify the package contents
+        run: npm pack --dry-run
+
+  self-scan:
+    name: self-scan (no critical exposure)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # MOSCA scans its own source. It uses only modern primitives, so a
+      # failure here means a rule regressed into a false positive.
+      - name: Scan MOSCA with MOSCA
+        run: node bin/mosca.js scan . --format json,sarif --out out --fail-on critical

@@ -1,0 +1,10 @@
+# MOSCA's own self-scan.
+#
+# `examples/vulnerable-app/` is intentionally insecure: it exists so the
+# scanner can be demonstrated without pointing it at real code.
+#
+# `test/` contains rule fixtures — MD5, SHA-1 and RC4 strings appear there on
+# purpose to prove the rules fire. Neither directory is part of the shipped
+# product, so the CI self-scan excludes them.
+examples/
+test/

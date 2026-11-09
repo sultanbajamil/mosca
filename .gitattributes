@@ -1,0 +1,11 @@
+# Normalise line endings in the repository; checkout uses the platform default.
+* text=auto
+
+# Generated reports and fixtures are handled as-is.
+*.b64 text
+*.html text
+*.md text
+*.js text
+*.json text
+*.yml text
+*.yaml text

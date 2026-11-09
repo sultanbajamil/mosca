@@ -1,0 +1,29 @@
+# OpenSSH daemon configuration — bastion host
+# Managed by the platform team. Last reviewed 2019.
+
+Port 22
+AddressFamily inet
+ListenAddress 0.0.0.0
+
+# Legacy host keys kept so the old jump clients keep working.
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Host key algorithms offered to clients.
+HostKeyAlgorithms ssh-rsa,ecdsa-sha2-nistp256,ssh-ed25519
+
+# Key exchange. The group1 entry is required by two appliances.
+KexAlgorithms diffie-hellman-group1-sha1,diffie-hellman-group14-sha256,ecdh-sha2-nistp256,curve25519-sha256
+
+# Symmetric ciphers.
+Ciphers aes128-ctr,aes256-ctr,3des-cbc
+
+# MACs.
+MACs hmac-sha1,hmac-sha2-256
+
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+ClientAliveInterval 300

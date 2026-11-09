@@ -1,0 +1,49 @@
+name: Rule request
+description: A false positive, a false negative, or a missing algorithm/language.
+title: 'rule: '
+labels: [rules]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of request
+      options:
+        - False positive (flagged something safe)
+        - False negative (missed something vulnerable)
+        - Missing language or framework
+        - Missing algorithm or configuration dialect
+    validations:
+      required: true
+
+  - type: input
+    id: language
+    attributes:
+      label: Language, framework or configuration dialect
+      placeholder: Rust / axum, or nginx
+    validations:
+      required: true
+
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Code or configuration
+      description: The smallest snippet that demonstrates the behaviour.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this classification is wrong
+      description: Cite the API documentation or the standard that supports the change.
+    validations:
+      required: true
+
+  - type: input
+    id: reference
+    attributes:
+      label: Reference
+      placeholder: https://nodejs.org/api/crypto.html#cryptocreatehashalgorithm-options
+    validations:
+      required: false
