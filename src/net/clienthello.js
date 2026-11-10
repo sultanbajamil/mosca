@@ -135,6 +135,25 @@ const u16 = (n) => {
 };
 const u24 = (n) => Buffer.from([(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]);
 
+/** QUIC variable-length integer (RFC 9000 §16). */
+export function quicVarint(value) {
+  const n = Number(value);
+  if (n < 0x40) return Buffer.from([n]);
+  if (n < 0x4000) {
+    const b = Buffer.alloc(2);
+    b.writeUInt16BE(0x4000 | n, 0);
+    return b;
+  }
+  if (n < 0x40000000) {
+    const b = Buffer.alloc(4);
+    b.writeUInt32BE(0x80000000 | n, 0);
+    return b;
+  }
+  const b = Buffer.alloc(8);
+  b.writeBigUInt64BE(0xc000000000000000n | BigInt(n), 0);
+  return b;
+}
+
 const extension = (type, data) => Buffer.concat([u16(type), u16(data.length), data]);
 
 /** signature_algorithms we advertise, modern first. */
@@ -177,7 +196,7 @@ const CIPHER_LIST = [
  * @param {{host:string, groups?:number[], alpn?:string[]}} opts
  * @returns {Buffer}
  */
-export function buildClientHello({ host, groups = OFFERED_GROUPS, alpn = ['h2', 'http/1.1'], versions = [0x0304, 0x0303], sharePayload }) {
+export function buildClientHello({ host, groups = OFFERED_GROUPS, alpn = ['h2', 'http/1.1'], versions = [0x0304, 0x0303], sharePayload, quic }) {
   const exts = [];
 
   // server_name (0x0000)
@@ -219,8 +238,16 @@ export function buildClientHello({ host, groups = OFFERED_GROUPS, alpn = ['h2', 
   // psk_key_exchange_modes (0x002d): psk_dhe_ke
   exts.push(extension(0x002d, Buffer.from([1, 1])));
 
-  // extended_master_secret (0x0017) — empty
-  exts.push(extension(0x0017, Buffer.alloc(0)));
+  // QUIC transport parameters (0x0039). A QUIC server rejects a ClientHello
+  // without an initial_source_connection_id, so the Initial probe needs one.
+  if (quic) {
+    const scid = Buffer.from(quic.scid || []);
+    const params = Buffer.concat([quicVarint(0x0f), quicVarint(scid.length), scid]);
+    exts.push(extension(0x0039, params));
+  } else {
+    // extended_master_secret (0x0017) — empty. TLS-over-TCP only.
+    exts.push(extension(0x0017, Buffer.alloc(0)));
+  }
 
   const extBlock = Buffer.concat(exts);
 

@@ -24,6 +24,23 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
   const rules = new Map();
   const results = [];
 
+  // Map each finding fingerprint to the compliance controls it violates, so a
+  // code-scanning alert can carry its audit context.
+  const complianceByFingerprint = new Map();
+  for (const standard of analysis.compliance || []) {
+    for (const control of standard.controls || []) {
+      for (const violation of control.violations || []) {
+        if (!violation.fingerprint) continue;
+        if (!complianceByFingerprint.has(violation.fingerprint)) complianceByFingerprint.set(violation.fingerprint, []);
+        complianceByFingerprint.get(violation.fingerprint).push({
+          standard: standard.id,
+          control: control.id,
+          severity: control.severity,
+        });
+      }
+    }
+  }
+
   for (const item of analysis.items) {
     if (item.positive) continue;
     if (item.kind === 'endpoint') continue; // endpoints have no file location
@@ -102,6 +119,7 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
         moscaInequality: item.mosca?.inequality ?? null,
         priority: item.priority,
         baselineStatus: item.baselineStatus || 'not-compared',
+        compliance: complianceByFingerprint.get(item.fingerprint) || [],
       },
     });
   }
@@ -133,6 +151,12 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
         properties: {
           quantumReadinessIndex: analysis.summary.quantumReadinessIndex,
           crqcYear: analysis.summary.crqcYear,
+          compliance: (analysis.compliance || []).map((standard) => ({
+            standard: standard.id,
+            status: standard.status,
+            score: standard.score,
+            violations: standard.violationCount,
+          })),
         },
         results,
       },

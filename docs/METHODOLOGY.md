@@ -49,7 +49,7 @@ normalised first. When nothing matches, the label is `general` and the value is
 
 `yearsToCRQC = max(0, crqcYear - currentYear)`, using the scan year in UTC.
 The number is an input, not a prediction. The interactive report exposes a
-2027–2045 slider precisely so the reader can test their own belief.
+2029–2045 slider precisely so the reader can test their own belief.
 
 ## 3. Migration lead time
 
@@ -71,6 +71,14 @@ Examples:
 | 5 | 2.3 years |
 | 50 | 3.8 years |
 | 250+ | 5.0 years |
+
+Since v3 the count used here is the number of **unique migration sites**, not
+raw occurrences. A site is keyed by `kind | algorithm | where | normalised
+match`, so the same call copied into ten files counts once per file but a
+repeated identical anchor in one file counts once. The effort estimate adds a
+damped spread for duplicates: `1 + 0.15 × log2(1 + duplicates)`. This keeps a
+repeated helper from inflating a programme while still acknowledging the
+coordination cost of many identical edits.
 
 ## 4. The finding score
 
@@ -94,7 +102,7 @@ score = 100 × (
 | `durability` | `min(1, shelfLife / 30)` |
 | `breadth` | `min(1, log2(count + 1) / 6)` |
 | `classical` | `broken` = 1.0, `weak` = 0.6, `acceptable` = 0.2, `strong` = 0 |
-| `surface` | endpoint = 1.0, config = 0.6, source = 0.3 |
+| `surface` | endpoint = 1.0, chain = 1.0, config = 0.6, dependency = 0.55, artifact = 0.5, source = 0.3 |
 
 ### Why these weights
 
@@ -149,7 +157,7 @@ Bands map to priorities `P0`–`P3`. SARIF uses `critical/high → error`,
 QRI is a weighted share of the estate that is already quantum-safe:
 
 ```
-weight_i        = endpoint ? 3 : config ? 2 : source ? 1
+weight_i        = endpoint ? 3 : chain ? 3 : config ? 2 : dependency ? 2 : artifact ? 2 : source ? 1
 safety_i        = safe 1.0 | weakened 0.5 | unknown 0.3 | broken 0
 QRI             = 100 × Σ(weight_i × safety_i) / Σ(weight_i)
 ```
@@ -188,19 +196,71 @@ finding that only appears under the 2029 scenario is a bet on an aggressive
 timeline. The table is emitted in JSON (`summary.sensitivity`), printed as a
 compact strip in the terminal and rendered as cards in the HTML report.
 
+## 7b. Certificate-chain projection
+
+Chain findings use the transport surface and the endpoint shelf life. The
+projection is a separate, deliberately transparent calculation:
+
+```
+flight(pqc) = Σ certificate public-key bytes + signature bytes + framing
+exceeds     = flight(pqc) > INITIAL_CWND (14 336 bytes)
+```
+
+Signature and public-key sizes come from `PQC_SIZES` (ML-DSA-44/65/87,
+SLH-DSA-128s/128f/192s/256s). The comparison is against the 14 KB initial
+congestion window, not the path MTU: exceeding it adds a round-trip and makes
+every handshake slower, which is an operational finding rather than a wire
+error. A chain whose weakest entry is SHA-1 or a classical long-lived root is
+reported independently of the projection.
+
+## 7c. Compliance evaluation
+
+Compliance is a mapping, not a second risk model. Each standard declares
+controls with a predicate over enriched findings:
+
+| Standard | Controls (summary) |
+| --- | --- |
+| `cnsa2` | ML-KEM key establishment, ML-DSA/ML-DSA-87 signatures, AES-256, SHA-384 |
+| `nist-2030` | No RSA/ECC/DSA/EdDSA after 2030; removal by 2035 |
+| `pci-dss` | TLS ≥ 1.2, no RC4/3DES/DES, RSA ≥ 2048, no MD5/SHA-1, HNDL exposure |
+| `hipaa` | ePHI in transit and at rest, integrity, long-retention HNDL |
+
+A control is `pass` when no finding violates it, `fail` when one or more do,
+and `partial` when violations are limited to non-production surfaces. The
+standard score is `100 × weighted passed controls / total`, rounded to one
+decimal. Violations carry the finding fingerprint, so a gate can point at the
+exact line or endpoint. `--fail-on-compliance` exits 1 when the selected
+standard is `fail`.
+
+## 7d. Fix policy
+
+`mosca fix` is a suggestion engine with a narrow automatic boundary:
+
+- **Automatic hunk**: hash, MAC or AES key-size literal swap where the target
+  is unambiguous and the file is not a protocol implementation or test vector.
+- **Advisory**: signatures, key agreement, certificates, protocol config,
+  lockfiles and live listeners. Symmetric changes inside
+  `net|protocol|tls|quic|ssh|ikev2|ipsec|test|spec|fixtures` paths are also
+  advisory, because the literal is part of a wire format or an oracle.
+
+The planner never edits a file. `buildPatch()` emits a unified diff with CRLF
+preservation and records skipped hunks when the literal has moved, so a stale
+finding produces a visible skip instead of a corrupt patch.
+
 ## 8. Effort estimate
 
 A deliberately simple order-of-magnitude estimate:
 
 ```
 effort = Σ  base(kind) × (quantum === 'broken' ? 1 : 0.5)
-base   = endpoint 3 | config 1 | source 0.5   (engineer-days)
+base   = endpoint 3 | chain 3 | config 1 | dependency 1 | artifact 1 | source 0.5
+           (engineer-days per unique migration site)
 ```
 
 It excludes the roadmap's fixed programme costs and coordination overhead, so
-it is labelled "estimated effort", not a quote. The roadmap recomputes effort
-per phase without the quantum multiplier so the phases sum to a comparable
-number.
+it is labelled "estimated effort", not a quote. Duplicate occurrences add the
+damped spread described in §3. The roadmap recomputes effort per phase without
+the quantum multiplier so the phases sum to a comparable number.
 
 ## 9. Roadmap ordering
 
@@ -237,17 +297,21 @@ verdict.
 
 1. **Regex rules cannot see dataflow.** A wrapper function named `safeHash`
    that calls MD5 internally will be flagged at the wrapper's call site only if
-   the wrapper name matches a rule. The reverse is also possible: a comment or
-   string that looks like an API call is stripped where possible, but template
-   languages and generated code can defeat comment stripping.
-2. **Counts are lexical, not linked.** Migration lead time counts occurrences,
-   not distinct call paths. A shared helper counted ten times overstates the
-   work; a dynamically dispatched algorithm counted zero times understates it.
-3. **TLS probes are unauthenticated and single-shot.** A transient network
-   failure is reported as `unreachable`, not as a finding. Legacy-version
-   acceptance is verified with one ClientHello offering TLS 1.0 and 1.1;
-   middleboxes can influence the answer.
-4. **The CRQC year dominates every conclusion.** That is the point. Change
+   the wrapper name matches a rule. Constant propagation covers only a
+   single-assignment string in the same file; it is not a type system. Template
+   languages and generated code can still defeat comment stripping.
+2. **Counts are lexical, not linked.** Unique-site effort is a better proxy than
+   raw occurrences, but a shared helper called from ten packages is still
+   counted once per file. Dynamically dispatched algorithms can be missed.
+3. **TLS, STARTTLS, QUIC and IKEv2 probes are unauthenticated and single-shot.**
+   A transient network failure is reported as `unreachable`, not as a finding.
+   Legacy-version acceptance is verified with one ClientHello; middleboxes can
+   influence the answer. QUIC and IKEv2 are UDP and can be filtered even when
+   the service exists.
+4. **Artefact scanning reads metadata, not key strength.** A public key is
+   classified by its declared algorithm and size. It cannot tell whether the
+   private half is stored in an HSM, a vault or a laptop.
+5. **The CRQC year dominates every conclusion.** That is the point. Change
    `--scenario` and watch the exposure count move. If a vendor tells you a
    single number without that assumption, ask what it is.
 
@@ -260,6 +324,7 @@ verdict.
   Standards*.
 - NSA CNSA 2.0, *Commercial National Security Algorithm Suite 2.0*.
 - RFC 8446 (TLS 1.3), RFC 8996 (deprecating TLS 1.0/1.1).
+- RFC 9001 (Using TLS to Secure QUIC), RFC 9370 (Multiple Key Exchanges in IKEv2).
 - `draft-ietf-tls-ecdhe-mlkem`, *Hybrid ECDHE-MLKEM Key Agreement for TLS 1.3*.
 - CycloneDX 1.6 specification, cryptography extension.
 - SARIF 2.1.0, OASIS.

@@ -18,6 +18,7 @@
 import tls from 'node:tls';
 import { probeServerHello, groupPosture, versionName, GROUPS, CIPHER_SUITES } from './clienthello.js';
 import { parseCertificate } from './x509.js';
+import { analyseChain, deriveChainFindings } from './x509-chain.js';
 import { lookup, QUANTUM } from '../rules/algorithms.js';
 
 /**
@@ -216,6 +217,15 @@ export async function inspectEndpoint(target, opts = {}) {
           issuer: c.issuer?.CN || null,
           validTo: c.valid_to || null,
         }));
+
+        // Analyse every certificate in the chain, not just the leaf. Node
+        // exposes the DER of each link through getPeerCertificate(true).
+        const chainDers = h.chain.map((c) => c.raw).filter(Boolean);
+        if (chainDers.length) {
+          base.chainAnalysis = analyseChain(chainDers, { yearsToCRQC: opts.yearsToCRQC ?? 7 });
+          base.certificateChain = base.chainAnalysis.entries;
+          base.pqcHandshake = base.chainAnalysis.pqc;
+        }
       } catch (err) {
         base.certificateError = `could not parse certificate: ${err.message}`;
       }
@@ -412,6 +422,11 @@ export function deriveEndpointFindings(ep) {
         note: "Grover's algorithm reduces AES-128 to ~64-bit security. Prefer AES-256-GCM or ChaCha20-Poly1305.",
       });
     }
+  }
+
+  // --------------------------------------------------------- certificate chain
+  if (ep.chainAnalysis) {
+    findings.push(...deriveChainFindings(ep.chainAnalysis, where, { yearsToCRQC: ep.yearsToCRQC ?? 7 }));
   }
 
   // ---------------------------------------------- local runtime capability

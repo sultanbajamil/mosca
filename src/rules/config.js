@@ -20,6 +20,21 @@ const isSshd = (p) => /sshd?_config$|sshd_config\.d[\\/]|ssh_config$/i.test(p);
 const isOpenssl = (p) => /openssl\.cnf$|openssl\.conf$|\.cnf$/i.test(p);
 const isJavaSecurity = (p) => /java\.security$/i.test(p);
 const isK8s = (p) => /\.ya?ml$/i.test(p);
+const isTerraform = (p) => /\.tf$/i.test(p);
+const isTlsManifest = (p) => /\.ya?ml$/i.test(p) && /(cert|issuer|tls|ingress|gateway|istio|mesh)/i.test(p);
+const isIstio = (p) => /\.ya?ml$/i.test(p) && /istio|peer.?auth|destination.?rule|gateway|virtual.?service/i.test(p);
+const isHAProxy = (p) => /(^|[\\/])haproxy[^\\/]*\.cfg$|(^|[\\/])haproxy\.conf$/i.test(p);
+const isEnvoy = (p) => /(^|[\\/])envoy[^\\/]*\.(?:ya?ml|conf|json)$/i.test(p);
+const isCaddy = (p) => /(^|[\\/])Caddyfile(?:\.[^\\/]*)?$/i.test(p);
+const isTraefik = (p) => /(^|[\\/])traefik[^\\/]*\.(?:ya?ml|toml)$/i.test(p);
+const isWrangler = (p) => /(^|[\\/])(?:wrangler|cloudflare)[^\\/]*\.(?:toml|jsonc?|json)$/i.test(p);
+const isDockerfile = (p) => /(^|[\\/])Dockerfile(?:\.[^\\/]*)?$|\.dockerfile$/i.test(p);
+
+/** Parse an RSA size out of a matched token such as RSA_2048. */
+const rsaBits = (m) => {
+  const bits = Number((m[1] || '').match(/2048|3072|4096|1024/)?.[0]);
+  return Number.isFinite(bits) ? bits : 2048;
+};
 
 /** @type {ConfigRule[]} */
 export const CONFIG_RULES = [
@@ -245,10 +260,371 @@ export const CONFIG_RULES = [
     primitive: 'symmetric',
     confidence: 'high',
   },
+
+  // ---------------------------------------------------------------- terraform
+  {
+    id: 'tf-aws-kms-rsa',
+    appliesTo: isTerraform,
+    re: /key_spec\s*=\s*"(RSA_(?:1024|2048|3072|4096))"/gi,
+    algo: 'rsa',
+    bits: rsaBits,
+    primitive: 'signature',
+    confidence: 'high',
+    note: 'AWS KMS asymmetric key. RSA falls to Shor regardless of size; plan an ML-DSA or ML-KEM migration.',
+  },
+  {
+    id: 'tf-aws-kms-ecc',
+    appliesTo: isTerraform,
+    re: /key_spec\s*=\s*"(ECC_(?:NIST_P256|NIST_P384|NIST_P521|SECG_P256K1))"/gi,
+    algo: 'ecdsa',
+    primitive: 'signature',
+    confidence: 'high',
+    note: 'AWS KMS elliptic-curve key. ECDSA is broken by Shor; ML-DSA-65 is the FIPS 204 replacement.',
+  },
+  {
+    id: 'tf-aws-acm-key-algorithm',
+    appliesTo: isTerraform,
+    re: /key_algorithm\s*=\s*"(RSA_1024|RSA_2048|EC_prime256v1|EC_secp384r1)"/gi,
+    algo: (m) => (/^RSA/.test(m[1]) ? 'rsa' : 'ecdsa'),
+    bits: (m) => (/^RSA/.test(m[1]) ? rsaBits(m) : null),
+    primitive: 'signature',
+    confidence: 'high',
+  },
+  {
+    id: 'tf-alb-legacy-ssl-policy',
+    appliesTo: isTerraform,
+    re: /ssl_policy\s*=\s*"(ELBSecurityPolicy-(?:2014-10|2015-05|2016-08|TLS-1-0[^"]*|TLS-1-1[^"]*))"/gi,
+    algo: (m) => (/TLS-1-1|2016-08/i.test(m[1]) ? 'tls-1.1' : 'tls-1.0'),
+    primitive: 'protocol',
+    confidence: 'high',
+    note: 'Legacy AWS load-balancer security policy. Use ELBSecurityPolicy-TLS13-1-3 or a current PQ-capable policy.',
+  },
+  {
+    id: 'tf-cloudfront-min-tls',
+    appliesTo: isTerraform,
+    re: /minimum_protocol_version\s*=\s*"(TLSv1(?:\.1)?)"/gi,
+    algo: (m) => tlsVersionId(m[1]),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'tf-google-kms-rsa',
+    appliesTo: isTerraform,
+    re: /algorithm\s*=\s*"(RSA_(?:SIGN|DECRYPT)_PKCS1_2048[^"]*)"/gi,
+    algo: 'rsa-2048',
+    primitive: 'signature',
+    confidence: 'high',
+    note: 'Google Cloud KMS RSA-2048 key. Quantum-vulnerable and below the modern CNSA 2.0 recommendation.',
+  },
+  {
+    id: 'tf-google-kms-ec',
+    appliesTo: isTerraform,
+    re: /algorithm\s*=\s*"(EC_SIGN_(?:P256|P384|SECP256K1)_SHA256)"/gi,
+    algo: 'ecdsa',
+    primitive: 'signature',
+    confidence: 'high',
+  },
+  {
+    id: 'tf-azure-key-size',
+    appliesTo: isTerraform,
+    re: /key_size\s*=\s*(1024|2048|3072)\b/gi,
+    algo: 'rsa',
+    bits: (m) => Number(m[1]),
+    primitive: 'signature',
+    confidence: 'medium',
+    note: 'Azure Key Vault key size. RSA is quantum-vulnerable; CNSA 2.0 requires ML-DSA-87 or ML-KEM-1024.',
+  },
+  {
+    id: 'tf-azure-key-type-rsa',
+    appliesTo: isTerraform,
+    re: /key_type\s*=\s*"RSA"/gi,
+    algo: 'rsa',
+    primitive: 'signature',
+    confidence: 'medium',
+  },
+  {
+    id: 'tf-cloudflare-min-tls',
+    appliesTo: isTerraform,
+    re: /min_tls_version\s*=\s*"(1\.[01])"/gi,
+    algo: (m) => (m[1] === '1.1' ? 'tls-1.1' : 'tls-1.0'),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+
+  // -------------------------------------------------------- kubernetes / istio
+  {
+    id: 'k8s-cert-manager-rsa',
+    appliesTo: isTlsManifest,
+    re: /privateKey:\s*\n(?:[^\n]*\n){0,6}\s*algorithm:\s*RSA\b/gi,
+    algo: 'rsa',
+    primitive: 'signature',
+    confidence: 'high',
+    note: 'cert-manager RSA private key. Move to ML-DSA-65 once the issuer and clients support it.',
+  },
+  {
+    id: 'k8s-cert-manager-key-size',
+    appliesTo: isTlsManifest,
+    re: /privateKey:\s*\n(?:[^\n]*\n){0,6}\s*size:\s*(1024|2048|3072)\b/gi,
+    algo: 'rsa',
+    bits: (m) => Number(m[1]),
+    primitive: 'signature',
+    confidence: 'high',
+  },
+  {
+    id: 'k8s-cert-manager-ecdsa',
+    appliesTo: isTlsManifest,
+    re: /privateKey:\s*\n(?:[^\n]*\n){0,6}\s*algorithm:\s*ECDSA\b/gi,
+    algo: 'ecdsa',
+    primitive: 'signature',
+    confidence: 'high',
+  },
+  {
+    id: 'istio-min-tls-1-0',
+    appliesTo: isIstio,
+    re: /minProtocolVersion:\s*TLSV1_0\b/gi,
+    algo: 'tls-1.0',
+    primitive: 'protocol',
+    confidence: 'high',
+    note: 'Istio PeerAuthentication / Gateway still permits TLS 1.0.',
+  },
+  {
+    id: 'istio-min-tls-1-1',
+    appliesTo: isIstio,
+    re: /minProtocolVersion:\s*TLSV1_1\b/gi,
+    algo: 'tls-1.1',
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'istio-weak-cipher-suites',
+    appliesTo: isIstio,
+    re: /cipherSuites:\s*\[[^\]]*\b(?:RC4|3DES|DES|NULL|EXPORT)[^\]]*\]/gi,
+    algo: (m) => (/RC4/i.test(m[0]) ? 'rc4' : /3DES/i.test(m[0]) ? '3des' : 'none'),
+    primitive: 'symmetric',
+    confidence: 'high',
+  },
+  {
+    id: 'istio-classical-ecdh-curves',
+    appliesTo: isIstio,
+    re: /ecdhCurves:\s*\[(?![^\]]*(?:MLKEM|X25519MLKEM768|Kyber))[^\]]*\]/gi,
+    algo: 'ecdh',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+    note: 'Istio curve list has no hybrid post-quantum group.',
+  },
+  {
+    id: 'k8s-ingress-proxy-ssl-protocols',
+    appliesTo: isK8s,
+    re: /nginx\.ingress\.kubernetes\.io\/proxy-ssl-protocols\s*:\s*["']?([^"'\n]*\bTLSv1(?:\.1)?(?![\d.])[^"'\n]*)/gi,
+    algo: 'tls-1.0',
+    primitive: 'protocol',
+    confidence: 'medium',
+  },
+
+  // ------------------------------------------------------------------ haproxy
+  {
+    id: 'haproxy-ssl-min-ver-legacy',
+    appliesTo: isHAProxy,
+    re: /ssl-min-ver\s+(TLSv1(?:\.1)?(?![\d.])|SSLv[23])\b/gi,
+    algo: (m) => tlsVersionId(m[1]),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'haproxy-ciphers-weak',
+    appliesTo: isHAProxy,
+    re: /(?:ciphers|ciphersuites)\s+[^\n]*(?:RC4|3DES|DES-CBC3|NULL|EXPORT)[^\n]*/gi,
+    algo: (m) => (/RC4/i.test(m[0]) ? 'rc4' : /3DES|DES-CBC3/i.test(m[0]) ? '3des' : 'none'),
+    primitive: 'symmetric',
+    confidence: 'high',
+  },
+  {
+    id: 'haproxy-classical-curves',
+    appliesTo: isHAProxy,
+    re: /(?:ssl-default-bind-curves|curves)\s+(?![^\n]*(?:MLKEM|X25519MLKEM768|Kyber))[^\n]*/gi,
+    algo: 'ecdh',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+    note: 'HAProxy curve list has no hybrid post-quantum group.',
+  },
+
+  // -------------------------------------------------------------------- envoy
+  {
+    id: 'envoy-min-tls-legacy',
+    appliesTo: isEnvoy,
+    re: /tls_minimum_protocol_version:\s*TLSv1(?:_[01])?\b/gi,
+    algo: (m) => (/TLSv1_1/i.test(m[0]) ? 'tls-1.1' : 'tls-1.0'),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'envoy-max-tls-1-2',
+    appliesTo: isEnvoy,
+    re: /tls_maximum_protocol_version:\s*TLSv1_2\b/gi,
+    algo: 'tls-1.2',
+    primitive: 'protocol',
+    confidence: 'medium',
+    note: 'TLS 1.3 is capped off. Remove the maximum so hybrid key exchange can negotiate.',
+  },
+  {
+    id: 'envoy-weak-cipher-suites',
+    appliesTo: isEnvoy,
+    re: /cipher_suites:\s*\[[^\]]*\b(?:RC4|3DES|DES|NULL|EXPORT)[^\]]*\]/gi,
+    algo: (m) => (/RC4/i.test(m[0]) ? 'rc4' : /3DES/i.test(m[0]) ? '3des' : 'none'),
+    primitive: 'symmetric',
+    confidence: 'high',
+  },
+  {
+    id: 'envoy-classical-ecdh-curves',
+    appliesTo: isEnvoy,
+    re: /ecdh_curves:\s*\[(?![^\]]*(?:MLKEM|X25519MLKEM768|Kyber))[^\]]*\]/gi,
+    algo: 'ecdh',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+  },
+
+  // -------------------------------------------------------------------- caddy
+  {
+    id: 'caddy-min-version-legacy',
+    appliesTo: isCaddy,
+    re: /min_version\s+(tls1(?:\.0|\.1))\b/gi,
+    algo: (m) => tlsVersionId(m[1]),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'caddy-protocols-no-tls13',
+    appliesTo: isCaddy,
+    re: /protocols\s+(?![^\n}]*tls1\.3)[^\n}]*tls1\.[0-2][^\n}]*/gi,
+    algo: 'tls-1.2',
+    primitive: 'protocol',
+    confidence: 'medium',
+  },
+  {
+    id: 'caddy-weak-ciphers',
+    appliesTo: isCaddy,
+    re: /(?:ciphers|cipher_suites)\s+[^\n]*(?:RC4|3DES|DES-CBC3|NULL|EXPORT)[^\n]*/gi,
+    algo: (m) => (/RC4/i.test(m[0]) ? 'rc4' : /3DES|DES-CBC3/i.test(m[0]) ? '3des' : 'none'),
+    primitive: 'symmetric',
+    confidence: 'high',
+  },
+  {
+    id: 'caddy-classical-curves',
+    appliesTo: isCaddy,
+    re: /curves\s+(?![^\n]*(?:MLKEM|X25519MLKEM768|Kyber))[^\n]*/gi,
+    algo: 'ecdh',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+  },
+
+  // ------------------------------------------------------------------ traefik
+  {
+    id: 'traefik-min-version-legacy',
+    appliesTo: isTraefik,
+    re: /minVersion:\s*"?VersionTLS1(?:\.0|\.1|0|1)?"?/gi,
+    algo: (m) => (/TLS1\.1|TLS11/i.test(m[0]) ? 'tls-1.1' : 'tls-1.0'),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'traefik-max-version-1-2',
+    appliesTo: isTraefik,
+    re: /maxVersion:\s*"?VersionTLS12"?/gi,
+    algo: 'tls-1.2',
+    primitive: 'protocol',
+    confidence: 'medium',
+  },
+  {
+    id: 'traefik-weak-cipher-suites',
+    appliesTo: isTraefik,
+    re: /cipherSuites:\s*\[[^\]]*\bTLS_(?:RSA|ECDHE_RSA)[^\]]*\]/gi,
+    algo: 'rsa',
+    primitive: 'key-agreement',
+    confidence: 'high',
+    note: 'Static-RSA cipher suites in Traefik: no forward secrecy.',
+  },
+  {
+    id: 'traefik-classical-curves',
+    appliesTo: isTraefik,
+    re: /curvePreferences:\s*\[(?![^\]]*(?:MLKEM|X25519MLKEM768|Kyber))[^\]]*\]/gi,
+    algo: 'ecdh',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+  },
+
+  // -------------------------------------------------------- cloudflare / edge
+  {
+    id: 'cloudflare-min-tls-legacy',
+    appliesTo: isWrangler,
+    re: /min_tls_version\s*=\s*"?(1\.[01])"?/gi,
+    algo: (m) => (m[1] === '1.1' ? 'tls-1.1' : 'tls-1.0'),
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+  {
+    id: 'cloudflare-tls-1-0-enabled',
+    appliesTo: isWrangler,
+    re: /tls_1_0\s*=\s*"?(?:on|true)"?/gi,
+    algo: 'tls-1.0',
+    primitive: 'protocol',
+    confidence: 'high',
+  },
+
+  // --------------------------------------------------------------- dockerfile
+  {
+    id: 'dockerfile-base-old-openssl',
+    appliesTo: isDockerfile,
+    re: /FROM\s+\S*(?:node:(?:1[0-9]|2[0-2])(?:[.-]|$)|ubuntu:(?:18\.04|20\.04|22\.04)|debian:(?:buster|bullseye|bookworm)|alpine:3\.(?:1[0-9]|2[0-1])|python:3\.(?:8|9|10|11))/gi,
+    algo: 'x25519',
+    primitive: 'key-agreement',
+    confidence: 'medium',
+    note: 'The base image ships OpenSSL older than 3.5, so ML-KEM / ML-DSA are not available by default. Rebuild on a current image before enabling hybrid TLS.',
+  },
+  {
+    id: 'dockerfile-openssl-1-x',
+    appliesTo: isDockerfile,
+    re: /(?:openssl[=:\s]+1\.[01]\.|libssl1\.[01])/gi,
+    algo: 'x25519',
+    primitive: 'key-agreement',
+    confidence: 'high',
+    note: 'OpenSSL 1.0/1.1 has no ML-KEM or ML-DSA support.',
+  },
+
+  // -------------------------------------------------------------- ssh / openssl
+  {
+    id: 'sshd-pubkey-accepted-ssh-rsa',
+    appliesTo: isSshd,
+    re: /^\s*PubkeyAcceptedAlgorithms\s+([^\n#]*\bssh-rsa\b[^\n#]*)/gim,
+    algo: 'ssh-rsa',
+    primitive: 'signature',
+    confidence: 'high',
+    note: 'ssh-rsa uses SHA-1 and is disabled by default in OpenSSH 8.8+. Remove it from the accepted list.',
+  },
+  {
+    id: 'openssl-max-protocol-legacy',
+    appliesTo: isOpenssl,
+    re: /MaxProtocol\s*=\s*(TLSv1\.1|TLSv1(?![\d.]))/gi,
+    algo: (m) => tlsVersionId(m[1]),
+    primitive: 'protocol',
+    confidence: 'high',
+    note: 'A TLS 1.0/1.1 ceiling prevents TLS 1.3 and hybrid key exchange from ever negotiating.',
+  },
 ];
 
 /** Config file extensions we are willing to read as text. */
-export const CONFIG_EXTENSIONS = ['.conf', '.cnf', '.cfg', '.ini', '.yaml', '.yml', '.config', '.properties'];
+export const CONFIG_EXTENSIONS = [
+  '.conf',
+  '.cnf',
+  '.cfg',
+  '.ini',
+  '.yaml',
+  '.yml',
+  '.config',
+  '.properties',
+  '.tf',
+  '.hcl',
+  '.toml',
+];
 
 /** Files with no extension that are still configuration. */
 export const CONFIG_FILENAMES = [
@@ -260,6 +636,8 @@ export const CONFIG_FILENAMES = [
   'openssl.cnf',
   'java.security',
   'Dockerfile',
+  'Caddyfile',
+  'haproxy.cfg',
   '.htaccess',
 ];
 
@@ -271,6 +649,9 @@ export function isConfigFile(path) {
   const base = path.split(/[\\/]/).pop() || '';
   if (CONFIG_FILENAMES.includes(base)) return true;
   const lower = base.toLowerCase();
+  // Dockerfile.dev / Dockerfile.prod / app.dockerfile, and Caddyfile.<suffix>
+  if (/^dockerfile([.-]|$)/i.test(lower) || lower.endsWith('.dockerfile')) return true;
+  if (/^caddyfile([.-]|$)/i.test(lower)) return true;
   if (CONFIG_EXTENSIONS.some((e) => lower.endsWith(e))) {
     // Do not treat every YAML in a repo as a TLS policy, but the rules are
     // anchored on specific keys so false positives stay rare.

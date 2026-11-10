@@ -1,10 +1,10 @@
 # MOSCA
 
-**CI-native post-quantum exposure scanner for code, configuration, live TLS and SSH endpoints.**
+**CI-native post-quantum exposure scanner for code, configuration, keys, dependencies and live TLS, SSH, STARTTLS, QUIC and IKEv2 endpoints.**
 
 [![CI](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml/badge.svg)](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml)
 [![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen)](scripts/check-zero-deps.js)
-[![tests: 112](https://img.shields.io/badge/tests-112-brightgreen)](test/)
+[![tests: 206](https://img.shields.io/badge/tests-206-brightgreen)](test/)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![live report](https://img.shields.io/badge/live%20report-open-8b5cf6)](https://sultanbajamil.github.io/mosca/)
 
@@ -31,18 +31,38 @@ $ npx github:sultanbajamil/mosca scan . --tls example.com --ssh bastion.example.
 
 - **Zero runtime dependencies.** Node.js ≥ 20, ESM, no `node_modules`.
 - **Finds crypto the way it is actually written** — 148 rules across 16
-  languages, 23 configuration rules for nginx, Apache, OpenSSH, OpenSSL,
-  Java and Kubernetes, and 91 classified algorithms.
+  languages, 62 configuration/IaC rules for nginx, Apache, OpenSSH, OpenSSL,
+  Java, Kubernetes, Terraform, Istio, Envoy, HAProxy, Caddy, Traefik,
+  Cloudflare and Dockerfiles, and 92 classified algorithms.
+- **Follows constants.** `const HASH = 'md5'; crypto.createHash(HASH)` is a
+  finding, not a blind spot; reassigned or interpolated constants stay
+  unresolved.
+- **Reads the artefacts and the supply chain.** PEM, DER, JWK/JWKS,
+  `authorized_keys`, `known_hosts`, plus eight lockfile formats with a
+  cryptographic package intelligence table.
+- **Analyzes the whole X.509 chain**, not just the leaf: weakest link,
+  long-lived classical roots, SHA-1 signatures, and a projected ML-DSA/SLH-DSA
+  handshake against the 14 KB initial congestion window.
 - **Probes TLS with a hand-built ClientHello** that offers
   `X25519MLKEM768` (0x11EC) and reports the group the *server* selected.
   Node's own TLS stack cannot do this, so neither can tools that inherit it.
-- **Probes SSH with a hand-built `SSH_MSG_KEXINIT`** and reads the server's
+- **Probes SSH with a hand-built `SSH_MSG_KEXINIT`**, reading the server's
   advertised KEX, host-key, cipher and MAC lists — including
   `mlkem768x25519-sha256` and `sntrup761x25519-sha512@openssh.com`.
+- **Probes STARTTLS, QUIC and IKEv2.** SMTP, IMAP, POP3, PostgreSQL and LDAP
+  upgrades; RFC 9001 Initial packet protection built by hand; and RFC 9370
+  ADDKE transforms against IPsec gateways.
+- **Gates on named standards.** CNSA 2.0, NIST IR 8547's 2030 transition,
+  PCI DSS v4.0 and the HIPAA Security Rule, with per-control evidence.
+- **Proposes fixes.** `mosca fix` emits a reviewable patch for hash, MAC and
+  AES key-size swaps, and numbered advisories for everything that is a
+  protocol or trust-chain migration. It never applies a change.
 - **Diffs against a baseline.** Accept the debt you already have, then fail CI
   only when a change introduces a new exposure.
-- **Emits artefacts**: an interactive self-contained HTML report, a
-  CycloneDX 1.6 **CBOM**, and **SARIF 2.1.0** for GitHub code scanning.
+- **Emits artefacts**: an interactive self-contained HTML report with a
+  crypto-agility simulator and certificate-chain tree, a CycloneDX 1.6
+  **CBOM** with library dependencies, **SARIF 2.1.0** for GitHub code
+  scanning, and **Mermaid** diagrams for review notes.
 
 ---
 
@@ -76,6 +96,25 @@ a bill of materials you can hand to an auditor.
 | Server's chosen PQ hybrid group | no | only if linked OpenSSL supports it | **yes, raw ClientHello** |
 | Mosca-inequality exposure per finding | no | no | **yes** |
 | Zero runtime dependencies | rarely | rarely | **yes** |
+
+### What v3 adds
+
+v3 is the enterprise and deep-protocol edition. It keeps the zero-dependency
+contract and extends the same unified finding schema to areas a source scan
+cannot see:
+
+| Area | What it does |
+| --- | --- |
+| X.509 chain analysis | Classifies every certificate in the peer chain, finds the weakest link, flags long-lived classical roots and SHA-1 signatures, and projects a post-quantum chain against the 14 KB initial congestion window. |
+| STARTTLS | Negotiates SMTP, IMAP, POP3, PostgreSQL and LDAP upgrades, then sends the same raw ClientHello and closes the socket. |
+| QUIC / HTTP/3 | Builds an RFC 9001 Initial packet with HKDF-SHA256, AES-128-GCM and AES-ECB header protection, then parses the server Initial, Retry and Version Negotiation. Pinned to RFC 9001 Appendix A.1 vectors. |
+| IKEv2 | Sends `IKE_SA_INIT` with RFC 9370 ADDKE transforms and reports whether the gateway understands hybrid key exchange. |
+| Artefacts | Reads metadata from PEM, DER, JWK/JWKS, `authorized_keys`, `known_hosts` and `*.pub` files; never emits private key material. |
+| Supply chain | Parses npm, yarn, pnpm, Cargo, Go, Poetry, requirements.txt and Maven lockfiles against a curated cryptographic package table. |
+| Context | Propagates single-assignment string constants into crypto APIs, and separates raw occurrences from unique migration sites. |
+| IaC and edge proxies | 62 config rules covering Terraform, cert-manager, Istio, HAProxy, Envoy, Caddy, Traefik, Cloudflare and Dockerfiles. |
+| Compliance | `--compliance` and `--fail-on-compliance` for CNSA 2.0, NIST 2030, PCI DSS v4.0 and HIPAA. |
+| Fix and diagrams | `mosca fix` produces a patch plus advisories; `--format mermaid` produces review-ready graphs. |
 
 The key-exchange probe is the part that cannot be copied from a library call.
 MOSCA writes the TLS record by hand, generates a *canonical* ML-KEM-768
@@ -114,9 +153,13 @@ can be attached to an email or published to GitHub Pages unchanged.
 ### Commands
 
 ```bash
-mosca scan [path] [options]     # source + config + TLS + SSH
+mosca scan [path] [options]     # source + config + artefacts + deps + TLS/SSH/STARTTLS/QUIC/IKEv2
 mosca tls <host...>             # probe live TLS endpoints only
 mosca ssh <host...>             # probe SSH servers only
+mosca starttls <target...>      # probe SMTP/IMAP/POP3/PostgreSQL/LDAP STARTTLS
+mosca quic <host...>            # probe QUIC / HTTP/3
+mosca ikev2 <host...>           # probe IPsec gateways for RFC 9370 hybrid KEX
+mosca fix [path]                # propose a patch and print manual advisories
 mosca explain <algorithm>       # why an algorithm is exposed, and what replaces it
 mosca demo                      # scan the bundled vulnerable estate
 mosca init                      # write a starter mosca.json
@@ -129,9 +172,15 @@ Common options:
 | --- | --- |
 | `--tls <host,...>` | TLS endpoints to inspect (or set `endpoints` in `mosca.json`) |
 | `--ssh <host,...>` | SSH targets to inspect (or set `ssh` in `mosca.json`) |
+| `--starttls <target,...>` | STARTTLS targets (`smtp://`, `imap://`, `pop3://`, `postgres://`, `ldap://`) |
+| `--quic <host,...>` | QUIC / HTTP/3 endpoints |
+| `--ikev2 <host,...>` | IKEv2 gateways |
+| `--compliance <id>` | `cnsa2`, `nist-2030`, `pci-dss`, `hipaa` or `all` |
+| `--fail-on-compliance <id>` | Exit 1 when the selected standard fails |
+| `--fix` | Write `<out>/mosca-fix.patch` and print the fix plan |
 | `--baseline <file>` | Compare against a baseline; `--fail-on` considers only new findings |
 | `--write-baseline <file>` | Write this run's findings as the new baseline |
-| `--format <list>` | `html,json,cbom,sarif,term` (default `html,term`) |
+| `--format <list>` | `html,json,cbom,sarif,term,mermaid` (default `html,term`) |
 | `--out <dir>` | Output directory |
 | `--fail-on <severity>` | Exit 1 at or above `low`, `medium`, `high`, `critical` |
 | `--scenario <name>` | `aggressive` (2029), `moderate` (2033), `conservative` (2038) |
@@ -165,14 +214,19 @@ A composite GitHub Action is included:
 
 ```yaml
 - name: MOSCA
-  uses: sultanbajamil/mosca@v2
+  uses: sultanbajamil/mosca@v3
   with:
     path: .
     tls: example.com,api.example.com
     ssh: bastion.example.com
+    starttls: smtp://mail.example.com:587
+    quic: example.com
+    ikev2: vpn.example.com
+    compliance: cnsa2
+    fail-on-compliance: cnsa2
     baseline: .mosca-baseline.json
     fail-on: high
-    format: html,sarif,json,cbom
+    format: html,sarif,json,cbom,mermaid
 
 - name: Upload SARIF
   if: always()
@@ -180,6 +234,54 @@ A composite GitHub Action is included:
   with:
     sarif_file: mosca-report/mosca.sarif
 ```
+
+### Compliance gates
+
+A readiness score is useful for prioritisation but useless in an audit. The
+compliance engine maps each enriched finding onto named controls and reports
+pass, partial or fail per standard:
+
+```bash
+mosca scan . --compliance cnsa2
+mosca scan . --compliance all --fail-on-compliance pci-dss
+```
+
+| Standard | Focus |
+| --- | --- |
+| `cnsa2` | ML-KEM key establishment, ML-DSA signatures, AES-256, SHA-384 |
+| `nist-2030` | Deprecate RSA/ECC/DSA/EdDSA by 2030 and remove by 2035 |
+| `pci-dss` | TLS 1.2+, no RC4/3DES/DES, RSA-2048+, no MD5/SHA-1, HNDL |
+| `hipaa` | ePHI in transit and at rest, integrity, long-retention HNDL |
+
+Each violation carries the finding fingerprint, algorithm and location, so the
+SARIF result itself names the control it breaks.
+
+### Fix plans
+
+`mosca fix` is deliberately conservative. It only generates a textual hunk
+when the change is a literal swap of a hash, MAC or AES key size — and never
+inside a protocol implementation or a test vector, where the algorithm is part
+of the wire format. Everything else becomes an advisory:
+
+```bash
+mosca fix .
+# out/mosca-fix.patch — review with `git apply --check`, then apply deliberately
+```
+
+Signatures, key agreement, certificates, configuration, lockfiles and live
+listeners are always manual: those are trust-chain or protocol migrations, not
+find-and-replace. MOSCA never edits a file in the `fix` command.
+
+### Mermaid diagrams
+
+```bash
+mosca scan . --format mermaid --out out
+# out/mosca.mmd            risk graph
+# out/mosca-diagrams.md    risk graph, certificate chains and supply chain
+```
+
+Diagrams are bounded and deterministic, so a committed diagram does not churn
+on every scan. Labels are sanitised before they reach Mermaid syntax.
 
 ### Configuration
 
@@ -260,9 +362,20 @@ $ mosca explain rsa
 
 The report renders Mosca's inequality as a timeline. Drag the CRQC line and
 every bar is re-evaluated in the browser — no server, no JavaScript bundle,
-no network access. It also contains the findings table with severity and
-"new since baseline" filters, TLS and SSH endpoint cards, a CRQC sensitivity
-strip, the algorithm inventory and the phased roadmap.
+no network access. It also contains:
+
+- a **crypto-agility simulator** that re-scores the estate as you move the
+  CRQC year, scale migration speed and assume a hybrid-key-exchange rollout;
+- an **X.509 chain tree** for every inspected TLS endpoint, with the weakest
+  link highlighted and the projected post-quantum flight size against the
+  14 KB initial congestion window;
+- **compliance cards** for CNSA 2.0, NIST 2030, PCI DSS and HIPAA, naming each
+  failed control and its remediation;
+- a **cryptographic supply-chain table** of lockfile packages and an
+  **on-disk artefact table** (PEM, DER, JWK, OpenSSH);
+- the findings table with severity and "new since baseline" filters, TLS,
+  SSH, STARTTLS, QUIC and IKEv2 endpoint cards, a CRQC sensitivity strip, the
+  algorithm inventory and the phased roadmap.
 
 A generated example is committed at [`docs/index.html`](docs/index.html).
 
@@ -274,6 +387,8 @@ mosca scan . --format cbom --out out
 # cryptoProperties.algorithmProperties, NIST quantum level, and
 # mosca:* properties (status, replacement, inequality, location).
 # TLS and SSH servers appear as protocol assets with their KEX lists.
+# Lockfile packages appear as library components, and the top-level
+# `dependencies` graph connects them to the application.
 ```
 
 ### SARIF 2.1.0
@@ -281,7 +396,9 @@ mosca scan . --format cbom --out out
 Every actionable code finding becomes a SARIF result with a stable,
 line-independent `partialFingerprints.moscaFingerprint`, so GitHub code
 scanning tracks an issue across commits instead of re-opening it. Baseline
-runs also set `baselineState` to `new` or `unchanged`.
+runs also set `baselineState` to `new` or `unchanged`. With `--compliance`,
+each result gains a `properties.compliance` list naming the standards and
+controls it violates, and the run carries an estate-wide compliance summary.
 
 ## How the score works
 
@@ -310,28 +427,32 @@ be evaluated without pointing it at real code.
 npm run demo
 ```
 
-Expected result: **53 findings** (16 critical, 21 high, 11 medium), QRI
-**24.6/100**, ~25 engineer-days of estimated migration effort, in under a second.
-Add live endpoints for the full picture:
+Expected result: **56 findings** (source, configuration, one on-disk RSA
+artefact and two lockfile packages), QRI **23.9/100**, ~27 engineer-days of
+estimated migration effort across **51 unique migration sites**, in under a
+second. Add live endpoints for the full picture:
 
 ```bash
-node bin/mosca.js demo --tls cloudflare.com,github.com,en.wikipedia.org,example.com --ssh github.com
-# 73 findings · QRI 29.6/100 · HNDL exposure 28.6% · 4 TLS + 1 SSH endpoint
+node bin/mosca.js demo --tls cloudflare.com,github.com,en.wikipedia.org,example.com \
+  --ssh github.com --starttls smtp://gmail-smtp-in.l.google.com:25 --quic cloudflare.com
 ```
 
 ## Development
 
 ```bash
-npm run check   # zero-dependency guard + 112 tests
+npm run check   # zero-dependency guard + 206 tests
 npm test        # node:test only
 npm run demo
 ```
 
 No build step, no transpiler, no test framework to install. The test suite
-covers the algorithm registry invariants, 20+ rule true/false positives, DER
-X.509 parsing against a real Cloudflare certificate, ClientHello construction
-and ServerHello parsing, the risk model, all three report formats, the file
-walker, configuration handling and an end-to-end scan.
+covers the algorithm registry invariants, rule true/false positives, DER X.509
+parsing against a real Cloudflare certificate, ClientHello construction and
+ServerHello parsing, RFC 9001 QUIC Initial key derivation against the Appendix
+A.1 vectors, the STARTTLS and IKEv2 wire formats, X.509 chain analysis,
+lockfile parsing, artefact scanning, constant propagation, all four compliance
+standards, the fix planner, the risk model, every report format and an
+end-to-end scan.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the module map and the
 wire-format details, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to add a

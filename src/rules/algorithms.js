@@ -838,6 +838,18 @@ export const ALGORITHMS = {
     standard: 'OpenSSH 9.9+',
   },
 
+  // ------------------------------------------------------- transition ---
+  'pqc-transition': {
+    id: 'pqc-transition',
+    label: 'PQC transition (handshake size)',
+    primitives: ['certificate', 'protocol'],
+    quantum: Q.UNKNOWN,
+    classical: C.ACCEPTABLE,
+    replacement: 'ml-dsa-65',
+    standard: 'FIPS 204 / FIPS 205',
+    note: 'The post-quantum replacement is sound; the migration itself adds handshake bytes and operational risk.',
+  },
+
   // ------------------------------------------------------------- misc ---
   'none': {
     id: 'none',

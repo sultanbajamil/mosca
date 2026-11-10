@@ -15,7 +15,7 @@ const WORDMARK = `
   ██║ ╚═╝ ██║╚██████╔╝███████║╚██████╗██║  ██║
   ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝`;
 
-export function printBanner(version = '2.0.0') {
+export function printBanner(version = '3.0.0') {
   const lines = WORDMARK.split('\n');
   for (const line of lines) {
     // Vertical gradient from cyan to magenta.

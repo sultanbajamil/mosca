@@ -19,11 +19,17 @@ import { probeSsh, deriveSshFindings, parseSshTarget } from './net/ssh.js';
 import { c, quantumColor } from './util/log.js';
 import { analyse } from './analysis/risk.js';
 import { buildBaseline, loadBaseline, applyBaseline } from './analysis/baseline.js';
+import { COMPLIANCE_IDS, evaluateAllCompliance } from './analysis/compliance.js';
+import { buildFixPlan, buildPatch, renderFixReport } from './fix.js';
+import { buildMermaid, buildMermaidMarkdown } from './report/mermaid.js';
+import { inspectStarttls } from './net/starttls.js';
+import { inspectQuic } from './net/quic.js';
+import { inspectIkev2 } from './net/ikev2.js';
 import { RULE_COUNT } from './rules/source.js';
 import { CONFIG_RULES } from './rules/config.js';
 import { ALGORITHMS, lookup } from './rules/algorithms.js';
 
-const VERSION = '2.0.0';
+const VERSION = '3.0.0';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
@@ -33,6 +39,9 @@ export function parseArgs(argv) {
   const takesValue = new Set([
     'tls',
     'ssh',
+    'starttls',
+    'quic',
+    'ikev2',
     'out',
     'format',
     'fail-on',
@@ -44,6 +53,10 @@ export function parseArgs(argv) {
     'port',
     'baseline',
     'write-baseline',
+    'compliance',
+    'fail-on-compliance',
+    'fix-out',
+    'addke',
   ]);
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -79,9 +92,13 @@ const HELP = `
 ${c.bold('MOSCA')} — post-quantum exposure scanner
 
 ${c.bold('USAGE')}
-  mosca scan [path] [options]      Scan source, config, TLS and SSH
+  mosca scan [path] [options]      Scan source, config, artefacts, dependencies, TLS and SSH
   mosca tls <host...>              Probe TLS endpoints for post-quantum readiness
   mosca ssh <host...>              Probe SSH servers for hybrid KEX and weak algorithms
+  mosca starttls <target...>       Probe SMTP, IMAP, POP3, PostgreSQL and LDAP STARTTLS
+  mosca quic <host...>             Probe QUIC / HTTP/3 with a protected Initial packet
+  mosca ikev2 <host...>            Probe IPsec gateways for RFC 9370 hybrid key exchange
+  mosca fix [path]                 Propose a patch for automatic fixes and advisories for the rest
   mosca explain <algorithm>        Explain an algorithm and its migration path
   mosca demo                       Scan the bundled vulnerable example
   mosca init                       Write a starter mosca.json
@@ -90,9 +107,17 @@ ${c.bold('USAGE')}
 ${c.bold('SCAN OPTIONS')}
   --tls <host,...>        TLS endpoints to inspect (also: mosca.json "endpoints")
   --ssh <host,...>        SSH endpoints to inspect (also: mosca.json "ssh")
+  --starttls <target,...> STARTTLS targets: smtp://, imap://, pop3://, postgres://, ldap://
+  --quic <host,...>       QUIC / HTTP/3 endpoints to inspect
+  --ikev2 <host,...>      IKEv2 gateways to inspect for RFC 9370 hybrid KEX
   --out <dir>             Output directory (default: ./mosca-report)
-  --format <list>         html,json,cbom,sarif,term  (default: html,term)
+  --format <list>         html,json,cbom,sarif,term,mermaid  (default: html,term)
   --fail-on <severity>    Exit 1 at or above: low|medium|high|critical
+  --compliance <id>       Compliance report: cnsa2 | nist-2030 | pci-dss | hipaa | all
+  --fail-on-compliance <id>
+                          Exit 1 when the selected standard fails
+  --fix                   Write a proposed patch and print the fix plan
+  --fix-out <file>        Patch path (default: <out>/mosca-fix.patch)
   --baseline <file>       Compare against a baseline; gate only on new findings
   --write-baseline <file> Write this run's findings as the new baseline
   --config <file>         Config file path
@@ -115,12 +140,18 @@ ${c.bold('EXAMPLES')}
   mosca scan . --write-baseline .mosca-baseline.json
   mosca scan . --baseline .mosca-baseline.json --fail-on high
 
-  ${c.gray('# explain why RSA is exposed and what replaces it')}
-  mosca explain rsa
+  ${c.gray('# gate a merger on CNSA 2.0 and publish Mermaid diagrams')}
+  mosca scan . --compliance cnsa2 --fail-on-compliance cnsa2 --format html,term,mermaid
+
+  ${c.gray('# propose fixes without applying them')}
+  mosca fix . --out .mosca-report
 
   ${c.gray('# just probe endpoints')}
   mosca tls cloudflare.com github.com
   mosca ssh git.example.com:2222
+  mosca starttls smtp://mail.example.com:587
+  mosca quic cloudflare.com
+  mosca ikev2 vpn.example.com
 `;
 
 export async function main(argv = process.argv.slice(2)) {
@@ -146,6 +177,14 @@ export async function main(argv = process.argv.slice(2)) {
         return await runTls(args);
       case 'ssh':
         return await runSsh(args);
+      case 'starttls':
+        return await runStarttls(args);
+      case 'quic':
+        return await runQuic(args);
+      case 'ikev2':
+        return await runIkev2(args);
+      case 'fix':
+        return await runFix(args, args._[1] || '.');
       case 'explain':
         return runExplain(args);
       case 'demo':
@@ -185,20 +224,30 @@ async function runScan(args, target) {
   const overrides = buildOverrides(args);
   const endpoints = splitList(args.tls);
   const sshTargets = splitList(args.ssh);
+  const starttlsTargets = splitList(args.starttls);
+  const quicTargets = splitList(args.quic);
+  const ikev2Targets = splitList(args.ikev2);
 
   // Load the baseline before scanning so a typo fails fast instead of after
   // a long network probe.
   const baselineDoc = args.baseline ? loadBaseline(path.resolve(args.baseline)) : null;
 
-  const { analysis, meta, endpoints: endpointResults, sshEndpoints } = await scan({
+  const { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, artifacts, dependencies } = await scan({
     root,
     config: overrides,
     endpoints,
     ssh: sshTargets,
+    starttls: starttlsTargets,
+    quic: quicTargets,
+    ikev2: ikev2Targets,
     quiet,
   });
 
   if (baselineDoc) applyBaseline(analysis, baselineDoc);
+
+  const complianceSelection = selectionValue(args.compliance || args['fail-on-compliance']);
+  const compliance = evaluateAllCompliance(analysis, complianceSelection);
+  analysis.compliance = compliance;
 
   const formats = args.json ? ['json'] : splitList(args.format) || ['html', 'term'];
 
@@ -208,6 +257,7 @@ async function runScan(args, target) {
     printSshEndpoints(sshEndpoints);
     printFindings(analysis.items, { limit: Number(args.top) || 20 });
     printRoadmap(analysis.roadmap);
+    printCompliance(compliance);
     printNextSteps(analysis);
   }
 
@@ -241,8 +291,17 @@ async function runScan(args, target) {
     fs.writeFileSync(file, JSON.stringify(sarif, null, 2), 'utf8');
     written.push(file);
   }
+  if (formats.includes('mermaid')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const mmd = path.join(outDir, 'mosca.mmd');
+    fs.writeFileSync(mmd, buildMermaid(analysis) + '\n', 'utf8');
+    written.push(mmd);
+    const diagrams = path.join(outDir, 'mosca-diagrams.md');
+    fs.writeFileSync(diagrams, buildMermaidMarkdown(analysis), 'utf8');
+    written.push(diagrams);
+  }
   if (formats.includes('json')) {
-    const payload = { analysis, meta, endpoints: endpointResults, sshEndpoints };
+    const payload = { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, artifacts, dependencies };
     if (args.json && !args.out) {
       // Stream to stdout for piping.
       console.log(JSON.stringify(payload, null, 2));
@@ -251,6 +310,25 @@ async function runScan(args, target) {
       const file = path.join(outDir, 'mosca.json');
       fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
       written.push(file);
+    }
+  }
+
+  if (args.fix) {
+    const plan = buildFixPlan(analysis);
+    const patchFile = path.resolve(args['fix-out'] || path.join(outDir, 'mosca-fix.patch'));
+    const result = buildPatch(plan, { root });
+    fs.mkdirSync(path.dirname(patchFile), { recursive: true });
+    if (result.patch) {
+      fs.writeFileSync(patchFile, result.patch, 'utf8');
+      written.push(patchFile);
+    }
+    if (!quiet) {
+      console.log(c.bold('  FIX PLAN') + '\n');
+      console.log(renderFixReport(plan).replace(/^/gm, '  '));
+      if (result.skipped.length) {
+        console.log(c.yellow(`  ${result.skipped.length} edit(s) skipped; see the plan above.`));
+      }
+      console.log('');
     }
   }
 
@@ -271,7 +349,32 @@ async function runScan(args, target) {
     console.log(c.gray(`  ${RULE_COUNT} source rules · ${CONFIG_RULES.length} config rules · completed in ${meta.durationMs} ms\n`));
   }
 
-  return exitCode(analysis, args['fail-on'], { newOnly: Boolean(baselineDoc) });
+  let code = exitCode(analysis, args['fail-on'], { newOnly: Boolean(baselineDoc) });
+  if (args['fail-on-compliance'] && compliance.some((result) => result.status === 'fail')) code = 1;
+  return code;
+}
+
+/** `--compliance` with no value means every standard. */
+function selectionValue(value) {
+  if (!value || value === true) return undefined;
+  return String(value);
+}
+
+/** Terminal compliance table. */
+function printCompliance(results) {
+  if (!results.length) return;
+  console.log(c.bold('  COMPLIANCE') + '\n');
+  for (const result of results) {
+    const verdict = result.status === 'pass' ? c.green('PASS') : result.status === 'partial' ? c.yellow('PARTIAL') : c.red('FAIL');
+    console.log(`  ${c.bold(result.label.padEnd(22))} ${verdict}  ${c.gray(`score ${result.score} · ${result.violationCount} violation${result.violationCount === 1 ? '' : 's'}`)}`);
+    for (const control of result.controls.filter((item) => item.status === 'fail').slice(0, 4)) {
+      console.log(`      ${c.red('✕')} ${control.label} ${c.gray(`(${control.violationCount})`)}`);
+    }
+    if (result.controls.filter((item) => item.status === 'fail').length > 4) {
+      console.log(c.gray(`      … ${result.controls.filter((item) => item.status === 'fail').length - 4} more failed controls`));
+    }
+  }
+  console.log(c.gray(`  Standards: ${COMPLIANCE_IDS.join(', ')}\n`));
 }
 
 function buildOverrides(args) {
@@ -390,6 +493,163 @@ async function runSsh(args) {
 }
 
 // ---------------------------------------------------------------------------
+// starttls / quic / ikev2
+// ---------------------------------------------------------------------------
+
+async function runStarttls(args) {
+  const targets = args._.slice(1);
+  if (!targets.length) {
+    console.error(c.red('  Usage: mosca starttls <smtp://host:587 | imap://host:993 | pop3://host:995 | postgres://host:5432 | ldap://host:389>'));
+    return 2;
+  }
+  printBanner(VERSION);
+  const results = await Promise.all(targets.map((target) => inspectStarttls(target, { timeout: 10000 })));
+
+  console.log(c.bold('  STARTTLS POSTURE') + '\n');
+  for (const ep of results) {
+    const label = `${ep.protocol}://${ep.host}${ep.port ? `:${ep.port}` : ''}`;
+    if (!ep.reachable) {
+      console.log(`  ${c.red('✕')} ${c.bold(label)}  ${c.gray(ep.error || 'unreachable')}`);
+      continue;
+    }
+    const kex = ep.hybrid ? c.green(`● ${ep.groupLabel}`) : c.red(`○ ${ep.groupLabel || ep.group || 'unknown'}`);
+    console.log(`  ${c.green('✓')} ${c.bold(label)}`);
+    console.log(`      protocol   ${c.cyan(ep.versionName || '?')}`);
+    console.log(`      key xchg   ${kex}${ep.hybrid ? c.gray('  (post-quantum hybrid)') : c.gray('  (breaks under Shor)')}`);
+    if (ep.cipherName) console.log(`      cipher     ${ep.cipherName}`);
+    const chain = ep.chainAnalysis;
+    if (chain?.entries?.length) {
+      const leaf = chain.entries[0];
+      console.log(`      cert       ${leaf.keyLabel}${leaf.keyBits ? ` ${leaf.keyBits}` : ''} · ${chain.length} certificate${chain.length === 1 ? '' : 's'}`);
+    }
+    for (const finding of ep.findings.filter((f) => !f.positive)) {
+      console.log(`      ${c.yellow('!')} ${finding.title}`);
+    }
+    console.log('');
+  }
+  const hybrid = results.filter((result) => result.hybrid).length;
+  console.log(c.gray(`  ${hybrid} of ${results.length} STARTTLS endpoint${results.length === 1 ? '' : 's'} negotiate post-quantum hybrid key exchange.`));
+  console.log('');
+  return 0;
+}
+
+async function runQuic(args) {
+  const hosts = args._.slice(1);
+  if (!hosts.length) {
+    console.error(c.red('  Usage: mosca quic <host...> [--port 443]'));
+    return 2;
+  }
+  printBanner(VERSION);
+  const port = args.port ? Number(args.port) : null;
+  const targets = hosts.map((host) => (port && !host.includes(':') ? `${host}:${port}` : host));
+  const results = await Promise.all(targets.map((target) => inspectQuic(target, { timeout: 10000 })));
+
+  console.log(c.bold('  QUIC POSTURE') + '\n');
+  for (const ep of results) {
+    const label = `${ep.host}${ep.port !== 443 ? `:${ep.port}` : ''}`;
+    if (!ep.reachable) {
+      console.log(`  ${c.red('✕')} ${c.bold(label)}  ${c.gray(ep.error || 'unreachable')}`);
+      continue;
+    }
+    const kex = ep.hybrid ? c.green(`● ${ep.groupLabel}`) : c.red(`○ ${ep.groupLabel || ep.group || 'unknown'}`);
+    console.log(`  ${c.green('✓')} ${c.bold(label)}`);
+    console.log(`      version    ${c.cyan(ep.versionName || '?')}${ep.versionNegotiation ? c.gray('  (version negotiation)') : ''}`);
+    console.log(`      key xchg   ${kex}${ep.hybrid ? c.gray('  (post-quantum hybrid)') : c.gray('  (breaks under Shor)')}`);
+    if (ep.cipherName) console.log(`      cipher     ${ep.cipherName}`);
+    if (ep.datagramBytes) console.log(`      response   ${ep.datagramBytes} bytes`);
+    for (const finding of ep.findings.filter((f) => !f.positive)) {
+      console.log(`      ${c.yellow('!')} ${finding.title}`);
+    }
+    console.log('');
+  }
+  const hybrid = results.filter((result) => result.hybrid).length;
+  console.log(c.gray(`  ${hybrid} of ${results.length} QUIC endpoint${results.length === 1 ? '' : 's'} negotiate post-quantum hybrid key exchange.`));
+  console.log('');
+  return 0;
+}
+
+async function runIkev2(args) {
+  const hosts = args._.slice(1);
+  if (!hosts.length) {
+    console.error(c.red('  Usage: mosca ikev2 <host...> [--port 500] [--addke 35,36]'));
+    return 2;
+  }
+  printBanner(VERSION);
+  const port = args.port ? Number(args.port) : null;
+  const targets = hosts.map((host) => (port && !host.includes(':') ? `${host}:${port}` : host));
+  const addkeIds = args.addke
+    ? splitList(args.addke).map(Number).filter((id) => Number.isFinite(id))
+    : undefined;
+  const results = await Promise.all(targets.map((target) => inspectIkev2(target, { timeout: 4000, addkeIds })));
+
+  console.log(c.bold('  IKEv2 POSTURE') + '\n');
+  for (const ep of results) {
+    const label = `${ep.host}${ep.port !== 500 ? `:${ep.port}` : ''}`;
+    if (!ep.reachable) {
+      console.log(`  ${c.red('✕')} ${c.bold(label)}  ${c.gray(ep.error || 'unreachable')}`);
+      continue;
+    }
+    const hybrid = ep.addke?.supported;
+    console.log(`  ${c.green('✓')} ${c.bold(label)}`);
+    console.log(`      hybrid     ${hybrid ? c.green(`● ADDKE transform ${ep.addke.transformId}`) : c.red('○ no RFC 9370 additional key exchange')}`);
+    if (ep.classic?.notify) console.log(`      notify     ${ep.classic.notify}`);
+    for (const finding of ep.findings.filter((f) => !f.positive)) {
+      console.log(`      ${c.yellow('!')} ${finding.title}`);
+    }
+    console.log('');
+  }
+  const hybrid = results.filter((result) => result.addke?.supported).length;
+  console.log(c.gray(`  ${hybrid} of ${results.length} IKEv2 gateway${results.length === 1 ? '' : 's'} accept hybrid additional key exchange.`));
+  console.log('');
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
+// fix
+// ---------------------------------------------------------------------------
+
+async function runFix(args, target) {
+  const root = path.resolve(target);
+  if (!fs.existsSync(root)) {
+    console.error(c.red(`  Path does not exist: ${root}`));
+    return 2;
+  }
+  printBanner(VERSION);
+
+  const { analysis } = await scan({
+    root,
+    config: buildOverrides(args),
+    endpoints: splitList(args.tls) || [],
+    ssh: splitList(args.ssh) || [],
+    starttls: splitList(args.starttls) || [],
+    quic: splitList(args.quic) || [],
+    ikev2: splitList(args.ikev2) || [],
+    quiet: true,
+  });
+  const plan = buildFixPlan(analysis);
+  const result = buildPatch(plan, { root });
+
+  console.log(renderFixReport(plan).replace(/^/gm, '  '));
+  console.log('');
+
+  const outDir = path.resolve(args.out || path.join(root, 'mosca-report'));
+  const patchFile = path.resolve(args['fix-out'] || path.join(outDir, 'mosca-fix.patch'));
+  if (result.patch) {
+    fs.mkdirSync(path.dirname(patchFile), { recursive: true });
+    fs.writeFileSync(patchFile, result.patch, 'utf8');
+    console.log(c.gray(`  Patch written to ${patchFile} (${result.applied.reduce((sum, item) => sum + item.edits, 0)} edit(s)).`));
+    console.log(c.gray('  Apply deliberately: git apply --check <patch> && git apply <patch>'));
+  } else {
+    console.log(c.gray('  No automatic edits were generated; work through the advisories above.'));
+  }
+  if (result.skipped.length) {
+    console.log(c.yellow(`  ${result.skipped.length} edit(s) skipped because the literal moved or the file was unreadable.`));
+  }
+  console.log('');
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
 // explain
 // ---------------------------------------------------------------------------
 
@@ -489,7 +749,10 @@ function runRules() {
   console.log(`  Config rules    ${c.bold(String(CONFIG_RULES.length))}`);
   console.log(`  Languages       ${c.bold('16')}`);
   console.log(`  Algorithms      ${c.bold(String(Object.keys(ALGORITHMS).length))} classified in the registry`);
-  console.log(`  Protocols       ${c.bold('TLS 1.0–1.3, SSH 2.0')}`);
+  console.log(`  Protocols       ${c.bold('TLS 1.0–1.3, SSH 2.0, QUIC v1, IKEv2, STARTTLS')}`);
+  console.log(`  Artefacts       ${c.bold('PEM, DER, JWK/JWKS, OpenSSH, authorized_keys, known_hosts')}`);
+  console.log(`  Lockfiles       ${c.bold('npm, yarn, pnpm, Cargo, Go, Poetry, requirements.txt, Maven')}`);
+  console.log(`  Compliance      ${c.bold(COMPLIANCE_IDS.join(', '))}`);
   console.log('');
   return 0;
 }

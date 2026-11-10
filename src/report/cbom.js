@@ -243,6 +243,30 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
     });
   }
 
+  // Cryptographic libraries discovered in lockfiles. These are ordinary
+  // CycloneDX library components: their cryptographic meaning lives in
+  // properties, while `dependencies` connects them to the application.
+  const libraryRefs = [];
+  const librarySeen = new Set();
+  for (const pkg of analysis.dependencies?.packages || []) {
+    const ref = `pkg/${pkg.ecosystem || 'unknown'}/${pkg.name}@${pkg.version || 'unknown'}`;
+    if (librarySeen.has(ref)) continue;
+    librarySeen.add(ref);
+    libraryRefs.push(ref);
+    components.push({
+      type: 'library',
+      'bom-ref': ref,
+      name: pkg.name,
+      version: pkg.version || undefined,
+      properties: [
+        { name: 'mosca:cryptoPackageStatus', value: pkg.status || 'quantum-vulnerable' },
+        { name: 'mosca:algorithm', value: pkg.algorithm || 'unknown' },
+        { name: 'mosca:lockfile', value: pkg.file || pkg.rel || 'unknown' },
+        { name: 'mosca:ecosystem', value: pkg.ecosystem || 'unknown' },
+      ],
+    });
+  }
+
   const bom = {
     bomFormat: 'CycloneDX',
     specVersion: '1.6',
@@ -262,6 +286,7 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
       },
       component: {
         type: 'application',
+        'bom-ref': 'application',
         name: projectName,
         version,
       },
@@ -275,6 +300,7 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
       ],
     },
     components,
+    dependencies: [{ ref: 'application', dependsOn: libraryRefs }],
   };
 
   return bom;

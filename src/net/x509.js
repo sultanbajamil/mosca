@@ -281,6 +281,36 @@ function parseSPKI(buf, node) {
   return result;
 }
 
+/**
+ * Parse a standalone SubjectPublicKeyInfo DER structure (PEM `PUBLIC KEY`).
+ * @param {Buffer} der
+ */
+export function parseSubjectPublicKeyInfo(der) {
+  const root = readTLV(der, 0);
+  if (root.tag !== TAG.SEQUENCE) throw new Error('SPKI: not a SEQUENCE');
+  return parseSPKI(der, root);
+}
+
+/**
+ * Parse a PKCS#1 RSAPublicKey DER structure (PEM `RSA PUBLIC KEY`).
+ * @param {Buffer} der
+ */
+export function parsePkcs1RsaPublicKey(der) {
+  const root = readTLV(der, 0);
+  if (root.tag !== TAG.SEQUENCE) throw new Error('RSAPublicKey: not a SEQUENCE');
+  const kids = [...children(der, root)];
+  if (!kids[0] || kids[0].tag !== TAG.INTEGER) throw new Error('RSAPublicKey: missing modulus');
+  const bits = bitLength(decodeInteger(der, kids[0]));
+  return {
+    oid: '1.2.840.113549.1.1.1',
+    algorithm: 'rsa',
+    algorithmName: 'rsaEncryption',
+    curve: null,
+    bits,
+    keyBytes: Math.ceil(bits / 8),
+  };
+}
+
 /** Parse the extensions block into a friendly object. */
 function parseExtensions(buf, node) {
   const out = { san: [], keyUsage: [], extendedKeyUsage: [], isCA: false };

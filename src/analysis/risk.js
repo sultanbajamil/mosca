@@ -32,8 +32,8 @@ import { fingerprint } from './baseline.js';
 export const SEVERITY_ORDER = { info: 0, low: 1, medium: 2, high: 3, critical: 4 };
 export const SEVERITY_LABEL = { 0: 'info', 1: 'low', 2: 'medium', 3: 'high', 4: 'critical' };
 
-const SURFACE = { endpoint: 1, config: 0.6, source: 0.3 };
-const SURFACE_WEIGHT = { endpoint: 3, config: 2, source: 1 };
+const SURFACE = { endpoint: 1, chain: 1, dependency: 0.55, artifact: 0.5, config: 0.6, source: 0.3 };
+const SURFACE_WEIGHT = { endpoint: 3, chain: 3, config: 2, dependency: 2, artifact: 2, source: 1 };
 
 const QUANTUM_FACTOR = { broken: 1, weakened: 0.5, unknown: 0.4, safe: 0 };
 const CLASSICAL_FACTOR = { broken: 1, weak: 0.6, acceptable: 0.2, strong: 0 };
@@ -88,6 +88,40 @@ function shift(severity, delta) {
 }
 
 /**
+ * A migration site is one distinct operation, not one textual occurrence.
+ * Ten calls to the same local wrapper are ten findings but one migration.
+ *
+ * The key intentionally uses the matched API call (normalised) rather than
+ * the line number, so moving a function does not create a new site.
+ * @param {object} item enriched finding
+ */
+export function migrationSiteKey(item) {
+  const location = item.location || {};
+  const where = location.file
+    ? location.file
+    : location.host
+      ? `${location.host}:${location.port ?? ''}`
+      : 'unknown';
+  const text = String(item.matched || item.snippet || item.id || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .slice(0, 160);
+  return `${item.kind}|${item.algorithm}|${where}|${text}`;
+}
+
+/** Effort for a single distinct migration site. */
+export function baseEffortDays(item) {
+  const base =
+    item.kind === 'endpoint' || item.kind === 'chain'
+      ? 3
+      : item.kind === 'config' || item.kind === 'dependency' || item.kind === 'artifact'
+        ? 1
+        : 0.5;
+  return base * (item.quantum === 'broken' ? 1 : 0.5);
+}
+
+/**
  * The main analysis entry point.
  *
  * @param {{findings:object[], endpoints:object[], sshEndpoints?:object[], config:object, now?:Date}} input
@@ -109,7 +143,9 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
   const items = findings.map((f) => {
     const algo = lookup(f.algorithm);
     const count = algorithmCounts.get(f.algorithm) || 1;
-    const isEndpoint = f.kind === 'endpoint';
+    // Chain findings describe the certificate hierarchy of a live endpoint,
+    // so they inherit the transport-payload shelf life and escalation.
+    const isEndpoint = f.kind === 'endpoint' || f.kind === 'chain';
     const shelf = isEndpoint
       ? { years: config.defaultShelfLife, label: 'transport payload' }
       : shelfLifeFor(f.location?.file || '', config.dataClasses, config.defaultShelfLife);
@@ -172,13 +208,12 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
   // ------------------------------------------------------------- aggregates
   const bySeverity = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
   const byPrimitive = {};
-  const byKind = { source: 0, config: 0, endpoint: 0 };
+  const byKind = { source: 0, config: 0, endpoint: 0, chain: 0, artifact: 0, dependency: 0 };
   const byAlgorithm = new Map();
   const byFile = new Map();
 
   let weightedTotal = 0;
   let weightedSafe = 0;
-  let effortDays = 0;
 
   for (const item of items) {
     bySeverity[item.severity] = (bySeverity[item.severity] || 0) + 1;
@@ -189,11 +224,6 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
     weightedTotal += w;
     const safety = item.quantum === 'safe' ? 1 : item.quantum === 'weakened' ? 0.5 : item.quantum === 'unknown' ? 0.3 : 0;
     weightedSafe += w * safety;
-
-    if (!item.positive) {
-      const base = item.kind === 'endpoint' ? 3 : item.kind === 'config' ? 1 : 0.5;
-      effortDays += base * (item.quantum === 'broken' ? 1 : 0.5);
-    }
 
     const algo = byAlgorithm.get(item.algorithm) || {
       algorithm: item.algorithm,
@@ -229,6 +259,24 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
     }
   }
 
+  // ---------------------------------------------------- migration effort
+  // Count unique sites first, then apply a damped spread for duplicates.
+  // A wrapper called fifty times is one migration with a coordination cost,
+  // not fifty independent migrations.
+  const actionableItems = items.filter((i) => !i.positive);
+  const sites = new Map();
+  for (const item of actionableItems) {
+    const key = migrationSiteKey(item);
+    if (!sites.has(key)) sites.set(key, baseEffortDays(item));
+  }
+  const rawOccurrences = actionableItems.length;
+  const uniqueMigrationSites = sites.size;
+  const uniqueEffortDays = [...sites.values()].reduce((sum, days) => sum + days, 0);
+  const duplicateOccurrences = Math.max(0, rawOccurrences - uniqueMigrationSites);
+  const spread =
+    duplicateOccurrences > 0 ? 1 + 0.15 * Math.log2(1 + duplicateOccurrences) : 1;
+  const effortDays = uniqueEffortDays * spread;
+
   const quantumReadinessIndex = weightedTotal === 0 ? 100 : Math.round((weightedSafe / weightedTotal) * 1000) / 10;
 
   // HNDL exposure: share of inspected endpoints (TLS and SSH) whose key
@@ -259,6 +307,10 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
     endpointsWithPqc,
     exposedItems: items.filter((i) => i.mosca?.exposed && !i.positive).length,
     effortDays: Math.round(effortDays),
+    rawOccurrences,
+    uniqueMigrationSites,
+    duplicateOccurrences,
+    migrationSpread: uniqueMigrationSites === 0 ? 0 : Math.round((rawOccurrences / uniqueMigrationSites) * 100) / 100,
     sensitivity: computeSensitivity(items, currentYear),
     topRisk: items.find((i) => !i.positive) || null,
   };

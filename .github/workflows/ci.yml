@@ -29,7 +29,7 @@ jobs:
         run: npm run check
 
       - name: Scan the demo estate
-        run: node bin/mosca.js demo --quiet --format html,json,cbom,sarif --out out
+        run: node bin/mosca.js demo --quiet --format html,json,cbom,sarif,mermaid --out out
 
       - name: Validate generated artefacts
         run: node scripts/validate-artifacts.js out

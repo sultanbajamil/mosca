@@ -6,6 +6,86 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.0] — 2026-11-10
+
+The enterprise and deep-protocol edition. Every new scanner and probe emits the
+same unified finding schema, so risk scoring, baselines, CBOM, SARIF, the HTML
+report and the fix planner all see the new surfaces without a second pipeline.
+
+### Added
+
+- **X.509 chain analysis** (`src/net/x509-chain.js`). Parses every certificate
+  in the peer chain, classifies leaf, intermediate and root, finds the weakest
+  link, flags long-lived classical roots that cross the CRQC window and SHA-1
+  signatures, and projects an ML-DSA-65 / SLH-DSA chain size against the 14 KB
+  initial congestion window. TLS and STARTTLS attach `chainAnalysis` and
+  `pqcHandshake`; chain findings use `kind: 'chain'`.
+- **STARTTLS probe** (`src/net/starttls.js`) for SMTP, IMAP, POP3, PostgreSQL
+  and LDAP. Negotiates the upgrade with the native protocol command, sends the
+  same raw ClientHello, extracts the negotiated group and chain, and closes the
+  socket without authenticating. `mosca starttls` and `scan --starttls`.
+- **QUIC / HTTP/3 probe** (`src/net/quic.js`). Builds an RFC 9001 Initial
+  packet with HKDF-SHA256, AES-128-GCM and AES-128-ECB header protection by
+  hand, pinned to the RFC 9001 Appendix A.1 test vectors, then parses the server
+  Initial, Retry and Version Negotiation. `mosca quic` and `scan --quic`.
+- **IKEv2 probe** (`src/net/ikev2.js`). Sends `IKE_SA_INIT` with RFC 9370
+  ADDKE transforms and reports whether the gateway accepts hybrid key exchange.
+  `mosca ikev2`, `scan --ikev2` and `--addke`.
+- **On-disk artefact scanner** (`src/scan/artifacts.js`). Reads metadata from
+  PEM, DER, JWK/JWKS, OpenSSH private keys, `authorized_keys`, `known_hosts`
+  and `*.pub` files. Private key bodies are never emitted. Findings use
+  `kind: 'artifact'`.
+- **Cryptographic supply-chain scanner** (`src/scan/deps.js` and
+  `src/rules/crypto-packages.js`). Eight lockfile parsers (package-lock,
+  npm-shrinkwrap, yarn, pnpm, Cargo, Go, Poetry, requirements.txt, Maven) plus a
+  curated package intelligence table. Findings use `kind: 'dependency'`.
+- **Contextual static analysis** (`src/scan/constants.js`). Single-assignment
+  string constants are propagated into crypto APIs; reassigned or interpolated
+  constants stay unresolved. Indirect findings record `flow` evidence.
+- **Unique-site migration effort.** Risk analysis now separates raw occurrences
+  from unique migration sites, keyed by kind, algorithm, location and
+  normalised match, and applies a damped duplication factor.
+- **IaC and edge-proxy rules.** Configuration rules grow from 23 to **62**,
+  covering Terraform, cert-manager, Istio, HAProxy, Envoy, Caddy, Traefik,
+  Cloudflare and Dockerfile variants, plus `.tf`, `.hcl` and `.toml`.
+- **Compliance engine** (`src/analysis/compliance.js`). `--compliance` and
+  `--fail-on-compliance` for CNSA 2.0, NIST 2030, PCI DSS v4.0 and HIPAA, with
+  per-control pass/partial/fail, scores, evidence and remediation. Compliance
+  properties flow into SARIF and HTML.
+- **`mosca fix`** (`src/fix.js`). Produces a reviewable unified patch for hash,
+  MAC and AES key-size literal swaps and numbered advisories for signatures,
+  key agreement, certificates, protocol, configuration, lockfile and endpoint
+  changes. Symmetric edits inside protocol implementations and test vectors are
+  demoted to advisories. Never applies a change.
+- **Mermaid output** (`src/report/mermaid.js`). Bounded, deterministic risk,
+  certificate-chain and supply-chain diagrams; `--format mermaid` writes
+  `mosca.mmd` and `mosca-diagrams.md`.
+- **HTML v3 sections**: crypto-agility simulator, X.509 chain tree, compliance
+  cards, supply-chain table and artefact table.
+- **CBOM** now includes lockfile packages as library components and a
+  top-level dependency graph; **SARIF** carries per-result compliance controls
+  and a run-level compliance summary.
+- **94 new tests** (206 total) for chain analysis, STARTTLS, QUIC, IKEv2,
+  artefacts, dependencies, constants, the 62 config rules, compliance, the fix
+  planner, Mermaid and the v3 report surfaces.
+
+### Changed
+
+- Version bumped to `3.0.0`; Node ≥ 20 is still the only requirement.
+- `mosca scan` now includes artefacts and dependencies by default, and accepts
+  STARTTLS, QUIC and IKEv2 targets.
+- The `rules` command reports the new protocols, artefact formats, lockfiles
+  and compliance standards.
+- The GitHub Action gains `starttls`, `quic`, `ikev2`, `compliance` and
+  `fail-on-compliance` inputs; `mermaid` is in the default format list.
+
+### Fixed
+
+- Mermaid labels are sanitised for braces, brackets, pipes and backticks, so a
+  malicious filename cannot break out of a node.
+- `mosca fix` no longer proposes literal swaps inside protocol or test-vector
+  paths.
+
 ## [2.0.0] — 2026-11-09
 
 The release that turns MOSCA from a scanner into a CI-native platform.
@@ -99,6 +179,7 @@ First release.
 - The HTML report's CBOM download now embeds the real CycloneDX document
   instead of producing an empty object.
 
-[Unreleased]: https://github.com/sultanbajamil/mosca/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/sultanbajamil/mosca/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/sultanbajamil/mosca/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/sultanbajamil/mosca/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/sultanbajamil/mosca/releases/tag/v1.0.0

@@ -10,29 +10,32 @@ what makes the tool auditable and the tests fast.
   .moscaignore ─────▶│ defaults, data classes   │
                      └────────────┬─────────────┘
                                   │ merged config
-        ┌─────────────────────────┼─────────────────────────┐
-        ▼                         ▼                         ▼
-┌───────────────┐        ┌────────────────┐        ┌──────────────────┐
-│ scan/source   │        │ scan/config    │        │ net/tls          │
-│ 148 rules     │        │ 23 rules       │        │ Node handshake + │
-│ 16 languages  │        │ nginx/sshd/…   │        │ raw ClientHello  │
-└───────┬───────┘        └───────┬────────┘        └────────┬─────────┘
-        │ findings               │ findings                 │ endpoints
-        └────────────────────────┼──────────────────────────┘
+     ┌──────────────┬─────────────┼─────────────┬──────────────┐
+     ▼              ▼             ▼             ▼              ▼
+┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────────┐
+│scan/     │ │scan/      │ │scan/      │ │scan/      │ │net/tls       │
+│source    │ │config     │ │artifacts  │ │deps       │ │starttls      │
+│148 rules │ │62 rules   │ │PEM/DER/JWK│ │8 lockfiles│ │quic / ikev2  │
+│16 langs  │ │IaC/proxies│ │OpenSSH    │ │packages   │ │raw probes    │
+└────┬─────┘ └─────┬─────┘ └─────┬─────┘ └─────┬─────┘ └──────┬───────┘
+     │ findings    │ findings    │ findings    │ findings      │ endpoints
+     └─────────────┴─────────────┼─────────────┴───────────────┘
                                  ▼
                      ┌──────────────────────────┐
                      │ analysis/risk.js         │
                      │ Mosca inequality, score, │
-                     │ severity, QRI, roadmap   │
+                     │ severity, QRI, effort,   │
+                     │ roadmap                  │
                      └────────────┬─────────────┘
                                   │ analysis object
-        ┌─────────────────────────┼─────────────────────────┐
-        ▼                         ▼                         ▼
-┌───────────────┐        ┌────────────────┐        ┌──────────────────┐
-│ report/       │        │ report/cbom    │        │ report/sarif     │
-│ terminal +    │        │ CycloneDX 1.6  │        │ SARIF 2.1.0      │
-│ html          │        │                │        │                  │
-└───────────────┘        └────────────────┘        └──────────────────┘
+     ┌──────────────┬─────────────┼─────────────┬──────────────┐
+     ▼              ▼             ▼             ▼              ▼
+┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────────┐
+│report/   │ │report/    │ │report/    │ │analysis/  │ │fix.js        │
+│terminal  │ │cbom       │ │sarif      │ │compliance │ │patch +       │
+│html      │ │CycloneDX  │ │SARIF      │ │4 standards│ │advisories    │
+│mermaid   │ │1.6        │ │2.1.0      │ │           │ │              │
+└──────────┘ └───────────┘ └───────────┘ └───────────┘ └──────────────┘
 ```
 
 ## Module map
@@ -43,21 +46,32 @@ what makes the tool auditable and the tests fast.
 | `src/cli.js` | Command grammar, output orchestration, exit codes |
 | `src/index.js` | `scan()` pipeline and `exitCode()` |
 | `src/config.js` | Defaults, scenarios, merge, data-class matching |
-| `src/rules/algorithms.js` | 91-entry algorithm registry, aliases, replacements |
+| `src/rules/algorithms.js` | 92-entry algorithm registry, aliases, replacements |
 | `src/rules/source.js` | 148 source rules across 16 languages |
-| `src/rules/config.js` | 23 rules for nginx, Apache, sshd, OpenSSL, Java, Kubernetes |
+| `src/rules/config.js` | 62 rules for IaC, edge proxies, nginx, Apache, sshd, OpenSSL, Java, Kubernetes |
+| `src/rules/crypto-packages.js` | Curated cryptographic package intelligence |
 | `src/scan/source.js` | Walker integration, comment stripping, match → finding |
+| `src/scan/constants.js` | Single-assignment constant propagation into crypto APIs |
 | `src/scan/config.js` | Config-file detection and rule application |
-| `src/net/clienthello.js` | Raw TLS ClientHello builder and ServerHello parser |
+| `src/scan/artifacts.js` | PEM, DER, JWK/JWKS, OpenSSH and `authorized_keys` metadata |
+| `src/scan/deps.js` | Eight lockfile parsers and package → finding mapping |
+| `src/net/clienthello.js` | Raw TLS ClientHello builder and ServerHello parser (TLS and QUIC) |
 | `src/net/x509.js` | Dependency-free DER/X.509 parser |
-| `src/net/tls.js` | Endpoint inspection and endpoint finding derivation |
+| `src/net/x509-chain.js` | Chain classification, weakest link, long-lived roots, PQC projection |
+| `src/net/tls.js` | Endpoint inspection, chain attachment and endpoint finding derivation |
 | `src/net/ssh.js` | Raw RFC 4253 banner exchange, KEXINIT parser, SSH findings |
-| `src/analysis/risk.js` | Mosca inequality, scoring, aggregates, sensitivity, roadmap |
+| `src/net/starttls.js` | SMTP, IMAP, POP3, PostgreSQL and LDAP STARTTLS upgrades |
+| `src/net/quic.js` | RFC 9001 Initial packet protection and QUIC response parsing |
+| `src/net/ikev2.js` | IKE_SA_INIT with RFC 9370 ADDKE transforms |
+| `src/analysis/risk.js` | Mosca inequality, scoring, aggregates, unique-site effort, sensitivity, roadmap |
 | `src/analysis/baseline.js` | Stable fingerprints, baseline build/load/apply, diff status |
+| `src/analysis/compliance.js` | CNSA 2.0, NIST 2030, PCI DSS and HIPAA controls |
+| `src/fix.js` | Fix planner, safe literal swaps, unified diff, advisories |
 | `src/report/terminal.js` | ANSI terminal report |
-| `src/report/html.js` | Self-contained interactive report |
-| `src/report/cbom.js` | CycloneDX 1.6 CBOM |
-| `src/report/sarif.js` | SARIF 2.1.0 |
+| `src/report/html.js` | Self-contained interactive report, simulator and chain tree |
+| `src/report/cbom.js` | CycloneDX 1.6 CBOM with library components |
+| `src/report/sarif.js` | SARIF 2.1.0 with compliance properties |
+| `src/report/mermaid.js` | Bounded risk, chain and dependency diagrams |
 | `src/util/fs.js` | Walker, ignore rules, binary-safe reads, comment stripper |
 | `src/util/log.js` | Colour, padding, score bars |
 
@@ -65,8 +79,9 @@ what makes the tool auditable and the tests fast.
 
 1. `cli.js` parses arguments and builds overrides.
 2. `index.js` loads `mosca.json`, then runs the source scanner, the config
-   scanner, TLS endpoint inspection and SSH endpoint inspection. Network work
-   is parallelised with `Promise.all`; one unreachable host never fails the scan.
+   scanner, the artefact scanner, the dependency scanner, and TLS, SSH,
+   STARTTLS, QUIC and IKEv2 endpoint inspection. Network work is parallelised
+   with `Promise.all`; one unreachable host never fails the scan.
 3. Every scanner emits the same finding shape:
 
 ```js
@@ -81,9 +96,11 @@ what makes the tool auditable and the tests fast.
    life, migration lead time, the inequality string, score, severity, priority
    and a primitive-aware replacement. It then aggregates.
 5. Reporters consume the same `analysis` object. They do not recompute risk,
-   so the terminal, HTML, CBOM and SARIF cannot disagree.
+   so the terminal, HTML, CBOM, SARIF and Mermaid cannot disagree. The
+   compliance engine runs over the enriched analysis before reporting; `fix.js`
+   consumes the same items to build its plan.
 6. `cli.js` writes artefacts and returns an exit code derived from
-   `--fail-on`.
+   `--fail-on` and, when requested, `--fail-on-compliance`.
 
 ## The raw TLS probe
 
@@ -165,7 +182,7 @@ application data is sent or received.
 ```
 TCP connect
   ◀  server identification   "SSH-2.0-OpenSSH_9.9p1 ..."
-  ▶  client identification   "SSH-2.0-MOSCA_2.0"
+  ▶  client identification   "SSH-2.0-MOSCA_3.0"
   ▶  SSH_MSG_KEXINIT          type 20, random cookie, 10 name-lists
   ◀  SSH_MSG_KEXINIT          parse the server's 10 name-lists
   ■  close                    no authentication, no key exchange
@@ -224,6 +241,103 @@ It is tested against a real DER certificate captured from `example.com`, not a
 hand-made fixture, because real encodings exercise long-form lengths,
 multi-byte OIDs and extension nesting.
 
+## X.509 chain analysis
+
+`src/net/x509-chain.js` consumes the DER of every certificate in the peer
+chain. It answers four questions that a leaf-only check cannot:
+
+1. **Which certificate is the weakest link?** Each entry is classified as
+   `broken`, `weakened` or `safe` from its key and signature algorithm, and the
+   chain inherits the worst class. A modern ECDSA leaf signed by an RSA-2048
+   intermediate is a chain problem.
+2. **Does a classical root cross the CRQC window?** `longLivedClassical()`
+   compares the root's expiry with the CRQC assumption and flags roots that
+   must stay trusted for decades.
+3. **What will the chain cost in bytes?** `PQC_SIZES` holds ML-DSA-44/65/87 and
+   SLH-DSA parameter-set signature and public-key sizes. `estimatePqcHandshake()`
+   projects the certificate flight for each option.
+4. **Will it fragment?** The projection is compared with `INITIAL_CWND`
+   (14 336 bytes). Exceeding the initial congestion window means an extra
+   round-trip on every handshake.
+
+Chain findings use `kind: 'chain'`, so risk scoring applies the chain surface
+weight and the fix planner emits a trust-chain advisory rather than a literal
+swap.
+
+## STARTTLS, QUIC and IKEv2
+
+The v3 probes share one rule: extract the protocol fingerprint, then close the
+socket. Nothing authenticates and nothing completes a handshake.
+
+- **STARTTLS** (`src/net/starttls.js`). The protocol descriptor carries the
+  upgrade command (`STARTTLS`, `STLS`, the PostgreSQL `SSLRequest`, the LDAP
+  `ExtendedRequest`). After the server accepts, the module reuses the raw
+  ClientHello and ServerHello parser from `net/clienthello.js`, so a mail
+  server is judged by exactly the same logic as a web server.
+- **QUIC** (`src/net/quic.js`). An RFC 9001 v1 Initial packet is built from
+  scratch: HKDF-SHA256 extracts and expands the initial secret, derives
+  client key/IV/header-protection secrets, AES-128-ECB produces the header
+  mask, and AES-128-GCM seals the payload. The implementation is pinned to the
+  RFC 9001 Appendix A.1 vectors. The response parser handles Initial, Retry and
+  Version Negotiation, and the ServerHello is handed to the same TLS parser.
+- **IKEv2** (`src/net/ikev2.js`). The probe sends `IKE_SA_INIT` with a classic
+  proposal and an RFC 9370 ADDKE proposal (transform type 6). The provisional
+  ML-KEM transform IDs are `35, 36, 37, 41, 42, 43`; a gateway that answers
+  anything other than `NO_PROPOSAL_CHOSEN` is treated as supporting hybrid
+  key exchange, because the exact ID is still being assigned.
+
+## Artefacts and supply chain
+
+`src/scan/artifacts.js` recognises PEM blocks, DER files, JWK/JWKS documents,
+OpenSSH private keys, `authorized_keys`, `known_hosts` and `*.pub` files. It
+parses only the public metadata — algorithm, key size, curve, validity — and
+never copies private key bodies into a finding. Findings use
+`kind: 'artifact'`.
+
+`src/scan/deps.js` parses eight lockfile formats into `{name, version,
+ecosystem, file, line}` records and matches them against
+`src/rules/crypto-packages.js`. The table records the primitive a package
+fixes, the oldest secure version where one exists, and its quantum status.
+Findings use `kind: 'dependency'`. Both scanners call
+`createIgnore(..., { defaults: false })` so lockfiles and key files are not
+excluded by the default walker ignores.
+
+## Context, effort and compliance
+
+`src/scan/constants.js` performs a deliberately small constant propagation:
+a single-assignment string literal in the same file is substituted into a
+known crypto call. Reassigned, concatenated or interpolated constants remain
+unresolved, and the finding records the flow evidence so a reader can see why
+the literal applies.
+
+Risk analysis reports two effort numbers: raw occurrences and unique migration
+sites. A site is keyed by `kind | algorithm | where | normalised match`;
+duplicates add `1 + 0.15 * log2(1 + duplicates)` rather than a full unit, which
+keeps a repeated call from inflating the estimate without pretending a
+hundred edits are one.
+
+`src/analysis/compliance.js` maps enriched findings onto named controls for
+CNSA 2.0, NIST 2030, PCI DSS v4.0 and HIPAA. Each control reports pass,
+partial or fail with a score, the offending fingerprints and a remediation
+string. `--fail-on-compliance` turns the verdict into an exit code; SARIF and
+HTML carry the same result.
+
+## Fix planner
+
+`src/fix.js` never writes to disk. It separates two kinds of change:
+
+- **Automatic hunks** exist only for hash, MAC and AES key-size literal swaps.
+  The replacement preserves the original spelling (`MD5`→`SHA256`,
+  `SHA-1`→`SHA-256`, `aes-128-cbc`→`aes-256-cbc`).
+- **Advisories** cover signatures, key agreement, certificates, protocol
+  configuration, lockfiles and live listeners. Symmetric changes inside a
+  protocol implementation or a test vector are demoted to advisories, because
+  the literal is part of the wire format or the test oracle.
+
+`buildPatch()` reads files through an injectable `readFile`, emits a unified
+diff with CRLF preservation, and records skipped edits when a literal has
+moved. The CLI writes `<out>/mosca-fix.patch`; the operator applies it.
+
 ## Rule model
 
 Source rules are objects, not a DSL:
@@ -266,14 +380,21 @@ The report is generated as one string with no external requests:
 
 - No web fonts; a system font stack is used.
 - No images; the gauge is inline SVG.
-- No CDN; the ~80 lines of JavaScript that implement the CRQC slider and the
-  findings filter are inlined.
+- No CDN; the ~250 lines of JavaScript that implement the CRQC slider, the
+  findings filter and the crypto-agility simulator are inlined.
 - All interpolated values pass through an HTML escaper, including project
   names, file paths and server errors.
 
 The timeline is data-driven: each row carries `data-shelf` and `data-lead`, and
 the slider recomputes exposure in the browser. The server-side score and the
-client-side visual therefore use the same inequality.
+client-side visual therefore use the same inequality. The v3 sections add:
+
+- **Simulator** — client-side re-evaluation of every item against the selected
+  CRQC year and migration-speed multiplier, with optional hybrid key exchange.
+- **Chain tree** — one card per TLS endpoint, with role, subject, key,
+  signature, days remaining and the PQC flight projection.
+- **Compliance cards** — score, status and failed controls per standard.
+- **Supply chain and artefacts** — lockfile packages and on-disk material.
 
 ### CBOM
 
@@ -287,7 +408,10 @@ instead of duplicating components. Each component carries:
   replacement, standard, the Mosca inequality and the first location.
 
 Certificates and negotiated protocols become first-class components, so the
-CBOM describes the live estate as well as the source.
+CBOM describes the live estate as well as the source. v3 adds `library`
+components for lockfile packages, with `mosca:cryptoPackageStatus`,
+`mosca:algorithm` and `mosca:lockfile` properties, plus a top-level
+`dependencies` entry connecting them to the application.
 
 ### SARIF
 
@@ -295,6 +419,20 @@ Rule ids are `mosca/<rule-id>`. Results include a `partialFingerprints` entry
 built from rule id, URI and line, which is what lets GitHub code scanning
 recognise the same issue after unrelated edits. Endpoint findings are excluded
 because they have no file location; they appear in the CBOM and HTML instead.
+With `--compliance`, each result carries `properties.compliance` (standard,
+control, severity) and the run carries a `compliance` summary.
+
+### Mermaid
+
+`src/report/mermaid.js` builds bounded, deterministic diagrams:
+
+- a risk graph linking algorithms to the files and endpoints that use them;
+- a certificate-chain tree per inspected endpoint, including the PQC
+  projection node;
+- a dependency graph coloured by package status.
+
+Node counts are capped (`MAX_ALGORITHMS`, `MAX_FILES`) so a large estate does
+not produce an unreadable diagram. Labels are sanitised for Mermaid syntax.
 
 ## Testing strategy
 
@@ -302,12 +440,24 @@ because they have no file location; they appear in the CBOM and HTML instead.
 
 | Area | What is asserted |
 | --- | --- |
-| `test/algorithms.test.js` | Shape of all 91 entries, replacement graph acyclic, alias resolution, TLS dialect mapping |
+| `test/algorithms.test.js` | Shape of all 92 entries, replacement graph acyclic, alias resolution, TLS dialect mapping |
 | `test/rules.test.js` | True and false positives for JS/Python/Go/Java plus nginx/sshd/OpenSSL |
 | `test/clienthello.test.js` | Record framing, extension ordering, 1216-byte share, canonical coefficients, ServerHello and HRR parsing |
 | `test/x509.test.js` | A real Cloudflare certificate, TLV boundaries, primitive decoders |
+| `test/x509-chain.test.js` | Chain classification, weakest link, long-lived roots, PQC projection against 14 KB |
 | `test/endpoint.test.js` | Target parsing, protocol normalisation, certificate summary, finding derivation |
-| `test/risk.test.js` | Every scoring direction, Mosca inequality, QRI, HNDL n/a semantics, roadmap phases |
+| `test/starttls.test.js` | SMTP/PostgreSQL upgrades, refusal handling, classical-KEX findings |
+| `test/quic.test.js` | RFC 9001 Appendix A.1 vectors, varints, Initial protect/unprotect, response parsing |
+| `test/ikev2.test.js` | Packet framing, ADDKE proposals, notify parsing, finding derivation |
+| `test/artifacts.test.js` | PEM, DER, JWK, OpenSSH and `authorized_keys` metadata; no private key leakage |
+| `test/deps.test.js` | Eight lockfile parsers, package matching, version bounds |
+| `test/context.test.js` | Constant propagation, reassignment refusal, indirect findings |
+| `test/config-rules.test.js` | The 62-rule inventory and IaC/proxy true positives |
+| `test/compliance.test.js` | Four standards, control evaluation, violation evidence |
+| `test/fix.test.js` | Automatic vs advisory, patch generation, CRLF, protocol demotion |
+| `test/mermaid.test.js` | Determinism, bounds, sanitisation, chain and dependency graphs |
+| `test/reports-v3.test.js` | CBOM libraries, SARIF compliance properties, HTML v3 sections |
+| `test/risk.test.js` | Every scoring direction, Mosca inequality, QRI, HNDL n/a semantics, unique-site effort, roadmap phases |
 | `test/report.test.js` | CycloneDX shape, SARIF shape, HTML self-containment and escaping |
 | `test/baseline.test.js` | Line-independent fingerprints, build/apply, new/existing/resolved, file validation |
 | `test/ssh.test.js` | SSH packets, KEXINIT parsing, banner parsing, KEX/cipher/MAC classification |
@@ -321,11 +471,12 @@ network-derived artefact is the committed DER fixture.
 
 ## Performance
 
-A cold `mosca demo` scan (10 source files, 3 config files) completes in roughly
-50 ms on a laptop. The walker is synchronous and single-pass; the expensive
-part of a real scan is endpoint latency, which is parallelised. There is no
-AST, no type checker and no subprocess, which is why the tool can be dropped
-into a pre-commit hook or a CI step without a build stage.
+A cold `mosca demo` scan (10 source files, 3 config files, a lockfile and an
+artefact) completes in roughly 80 ms on a laptop. The walker is synchronous and
+single-pass; the expensive part of a real scan is endpoint latency, which is
+parallelised. There is no AST, no type checker and no subprocess, which is why
+the tool can be dropped into a pre-commit hook or a CI step without a build
+stage.
 
 ## Extension points
 
@@ -339,3 +490,12 @@ into a pre-commit hook or a CI step without a build stage.
   `standard`, `hybrid`. The registry test will catch broken references.
 - **A new reporter**: consume the `analysis` object and add a format branch in
   `cli.js`. Reporters must not recompute risk.
+- **A new live protocol**: add a module under `src/net/` that returns the
+  endpoint shape (`reachable`, negotiated fields, `findings`) and wire it into
+  `src/index.js` and `src/cli.js`. The socket must be closed without
+  authentication.
+- **A new lockfile format**: add a parser to `src/scan/deps.js` and a branch in
+  `isDependencyFile` / `scanDependencyContent`.
+- **A new compliance standard**: add a definition to `src/analysis/compliance.js`
+  with controls that consume enriched findings; the CLI and SARIF pick it up
+  from `COMPLIANCE_IDS`.

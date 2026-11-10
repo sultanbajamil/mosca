@@ -94,8 +94,8 @@ export function globToRegExp(glob) {
  * Build an ignore predicate from glob patterns plus the built-in defaults.
  * @param {string[]} patterns
  */
-export function createIgnore(patterns = []) {
-  const regexes = [...DEFAULT_IGNORE_FILE_PATTERNS, ...patterns]
+export function createIgnore(patterns = [], { defaults = true } = {}) {
+  const regexes = [...(defaults ? DEFAULT_IGNORE_FILE_PATTERNS : []), ...patterns]
     .filter((p) => p && !p.startsWith('#'))
     .map((p) => globToRegExp(p.replace(/\\/g, '/')));
   return (relPath) => {

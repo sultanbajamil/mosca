@@ -10,6 +10,7 @@ import path from 'node:path';
 import { RULES, LANGUAGE_BY_EXT, LANGUAGE_LABELS, COMMENT_SYNTAX } from '../rules/source.js';
 import { lookup, rsaVariant } from '../rules/algorithms.js';
 import { stripComments, walk, readTextFile, createIgnore, loadIgnoreFile } from '../util/fs.js';
+import { collectConstants, resolveConstantAlgorithm, INDIRECT_RULES } from './constants.js';
 
 /** Longest snippet we keep, to keep reports readable. */
 const MAX_SNIPPET = 180;
@@ -141,6 +142,7 @@ export function scanSourceContentDetailed({ content, rel, language }) {
   const suppressions = readSuppressions(content);
   let suppressed = 0;
 
+  // -------------------------------------------------- literal API arguments
   for (const rule of rules) {
     let match;
     const re = new RegExp(rule.re.source, rule.re.flags.includes('g') ? rule.re.flags : `${rule.re.flags}g`);
@@ -181,7 +183,88 @@ export function scanSourceContentDetailed({ content, rel, language }) {
     }
   }
 
+  // ------------------------------------- identifiers resolved from constants
+  const constants = collectConstants(stripped, language);
+  if (constants.size) {
+    suppressed += scanIndirect({
+      stripped,
+      starts,
+      lines,
+      language,
+      rel,
+      constants,
+      suppressions,
+      seen,
+      findings,
+    });
+  }
+
   return { findings: mergeRefinements(findings), suppressed };
+}
+
+/**
+ * Resolve `createHash(ALGORITHM)` style calls using file-local constants.
+ * Only the argument position is considered, so a constant named `md5` used
+ * as a variable elsewhere cannot manufacture a finding.
+ *
+ * @returns {number} number of suppressed findings
+ */
+function scanIndirect({ stripped, starts, lines, language, rel, constants, suppressions, seen, findings }) {
+  const rules = INDIRECT_RULES[language] || [];
+  let suppressed = 0;
+
+  for (const rule of rules) {
+    const re = new RegExp(rule.re.source, rule.re.flags.includes('g') ? rule.re.flags : `${rule.re.flags}g`);
+    re.lastIndex = 0;
+    let match;
+    while ((match = re.exec(stripped)) !== null) {
+      const line = offsetToLine(starts, match.index);
+      const column = match.index - starts[line] + 1;
+      const name = match[1];
+      if (!constants.has(name)) {
+        if (match[0].length === 0) re.lastIndex++;
+        continue;
+      }
+      const value = constants.get(name);
+      const algo = resolveConstantAlgorithm(value, rule.transform);
+      if (!algo) {
+        if (match[0].length === 0) re.lastIndex++;
+        continue;
+      }
+
+      const key = `${rule.id}:${line}`;
+      if (seen.has(key)) {
+        if (match[0].length === 0) re.lastIndex++;
+        continue;
+      }
+      seen.add(key);
+
+      if (isSuppressed(suppressions, line)) {
+        suppressed++;
+        if (match[0].length === 0) re.lastIndex++;
+        continue;
+      }
+
+      findings.push({
+        id: rule.id,
+        kind: 'source',
+        title: `${algo.label} — ${describePrimitive(rule.primitive)}`,
+        algorithm: algo.id,
+        algorithmLabel: algo.label,
+        primitive: rule.primitive,
+        location: { file: rel, line: line + 1, column },
+        snippet: (lines[line] || '').trim().slice(0, MAX_SNIPPET),
+        matched: match[0].slice(0, MAX_SNIPPET),
+        confidence: 'medium',
+        note: `Algorithm resolved from the file-local constant ${name} = '${value}'. Confirm that the constant is not reassigned at runtime.`,
+        language,
+        evidence: { constant: name, value },
+      });
+
+      if (match[0].length === 0) re.lastIndex++;
+    }
+  }
+  return suppressed;
 }
 
 /**

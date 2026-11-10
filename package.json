@@ -1,7 +1,7 @@
 {
   "name": "mosca-pqc",
-  "version": "2.0.0",
-  "description": "MOSCA — CI-native post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source, config, live TLS and SSH endpoints, diffs against a baseline, scores harvest-now-decrypt-later risk with Mosca's inequality, and emits CycloneDX CBOM + SARIF.",
+  "version": "3.0.0",
+  "description": "MOSCA — CI-native post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source, config, key artifacts and dependency lockfiles; probes TLS, SSH, STARTTLS, QUIC and IKEv2; analyses X.509 chains; gates on CNSA 2.0, NIST 2030, PCI DSS and HIPAA; proposes reviewable fixes; and emits CycloneDX CBOM, SARIF and Mermaid.",
   "type": "module",
   "bin": {
     "mosca": "bin/mosca.js"
@@ -38,6 +38,10 @@
     "scan": "node bin/mosca.js scan",
     "tls": "node bin/mosca.js tls",
     "ssh": "node bin/mosca.js ssh",
+    "starttls": "node bin/mosca.js starttls",
+    "quic": "node bin/mosca.js quic",
+    "ikev2": "node bin/mosca.js ikev2",
+    "fix": "node bin/mosca.js fix",
     "explain": "node bin/mosca.js explain",
     "validate": "node scripts/validate-artifacts.js",
     "check": "node scripts/check-zero-deps.js && node --test"
@@ -57,11 +61,18 @@
     "ml-dsa",
     "tls",
     "ssh",
+    "quic",
+    "starttls",
+    "ikev2",
+    "x509",
     "baseline",
     "github-actions",
     "scanner",
     "compliance",
-    "cnsa-2.0"
+    "cnsa-2.0",
+    "pci-dss",
+    "hipaa",
+    "mermaid"
   ],
   "author": "",
   "license": "MIT",

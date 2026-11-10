@@ -72,7 +72,7 @@ export function locationLabel(item) {
  * @param {object} analysis
  * @param {{toolVersion?:string, now?:Date}} [opts]
  */
-export function buildBaseline(analysis, { toolVersion = '2.0.0', now = new Date() } = {}) {
+export function buildBaseline(analysis, { toolVersion = '3.0.0', now = new Date() } = {}) {
   const findings = [];
   const seen = new Set();
   for (const item of analysis.items || []) {

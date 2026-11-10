@@ -21,9 +21,11 @@ migration has to find:
 | Gateway | Java `KeyPairGenerator("RSA")`, `SSLContext("TLSv1")` | Shor, deprecated protocol |
 | Edge | nginx `ssl_protocols TLSv1 TLSv1.1`, RC4, 3DES | Protocol and cipher policy |
 | Host | sshd `ssh-rsa`, `diffie-hellman-group1-sha1` | Broken signature and KEX |
+| Supply chain | `crypto-js@3.1.9`, `node-forge@1.3.0` in `package-lock.json` | Deprecated and quantum-vulnerable crypto libraries |
+| Artefact | `deploy/legacy-public.pem`, an RSA-2048 public key | Long-lived classical key material on disk |
 
 Run the scan:
 
 ```bash
-npx mosca-pqc scan . --tls example.com
+npx github:sultanbajamil/mosca scan . --tls example.com
 ```

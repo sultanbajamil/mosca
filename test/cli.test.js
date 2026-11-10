@@ -55,3 +55,31 @@ test('short flags are accepted', () => {
   const args = parseArgs(['-h']);
   assert.equal(args.h, true);
 });
+
+test('v3 value flags parse without swallowing positionals', () => {
+  const args = parseArgs([
+    'scan',
+    '.',
+    '--compliance',
+    'cnsa2',
+    '--fail-on-compliance',
+    'pci-dss',
+    '--format',
+    'html,mermaid',
+    '--fix-out',
+    'fix.patch',
+    '--addke',
+    '35,36',
+  ]);
+  assert.deepEqual(args._, ['scan', '.']);
+  assert.equal(args.compliance, 'cnsa2');
+  assert.equal(args['fail-on-compliance'], 'pci-dss');
+  assert.equal(args.format, 'html,mermaid');
+  assert.equal(args['fix-out'], 'fix.patch');
+  assert.equal(args.addke, '35,36');
+
+  const bare = parseArgs(['scan', '--compliance', '--fix', '.']);
+  assert.equal(bare.compliance, true);
+  assert.equal(bare.fix, true);
+  assert.deepEqual(bare._, ['scan', '.']);
+});

@@ -37,6 +37,15 @@ if (json) {
   if (!Array.isArray(json.analysis.summary.sensitivity) || json.analysis.summary.sensitivity.length !== 4) {
     failures.push('summary.sensitivity must contain four CRQC scenarios');
   }
+  if (!Array.isArray(json.analysis.compliance) || json.analysis.compliance.length !== 4) {
+    failures.push('analysis.compliance must contain the four standards');
+  }
+  if (!json.analysis.dependencies || !Array.isArray(json.analysis.dependencies.packages)) {
+    failures.push('analysis.dependencies.packages is missing');
+  }
+  if (!json.analysis.artifacts || !Array.isArray(json.analysis.artifacts.findings)) {
+    failures.push('analysis.artifacts.findings is missing');
+  }
   for (const item of json.analysis.items) {
     if (!item.positive && !item.fingerprint) failures.push(`finding ${item.id} has no stable fingerprint`);
   }
@@ -60,9 +69,12 @@ if (cbom) {
     failures.push('CBOM has no components');
   }
   for (const component of cbom.components || []) {
-    if (component.type !== 'cryptographic-asset') {
-      failures.push(`CBOM component ${component['bom-ref']} is not a cryptographic-asset`);
+    if (!['cryptographic-asset', 'library'].includes(component.type)) {
+      failures.push(`CBOM component ${component['bom-ref']} has unsupported type ${component.type}`);
     }
+  }
+  if (!Array.isArray(cbom.dependencies) || cbom.dependencies.length === 0) {
+    failures.push('CBOM has no dependency graph');
   }
 }
 
@@ -71,6 +83,9 @@ if (sarif) {
   if (!Array.isArray(sarif.runs) || sarif.runs.length === 0) failures.push('SARIF has no runs');
   const run = sarif.runs?.[0];
   if (run?.tool?.driver?.name !== 'MOSCA') failures.push('SARIF driver name must be MOSCA');
+  if (!Array.isArray(run?.properties?.compliance) || run.properties.compliance.length !== 4) {
+    failures.push('SARIF run properties must contain the four compliance results');
+  }
   for (const result of run?.results || []) {
     if (!result.ruleId?.startsWith('mosca/')) failures.push(`SARIF ruleId ${result.ruleId} lacks the mosca/ prefix`);
     if (!result.locations?.[0]?.physicalLocation) failures.push(`SARIF result ${result.ruleId} has no location`);
@@ -85,6 +100,16 @@ if (!fs.existsSync(htmlFile)) {
   if (!html.startsWith('<!doctype html>')) failures.push('HTML report has no doctype');
   if (/<script[^>]+\bsrc=/i.test(html)) failures.push('HTML report loads an external script');
   if (/<link[^>]+\bhref=["']https?:/i.test(html)) failures.push('HTML report loads an external stylesheet');
+  for (const id of ['compliance', 'simulator', 'chains']) {
+    if (!html.includes(`id="${id}"`)) failures.push(`HTML report is missing the #${id} section`);
+  }
+}
+
+const mermaidFile = path.join(dir, 'mosca.mmd');
+if (fs.existsSync(mermaidFile)) {
+  const mermaid = fs.readFileSync(mermaidFile, 'utf8');
+  if (!mermaid.startsWith('flowchart LR')) failures.push('mosca.mmd is not a Mermaid flowchart');
+  if (/<script/i.test(mermaid)) failures.push('mosca.mmd contains raw HTML');
 }
 
 if (failures.length > 0) {

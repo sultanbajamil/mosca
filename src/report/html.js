@@ -346,6 +346,128 @@ function renderRoadmap(roadmap) {
 }
 
 // ---------------------------------------------------------------------------
+// v3: compliance, certificate chains, simulator, supply chain
+// ---------------------------------------------------------------------------
+
+const STATUS_CLASS = { pass: 'good', partial: 'warn', fail: 'bad' };
+
+function renderCompliance(results) {
+  if (!Array.isArray(results) || results.length === 0) {
+    return '<div class="empty">No compliance standard was evaluated.</div>';
+  }
+  const cards = results
+    .map((result) => {
+      const tone = STATUS_CLASS[result.status] || '';
+      const controls = result.controls
+        .map(
+          (control) => `<li class="ctl ${control.status}">
+            <span class="ctl-mark">${control.status === 'pass' ? '✓' : '✕'}</span>
+            <span><b>${esc(control.label)}</b>${control.status === 'fail' ? `<span class="ctl-count mono">${control.violationCount}</span><br><span class="muted">${esc(control.remediation)}</span>` : ''}</span>
+          </li>`,
+        )
+        .join('');
+      return `<article class="comp-card ${tone}">
+        <header>
+          <div><h3>${esc(result.label)}</h3><span class="muted">${esc(result.authority)}</span></div>
+          <span class="pill sev-${result.status === 'pass' ? 'safe' : result.status === 'partial' ? 'medium' : 'critical'}">${esc(result.status.toUpperCase())}</span>
+        </header>
+        <div class="comp-score mono">${result.score}<span>/100</span> · ${result.violationCount} violation${result.violationCount === 1 ? '' : 's'}</div>
+        <p class="muted">${esc(result.deadline)}</p>
+        <ul class="ctl-list">${controls}</ul>
+      </article>`;
+    })
+    .join('');
+  return `<div class="comp-grid">${cards}</div>`;
+}
+
+function renderChainTree(endpoints = []) {
+  const withChains = endpoints.filter((ep) => ep.chainAnalysis?.entries?.length);
+  if (!withChains.length) {
+    return '<div class="empty">No certificate chains were captured. Add TLS hosts with <code>--tls</code>.</div>';
+  }
+  return withChains
+    .map((ep) => {
+      const entries = ep.chainAnalysis.entries
+        .map(
+          (entry) => `<li class="chain-node ${entry.quantum}">
+            <span class="chain-role mono">${esc(entry.role)}</span>
+            <span class="chain-subject">${esc(entry.subject)}</span>
+            <span class="chain-meta mono">${esc(entry.keyLabel)}${entry.keyBits ? ` ${entry.keyBits}b` : ''} · ${esc(entry.signatureAlgorithm || 'unknown')} · ${entry.daysRemaining == null ? '?' : `${entry.daysRemaining}d`}</span>
+          </li>`,
+        )
+        .join('');
+      const pqc = ep.pqcHandshake?.worst;
+      const projection = pqc
+        ? `<div class="chain-pqc ${pqc.exceeds ? 'bad' : 'good'}">
+            <b>${esc(pqc.label)} projection</b>
+            <span class="mono">${pqc.totalBytes} bytes · ${pqc.exceeds ? 'exceeds' : 'fits'} the 14 KB initial window</span>
+          </div>`
+        : '';
+      return `<article class="chain-card">
+        <header><span class="mono">${esc(ep.host)}:${ep.port}</span><span class="muted">${ep.chainAnalysis.length} certificate${ep.chainAnalysis.length === 1 ? '' : 's'}</span></header>
+        <ol class="chain-list">${entries}</ol>
+        ${projection}
+      </article>`;
+    })
+    .join('');
+}
+
+function renderSimulator(analysis) {
+  const s = analysis.summary;
+  const actionable = analysis.items.filter((item) => !item.positive).length;
+  return `<div class="sim" id="sim">
+    <div class="sim-controls">
+      <label>CRQC year <output class="mono" id="sim-year">${s.crqcYear}</output>
+        <input type="range" id="sim-crqc" min="2029" max="2045" step="1" value="${s.crqcYear}">
+      </label>
+      <label>Migration speed <output class="mono" id="sim-speed">1.0×</output>
+        <input type="range" id="sim-lead" min="50" max="200" step="10" value="100">
+      </label>
+      <label class="sim-check"><input type="checkbox" id="sim-hybrid"> Assume hybrid key exchange lands this quarter</label>
+    </div>
+    <div class="sim-output">
+      <div class="sim-number mono" id="sim-exposed">${s.exposedItems}</div>
+      <div class="muted">of ${actionable} actionable findings still inside the Mosca window</div>
+      <div class="sim-bar"><span id="sim-bar-fill" style="width:${actionable ? (s.exposedItems / actionable) * 100 : 0}%"></span></div>
+    </div>
+  </div>`;
+}
+
+function renderDependencies(packages = []) {
+  if (!packages.length) return '<div class="empty">No cryptographic lockfile packages matched.</div>';
+  const rows = packages
+    .map((pkg) => {
+      const tone = pkg.status === 'quantum-safe' ? 'safe' : pkg.status === 'classically-broken' ? 'critical' : pkg.status === 'deprecated' ? 'medium' : 'high';
+      return `<tr>
+        <td class="mono">${esc(pkg.name)}</td>
+        <td class="mono">${esc(pkg.version || '')}</td>
+        <td>${esc(pkg.ecosystem || '')}</td>
+        <td><span class="pill sev-${tone}">${esc(pkg.status || 'unknown')}</span></td>
+        <td class="mono muted">${esc(pkg.file || pkg.rel || '')}</td>
+      </tr>`;
+    })
+    .join('');
+  return `<table class="data-table"><thead><tr><th>Package</th><th>Version</th><th>Ecosystem</th><th>Status</th><th>Lockfile</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderArtifacts(artifacts) {
+  const findings = artifacts?.findings || [];
+  if (!findings.length) return '<div class="empty">No on-disk key or certificate artifacts were found.</div>';
+  const rows = findings
+    .slice(0, 100)
+    .map(
+      (f) => `<tr>
+        <td class="mono">${esc(f.location?.file || '')}</td>
+        <td>${esc(f.algorithmLabel || f.algorithm || '')}</td>
+        <td>${esc(f.artifact?.type || f.primitive || '')}</td>
+        <td><span class="pill ${sevClass(f.severity)}">${esc(f.severity || '')}</span></td>
+      </tr>`,
+    )
+    .join('');
+  return `<table class="data-table"><thead><tr><th>File</th><th>Algorithm</th><th>Type</th><th>Severity</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---------------------------------------------------------------------------
 // Document
 // ---------------------------------------------------------------------------
 
@@ -643,8 +765,56 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:var(--faint);font-size:12px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
 .footer-brand{display:flex;align-items:center;gap:10px;letter-spacing:.1em;font-weight:600;color:var(--text);font-size:11px}
 
+/* ---------- v3: simulator, chains, compliance, tables ---------- */
+.sim{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;border:1px solid var(--border);background:var(--panel);border-radius:16px;padding:26px}
+.sim-controls{display:flex;flex-direction:column;gap:18px}
+.sim-controls label{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+.sim-controls output{color:var(--accent);font-size:15px}
+.sim-controls input[type=range]{accent-color:var(--accent);width:100%}
+.sim-check{flex-direction:row!important;align-items:center;gap:10px!important}
+.sim-output{display:flex;flex-direction:column;justify-content:center;gap:8px;border-left:1px solid var(--border);padding-left:28px}
+.sim-number{font-size:44px;font-weight:700;line-height:1;color:var(--text)}
+.sim-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.sim-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--yellow),var(--red));border-radius:999px;transition:width .3s}
+.chain-card{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:20px;margin-bottom:16px}
+.chain-card header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px}
+.chain-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.chain-node{display:grid;grid-template-columns:110px 1fr;gap:4px 14px;border-left:2px solid var(--border-2);padding:8px 0 8px 14px}
+.chain-node.broken{border-left-color:var(--red)}
+.chain-node.weakened{border-left-color:var(--yellow)}
+.chain-node.safe{border-left-color:var(--green)}
+.chain-role{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);grid-row:span 2;align-self:center}
+.chain-subject{font-weight:600;font-size:14px;word-break:break-word}
+.chain-meta{font-size:11.5px;color:var(--muted);grid-column:2}
+.chain-pqc{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.chain-pqc.bad{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#fecaca}
+.chain-pqc.good{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);color:#a7f3d0}
+.comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.comp-card{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:20px}
+.comp-card.good{border-color:rgba(52,211,153,.3)}
+.comp-card.warn{border-color:rgba(251,191,36,.3)}
+.comp-card.bad{border-color:rgba(248,113,113,.3)}
+.comp-card header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.comp-card h3{margin:0;font-size:15px}
+.comp-score{font-size:24px;font-weight:700;margin:10px 0 2px}
+.comp-score span{font-size:12px;color:var(--faint);font-weight:400}
+.comp-card p{font-size:12px;margin:0 0 12px}
+.ctl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+.ctl{display:flex;gap:8px;align-items:flex-start}
+.ctl-mark{font-weight:700}
+.ctl.pass .ctl-mark{color:var(--green)}
+.ctl.fail .ctl-mark{color:var(--red)}
+.ctl-count{color:var(--red);margin-left:6px;font-size:11px}
+.ctl .muted{font-size:11.5px}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-table th{text-align:left;color:var(--faint);font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:0 12px 10px 0;border-bottom:1px solid var(--border)}
+.data-table td{padding:9px 12px 9px 0;border-bottom:1px solid var(--border);vertical-align:top}
+
 @media (max-width:900px){
   .hero{grid-template-columns:1fr;gap:28px;padding-top:44px}
+  .sim{grid-template-columns:1fr}
+  .sim-output{border-left:0;border-top:1px solid var(--border);padding:20px 0 0}
+  .comp-grid{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .meth{grid-template-columns:1fr}
   .tl-row{grid-template-columns:1fr;gap:6px}
@@ -668,9 +838,12 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     <div class="brand"><span class="brand-mark"></span> MOSCA <small>post-quantum exposure scanner</small></div>
     <nav>
       <a href="#timeline">Timeline</a>
+      <a href="#simulator">Simulator</a>
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
       ${sshEndpoints.length ? '<a href="#ssh">SSH</a>' : ''}
+      <a href="#chains">Chains</a>
+      <a href="#compliance">Compliance</a>
       <a href="#roadmap">Roadmap</a>
       <a href="#methodology">Method</a>
     </nav>
@@ -718,6 +891,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     ${renderSensitivity(s.sensitivity)}
   </section>
 
+  <section id="simulator">
+    <div class="sec-head">
+      <h2>Crypto-agility simulator</h2>
+      <p>The Mosca window is not a fixed fact; it is a set of assumptions about the adversary and about how fast you can migrate. Move the CRQC year and the migration speed to see which findings cross the line. This is scenario planning, not a prediction.</p>
+    </div>
+    ${renderSimulator(analysis)}
+  </section>
+
   <section id="findings">
     <div class="sec-head">
       <h2>Findings</h2>
@@ -734,6 +915,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     ${renderEndpoints(endpoints)}
   </section>
 
+  <section id="chains">
+    <div class="sec-head">
+      <h2>Certificate chains</h2>
+      <p>Every certificate in the peer chain, not just the leaf. A modern leaf signed by a long-lived RSA intermediate is a chain problem: rotating the leaf does not remove the exposure.</p>
+    </div>
+    ${renderChainTree(analysis.endpoints || endpoints)}
+  </section>
+
   ${sshEndpoints.length ? `<section id="ssh">
     <div class="sec-head">
       <h2>Live SSH endpoints</h2>
@@ -748,6 +937,30 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <p>Every primitive observed, with its occurrence count and the recommended replacement.</p>
     </div>
     ${renderAlgorithms(analysis.algorithms)}
+  </section>
+
+  <section id="compliance">
+    <div class="sec-head">
+      <h2>Compliance gates</h2>
+      <p>A named standard is a better audit artefact than a score. Each control names the finding and the remediation an auditor will ask for.</p>
+    </div>
+    ${renderCompliance(analysis.compliance)}
+  </section>
+
+  <section id="supply-chain">
+    <div class="sec-head">
+      <h2>Cryptographic supply chain</h2>
+      <p>Lockfile packages that fix an algorithm on your behalf. A quantum-vulnerable TLS library is a finding even when your own code calls the right API.</p>
+    </div>
+    ${renderDependencies(analysis.dependencies?.packages || [])}
+  </section>
+
+  <section id="artifacts">
+    <div class="sec-head">
+      <h2>On-disk key and certificate artefacts</h2>
+      <p>PEM, DER, JWK and OpenSSH material found in the repository. Only metadata is read; private key bodies are never emitted.</p>
+    </div>
+    ${renderArtifacts(analysis.artifacts)}
   </section>
 
   <section id="roadmap">
@@ -884,6 +1097,41 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
   });
   if (search) search.addEventListener('input', applyFilter);
   applyFilter();
+
+  /* ---------------- crypto-agility simulator ---------------- */
+  (function(){
+    var crqc = document.getElementById('sim-crqc');
+    var lead = document.getElementById('sim-lead');
+    if (!crqc || !lead) return;
+    var hybrid = document.getElementById('sim-hybrid');
+    var yearOut = document.getElementById('sim-year');
+    var speedOut = document.getElementById('sim-speed');
+    var exposedOut = document.getElementById('sim-exposed');
+    var fill = document.getElementById('sim-bar-fill');
+    var items = (data.items || []).filter(function(i){ return i.quantum !== 'safe'; });
+    var currentYear = (data.summary && data.summary.currentYear) || new Date().getFullYear();
+
+    function run() {
+      var year = Number(crqc.value);
+      var scale = Number(lead.value) / 100;
+      if (yearOut) yearOut.textContent = String(year);
+      if (speedOut) speedOut.textContent = scale.toFixed(1) + '\u00d7';
+      var exposed = 0;
+      items.forEach(function(item){
+        if (hybrid && hybrid.checked && item.primitive === 'key-agreement') return;
+        var shelf = Number(item.shelfLife) || 0;
+        var leadTime = Number(item.leadTime) || 0;
+        if (shelf + leadTime * scale > year - currentYear) exposed++;
+      });
+      if (exposedOut) exposedOut.textContent = String(exposed);
+      if (fill) fill.style.width = (items.length ? (exposed / items.length) * 100 : 0) + '%';
+    }
+
+    crqc.addEventListener('input', run);
+    lead.addEventListener('input', run);
+    if (hybrid) hybrid.addEventListener('change', run);
+    run();
+  })();
 
   /* ---------------- CBOM download ---------------- */
   var dl = document.getElementById('download-cbom');

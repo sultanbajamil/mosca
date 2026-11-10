@@ -22,6 +22,26 @@ inputs:
     description: Comma-separated SSH targets to probe (host or host:port).
     required: false
     default: ''
+  starttls:
+    description: Comma-separated STARTTLS targets (smtp://, imap://, pop3://, postgres://, ldap://).
+    required: false
+    default: ''
+  quic:
+    description: Comma-separated QUIC endpoints to probe.
+    required: false
+    default: ''
+  ikev2:
+    description: Comma-separated IKEv2 gateways to probe.
+    required: false
+    default: ''
+  compliance:
+    description: 'Compliance report: cnsa2, nist-2030, pci-dss, hipaa, all, or empty.'
+    required: false
+    default: ''
+  fail-on-compliance:
+    description: 'Standard that fails the job when it does not pass: cnsa2, nist-2030, pci-dss, hipaa, all, or empty.'
+    required: false
+    default: ''
   baseline:
     description: Baseline file to compare against.
     required: false
@@ -35,9 +55,9 @@ inputs:
     required: false
     default: high
   format:
-    description: Comma-separated report formats (html,json,cbom,sarif,term).
+    description: Comma-separated report formats (html,json,cbom,sarif,term,mermaid).
     required: false
-    default: html,sarif,json,cbom
+    default: html,sarif,json,cbom,mermaid
   out:
     description: Output directory.
     required: false
@@ -70,6 +90,11 @@ runs:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_TLS: ${{ inputs.tls }}
         INPUT_SSH: ${{ inputs.ssh }}
+        INPUT_STARTTLS: ${{ inputs.starttls }}
+        INPUT_QUIC: ${{ inputs.quic }}
+        INPUT_IKEV2: ${{ inputs.ikev2 }}
+        INPUT_COMPLIANCE: ${{ inputs.compliance }}
+        INPUT_FAIL_ON_COMPLIANCE: ${{ inputs.fail-on-compliance }}
         INPUT_BASELINE: ${{ inputs.baseline }}
         INPUT_WRITE_BASELINE: ${{ inputs.write-baseline }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
@@ -80,6 +105,11 @@ runs:
         args=(scan "$INPUT_PATH" --format "$INPUT_FORMAT" --out "$INPUT_OUT")
         [ -n "$INPUT_TLS" ] && args+=(--tls "$INPUT_TLS")
         [ -n "$INPUT_SSH" ] && args+=(--ssh "$INPUT_SSH")
+        [ -n "$INPUT_STARTTLS" ] && args+=(--starttls "$INPUT_STARTTLS")
+        [ -n "$INPUT_QUIC" ] && args+=(--quic "$INPUT_QUIC")
+        [ -n "$INPUT_IKEV2" ] && args+=(--ikev2 "$INPUT_IKEV2")
+        [ -n "$INPUT_COMPLIANCE" ] && args+=(--compliance "$INPUT_COMPLIANCE")
+        [ -n "$INPUT_FAIL_ON_COMPLIANCE" ] && args+=(--fail-on-compliance "$INPUT_FAIL_ON_COMPLIANCE")
         [ -n "$INPUT_BASELINE" ] && args+=(--baseline "$INPUT_BASELINE")
         [ -n "$INPUT_WRITE_BASELINE" ] && args+=(--write-baseline "$INPUT_WRITE_BASELINE")
         [ -n "$INPUT_FAIL_ON" ] && args+=(--fail-on "$INPUT_FAIL_ON")
