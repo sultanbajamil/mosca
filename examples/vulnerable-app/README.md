@@ -27,5 +27,5 @@ migration has to find:
 Run the scan:
 
 ```bash
-npx github:sultanbajamil/mosca scan . --tls example.com
+npx mosca-pqc scan . --tls example.com
 ```

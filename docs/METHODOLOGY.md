@@ -157,7 +157,7 @@ Bands map to priorities `P0`–`P3`. SARIF uses `critical/high → error`,
 QRI is a weighted share of the estate that is already quantum-safe:
 
 ```
-weight_i        = endpoint ? 3 : chain ? 3 : config ? 2 : dependency ? 2 : artifact ? 2 : source ? 1
+weight_i        = endpoint ? 3 : captured-session ? 3 : chain ? 3 : config ? 2 : dependency ? 2 : artifact ? 2 : source ? 1
 safety_i        = safe 1.0 | weakened 0.5 | unknown 0.3 | broken 0
 QRI             = 100 × Σ(weight_i × safety_i) / Σ(weight_i)
 ```
@@ -247,13 +247,40 @@ The planner never edits a file. `buildPatch()` emits a unified diff with CRLF
 preservation and records skipped hunks when the literal has moved, so a stale
 finding produces a visible skip instead of a corrupt patch.
 
+## 7e. Captured sessions and the HNDL Captured Ratio
+
+A PCAP is a different observation from a live probe. The question is not what a
+server supports today, but what a session negotiated when it was recorded:
+
+```
+captureYear     = UTC year of the first packet in the flow
+yearsToCRQC     = max(0, crqcYear - captureYear)
+exposed         = classicalKex && shelfLife > yearsToCRQC
+capturedRatio   = 100 × classical sessions / all captured sessions
+```
+
+Anchoring to `captureYear` is the whole point. A ten-year secret recorded in
+2010 is 23 years from a 2033 CRQC, not seven; a fresh scan of the same host
+would report a different answer. Findings carry `captureYear`, `captureTime`
+and `capturedProtocol`, and the risk engine uses the same shelf-life and
+migration-lead inputs as a live endpoint.
+
+Captured sessions do **not** enter the live HNDL exposure denominator. A host
+with no reachable endpoint but a directory of captures is not an empty estate;
+it is a capture audit, and the report says so. The CBOM exposes both metrics:
+
+```
+mosca:harvestNowDecryptLaterExposure = "n/a" | "<percent>%"
+mosca:hndlCapturedRatio              = "n/a" | "<percent>%"
+```
+
 ## 8. Effort estimate
 
 A deliberately simple order-of-magnitude estimate:
 
 ```
 effort = Σ  base(kind) × (quantum === 'broken' ? 1 : 0.5)
-base   = endpoint 3 | chain 3 | config 1 | dependency 1 | artifact 1 | source 0.5
+base   = endpoint 3 | captured-session 3 | chain 3 | config 1 | dependency 1 | artifact 1 | source 0.5
            (engineer-days per unique migration site)
 ```
 
@@ -314,8 +341,51 @@ verdict.
 5. **The CRQC year dominates every conclusion.** That is the point. Change
    `--scenario` and watch the exposure count move. If a vendor tells you a
    single number without that assumption, ask what it is.
+6. **A capture is not an estate.** `mosca pcap` sees only the flows in the
+   file. Missing packets, TLS 1.3 application data, non-TCP transports and
+   traffic that was never recorded are reported as unobserved, not inferred.
+   The HNDL Captured Ratio is a property of the recording, not of the network.
 
-## 12. References
+## 12. Benchmark scoring
+
+The benchmark deliberately uses a different score from the finding risk model.
+A finding score answers "how exposed is this item?"; a benchmark score answers
+"how ready is this endpoint?".
+
+```
+start  = 100
+TLS    −40  no hybrid key exchange
+       −20  negotiated TLS 1.0 or 1.1
+       −15  weak cipher (RC4, 3DES, DES, NULL, EXPORT)
+SSH    −15  no hybrid key exchange
+debt    −5  per additional classical-debt signal, capped at −20
+```
+
+Classical-debt signals are: legacy TLS version, weak cipher, accepted legacy
+version, legacy SSH host key (`ssh-rsa`, `ssh-dss`), weak KEX
+(`diffie-hellman-group1-sha1`, SHA-1 variants), CBC ciphers and MD5/SHA-1 MACs.
+A target with neither TLS nor SSH reachable is excluded from the average
+(`observed = false`) rather than scored as zero.
+
+Grade bands: A+ ≥ 90, A ≥ 80, B ≥ 70, C ≥ 60, D ≥ 50, E ≥ 40, F < 40.
+
+Sector aggregation:
+
+```
+sectorQRI       = mean(observed target scores)
+hybridAdoption  = 100 × observed targets with hybrid KEX / observed targets
+hndlExposure    = 100 × classical targets where lifetime + 1 > yearsToCRQC
+                  / observed targets
+```
+
+Each target uses its sector's data lifetime for the HNDL calculation, so a
+sector with a high QRI and a 25-year retention obligation can still carry a
+high exposure percentage. The benchmark is a floor over publicly reachable
+endpoints, not a census: internal services, authenticated APIs and
+configuration drift are out of scope. The raw handshake snapshot is committed
+so the published page is reproducible.
+
+## 13. References
 
 - Mosca, M. (2018). *Cybersecurity in an era with quantum computers: will we
   be ready?* IEEE Security & Privacy.

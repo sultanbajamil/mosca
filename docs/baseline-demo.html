@@ -201,6 +201,10 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 .ep-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:.2s}
 .ep-card:hover{border-color:var(--border-2);transform:translateY(-2px)}
 .ep-card.down{opacity:.65}
+.ep-card.exposed{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.04)}
+.ep-card.legacy{border-color:rgba(251,191,36,.28)}
+.ep-card.safe{border-color:rgba(52,211,153,.3)}
+.cap-exposed{color:var(--red)}
 .ep-card header{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:14px}
 .ep-host{font-size:13px;font-weight:600}
 .ep-card dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
@@ -329,7 +333,8 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <a href="#simulator">Simulator</a>
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
-
+      
+      
       <a href="#chains">Chains</a>
       <a href="#compliance">Compliance</a>
       <a href="#roadmap">Roadmap</a>
@@ -346,13 +351,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h1>mosca-baseline-demo is <em>critically exposed</em>.</h1>
       <p class="lede">Most of the cryptographic estate falls to a quantum computer, and some of it is already broken.</p>
       <div class="hero-meta">
-        <span>Generated <b>2026-11-10 01:31:48 UTC</b></span>
+        <span>Generated <b>2026-11-10 01:54:13 UTC</b></span>
         <span>Scope <b>2 code findings</b></span>
         <span>CRQC <b>2033</b></span>
         <span>Actionable <b>2</b></span>
+        
       </div>
     </div>
-
+    
   <div class="gauge-wrap tone-bad">
     <svg class="gauge" viewBox="0 0 200 200" role="img" aria-label="Quantum readiness index 0 out of 100">
       <defs>
@@ -376,37 +382,38 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 
   <div class="baseline-note bad">
     <b>Baseline comparison.</b>
-    1 new finding since 2026-11-10T01:31:48.348Z ·
+    1 new finding since 2026-11-10T01:54:10.146Z ·
     1 existing ·
     0 resolved.
     Regressions are marked <span class="pill new">new</span>.
   </div>
 
   <div class="kpis">
-
+    
   <div class="kpi ">
     <div class="kpi-value">n/a</div>
     <div class="kpi-label">Harvest-now-decrypt-later</div>
     <div class="kpi-sub">no live endpoints inspected</div>
   </div>
-
+    
   <div class="kpi warn">
     <div class="kpi-value">2</div>
     <div class="kpi-label">Inside the Mosca window</div>
     <div class="kpi-sub">of 2 findings are already exposed</div>
   </div>
-
+    
   <div class="kpi bad">
     <div class="kpi-value">2</div>
     <div class="kpi-label">Critical findings</div>
     <div class="kpi-sub">0 high · 0 medium</div>
   </div>
-
+    
   <div class="kpi ">
     <div class="kpi-value">1d</div>
     <div class="kpi-label">Migration effort</div>
     <div class="kpi-sub">estimated engineer-days</div>
   </div>
+    
   </div>
 
   <section id="timeline">
@@ -414,7 +421,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h2>Mosca's inequality, on your estate</h2>
       <p>Each bar is an algorithm in use. The solid section is how long the data it protects must stay secret; the hatched section is the time a migration is expected to take. When the bar crosses the red line, the data is already exposed — an adversary who recorded it today can read it later. Move the line to test the assumption.</p>
     </div>
-
+    
   <div class="timeline-controls">
     <div class="scenario-buttons">
       <button class="scenario" data-year="2029">Aggressive <span>2029</span></button>
@@ -432,7 +439,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <span class="tl-axis-crqc" id="crqc-label">2033</span>
       <span class="tl-axis-end">+20y</span>
     </div>
-
+    
       <div class="tl-row" data-shelf="7" data-lead="1.5">
         <div class="tl-label">
           <span class="tl-name">MD5</span>
@@ -515,7 +522,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h2>Findings</h2>
       <p>Ranked by severity and by the Mosca score. The <span class="mono">Mosca</span> column shows the inequality behind each item: <span class="mono">shelf life + lead time vs. years to CRQC</span>.</p>
     </div>
-
+    
   <div class="toolbar">
     <div class="filters">
       <button class="chip active" data-filter="all">All <span>2</span></button>
@@ -543,14 +550,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr>
-      <tr class="finding sev-critical" data-sev="critical" data-new="1" data-text="sha-1 — hashing sha-1 src\regression.js:2 shattered (2017) and chosen-prefix collisions (2020).">
+      <tr class="finding sev-critical" data-sev="critical" data-new="1" data-text="sha-1 — hashing sha-1 src\other.js:3 shattered (2017) and chosen-prefix collisions (2020).">
         <td><span class="pill sev-critical">critical</span> <span class="pill new">new</span></td>
         <td class="mono prio">P0</td>
         <td>
           <div class="f-title">SHA-1 — hashing</div>
           <div class="f-note">SHAttered (2017) and chosen-prefix collisions (2020).</div>
         </td>
-        <td class="mono loc">src\regression.js:2</td>
+        <td class="mono loc">src\other.js:3</td>
         <td class="mono"><span class="repl">sha256</span></td>
         <td class="num mono" title="Mosca inequality">7 + 1.5 &gt; 7</td>
       </tr></tbody>
@@ -575,14 +582,16 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     <div class="empty">No certificate chains were captured. Add TLS hosts with <code>--tls</code>.</div>
   </section>
 
+  
 
+  
 
   <section id="algorithms">
     <div class="sec-head">
       <h2>Cryptographic inventory</h2>
       <p>Every primitive observed, with its occurrence count and the recommended replacement.</p>
     </div>
-
+    
   <div class="algo-head">
     <span>Algorithm</span><span>Occurrences</span><span>Count</span><span>Replace with</span>
   </div>
@@ -712,7 +721,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h2>Migration roadmap</h2>
       <p>Ordered by dependency, not just severity. Key exchange comes before signatures because harvest-now-decrypt-later is the only exposure that cannot be repaired after the fact.</p>
     </div>
-
+    
     <article class="phase">
       <div class="phase-num">01</div>
       <div class="phase-body">
@@ -765,13 +774,13 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 
   <footer>
     <div class="footer-brand"><span class="brand-mark" style="width:16px;height:16px"></span> MOSCA</div>
-    <div>Generated by MOSCA v3.0.0 · 2 findings · scan completed in 29 ms</div>
+    <div>Generated by MOSCA v3.1.0 · 2 findings · scan completed in 32 ms</div>
     <div><a href="#" id="download-cbom">Download CBOM (CycloneDX 1.6)</a></div>
   </footer>
 </main>
 
-<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-10T01:31:48.491Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":2,"actionable":2,"bySeverity":{"critical":2,"high":0,"medium":0,"low":0,"info":0},"byPrimitive":{"hash":2},"byKind":{"source":2,"config":0,"endpoint":0,"chain":0,"artifact":0,"dependency":0},"quantumReadinessIndex":0,"hndlExposure":0,"hndlApplicable":false,"endpointsInspected":0,"tlsEndpoints":0,"sshEndpoints":0,"endpointsWithPqc":0,"exposedItems":2,"effortDays":1,"rawOccurrences":2,"uniqueMigrationSites":2,"duplicateOccurrences":0,"migrationSpread":1,"sensitivity":[{"year":2029,"yearsToCRQC":3,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2033,"yearsToCRQC":7,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2038,"yearsToCRQC":12,"exposedItems":0,"exposedShare":0,"totalActionable":2},{"year":2045,"yearsToCRQC":19,"exposedItems":0,"exposedShare":0,"totalActionable":2}],"topRisk":{"id":"js-createHash","kind":"source","title":"MD5 — hashing","algorithm":"md5","algorithmLabel":"MD5","primitive":"hash","location":{"file":"src\\legacy.js","line":2,"column":23},"snippet":"const digest = crypto.createHash('md5').update(payload).digest('hex');","matched":"createHash('md5'","confidence":"high","note":"Practical collisions since 2004. Never use for security.","language":"javascript","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":1,"shelfLife":7,"dataClass":"general","leadTime":1.5,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":7,"leadTime":1.5,"yearsToCRQC":7,"inequality":"7 + 1.5 > 7","kind":"integrity"},"fingerprint":"82faa558d1826030dc428ea54592a00d","positive":false,"score":65.2,"severity":"critical","priority":"P0","replacementLabel":"SHA-256","baselineStatus":"existing"},"baseline":{"supplied":true,"createdAt":"2026-11-10T01:31:48.348Z","toolVersion":"3.0.0","recorded":1,"newFindings":1,"newActionable":1,"existingFindings":1,"resolvedFindings":0,"highestNewSeverity":"critical"}},"items":[{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\legacy.js","line":2,"column":23},"fingerprint":"82faa558d1826030dc428ea54592a00d","baselineStatus":"existing","isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\regression.js","line":2,"column":23},"fingerprint":"815cd723c9f18e78010cf9dee4397ffb","baselineStatus":"new","isNew":true}]}</script>
-<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:6f445006-fa6c-4355-b171-09ac76a1c982","version":1,"metadata":{"timestamp":"2026-11-10T01:31:48.491Z","tools":{"components":[{"type":"application","name":"mosca","version":"3.0.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","bom-ref":"application","name":"mosca-baseline-demo","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"0"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"n/a"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\regression.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}}],"dependencies":[{"ref":"application","dependsOn":[]}]}</script>
+<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-10T01:54:13.647Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":2,"actionable":2,"bySeverity":{"critical":2,"high":0,"medium":0,"low":0,"info":0},"byPrimitive":{"hash":2},"byKind":{"source":2,"config":0,"endpoint":0,"captured-session":0,"chain":0,"artifact":0,"dependency":0},"quantumReadinessIndex":0,"hndlExposure":0,"hndlApplicable":false,"capturedSessions":0,"capturedHndlApplicable":false,"hndlCapturedRatio":0,"capturedHybridSessions":0,"capturedClassicalSessions":0,"capturedServers":[],"endpointsInspected":0,"tlsEndpoints":0,"sshEndpoints":0,"endpointsWithPqc":0,"exposedItems":2,"effortDays":1,"rawOccurrences":2,"uniqueMigrationSites":2,"duplicateOccurrences":0,"migrationSpread":1,"sensitivity":[{"year":2029,"yearsToCRQC":3,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2033,"yearsToCRQC":7,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2038,"yearsToCRQC":12,"exposedItems":0,"exposedShare":0,"totalActionable":2},{"year":2045,"yearsToCRQC":19,"exposedItems":0,"exposedShare":0,"totalActionable":2}],"topRisk":{"id":"js-createHash","kind":"source","title":"MD5 — hashing","algorithm":"md5","algorithmLabel":"MD5","primitive":"hash","location":{"file":"src\\legacy.js","line":2,"column":23},"snippet":"const digest = crypto.createHash('md5').update(payload).digest('hex');","matched":"createHash('md5'","confidence":"high","note":"Practical collisions since 2004. Never use for security.","language":"javascript","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":1,"shelfLife":7,"dataClass":"general","leadTime":1.5,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":7,"leadTime":1.5,"yearsToCRQC":7,"anchorYear":2026,"inequality":"7 + 1.5 > 7","kind":"integrity"},"fingerprint":"82faa558d1826030dc428ea54592a00d","positive":false,"score":65.2,"severity":"critical","priority":"P0","replacementLabel":"SHA-256","baselineStatus":"existing"},"baseline":{"supplied":true,"createdAt":"2026-11-10T01:54:10.146Z","toolVersion":"3.1.0","recorded":1,"newFindings":1,"newActionable":1,"existingFindings":1,"resolvedFindings":0,"highestNewSeverity":"critical"}},"items":[{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\legacy.js","line":2,"column":23},"fingerprint":"82faa558d1826030dc428ea54592a00d","baselineStatus":"existing","isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\other.js","line":3,"column":17},"fingerprint":"e7c00cb7f339de688e1d9824a73d2936","baselineStatus":"new","isNew":true}]}</script>
+<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:68c57487-ec85-4cf5-9481-5f6612e423af","version":1,"metadata":{"timestamp":"2026-11-10T01:54:13.647Z","tools":{"components":[{"type":"application","name":"mosca","version":"3.1.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","bom-ref":"application","name":"mosca-baseline-demo","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"0"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"n/a"},{"name":"mosca:hndlCapturedRatio","value":"n/a"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\other.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}}],"dependencies":[{"ref":"application","dependsOn":[]}]}</script>
 <script>
 (function(){
   var data = JSON.parse(document.getElementById('mosca-data').textContent);

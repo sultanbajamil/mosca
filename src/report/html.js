@@ -250,6 +250,34 @@ function renderEndpoints(endpoints) {
   return `<div class="ep-grid">${cards}</div>`;
 }
 
+function renderCapturedSessions(sessions = []) {
+  if (!sessions.length) return '';
+  const cards = sessions.map((session) => {
+    const server = `${session.server?.name || session.server?.ip || 'unknown'}${session.server?.port ? `:${session.server.port}` : ''}`;
+    const when = session.captureTime ? session.captureTime.replace('T', ' ').slice(0, 19) : 'unknown';
+    const kind = session.protocol === 'tls' ? 'TLS' : 'SSH';
+    const negotiated = session.protocol === 'tls'
+      ? session.tls?.groupLabel || session.tls?.groupName || session.tls?.protocol || 'unknown'
+      : session.ssh?.agreedKex || session.ssh?.software || 'unknown';
+    const detail = session.protocol === 'tls'
+      ? `${session.tls?.protocol || 'TLS'} · ${session.tls?.cipherName || 'cipher unknown'}`
+      : `${session.ssh?.software || 'SSH'} · host key ${session.ssh?.hostKeyAlgorithms?.[0] || 'unknown'}`;
+    const status = session.hybrid ? 'safe' : session.hndl?.exposed ? 'exposed' : 'legacy';
+    const statusLabel = session.hybrid ? 'Hybrid KEX · protected' : session.hndl?.exposed ? 'Inside the Mosca window' : 'Classical · recorded';
+    return `<article class="ep-card capture-card ${status}">
+      <header><span class="ep-host mono">${esc(server)}</span><span class="pill sev-${status === 'exposed' ? 'critical' : status === 'safe' ? 'safe' : 'high'}">${kind}</span></header>
+      <dl>
+        <div><dt>Captured</dt><dd>${esc(when)} UTC</dd></div>
+        <div><dt>Negotiated</dt><dd>${esc(negotiated)}</dd></div>
+        <div><dt>Detail</dt><dd>${esc(detail)}</dd></div>
+        <div><dt>Mosca</dt><dd>${esc(session.hndl?.inequality || 'n/a')}</dd></div>
+      </dl>
+      <div class="ep-verdict">${session.hybrid ? `<span class="repl">● ${esc(statusLabel)}</span>` : `<span class="cap-exposed">○ ${esc(statusLabel)}</span>`}</div>
+    </article>`;
+  }).join('');
+  return `<div class="ep-grid">${cards}</div>`;
+}
+
 function renderSshEndpoints(endpoints) {
   if (!endpoints?.length) return '';
   const cards = endpoints
@@ -477,6 +505,7 @@ function renderArtifacts(artifacts) {
 export function buildHtmlReport({ analysis, meta, endpoints = [], projectName = 'project', toolVersion = '1.0.0', cbom = null }) {
   const s = analysis.summary;
   const sshEndpoints = analysis.sshEndpoints || [];
+  const capturedSessions = analysis.capturedSessions || [];
   const v = verdict(s.quantumReadinessIndex);
   const generated = new Date(s.generatedAt);
   // The footer offers the CBOM as a download. Embed the same document the CLI
@@ -713,6 +742,10 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 .ep-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:.2s}
 .ep-card:hover{border-color:var(--border-2);transform:translateY(-2px)}
 .ep-card.down{opacity:.65}
+.ep-card.exposed{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.04)}
+.ep-card.legacy{border-color:rgba(251,191,36,.28)}
+.ep-card.safe{border-color:rgba(52,211,153,.3)}
+.cap-exposed{color:var(--red)}
 .ep-card header{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:14px}
 .ep-host{font-size:13px;font-weight:600}
 .ep-card dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
@@ -842,6 +875,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
       ${sshEndpoints.length ? '<a href="#ssh">SSH</a>' : ''}
+      ${capturedSessions.length ? '<a href="#captures">Captures</a>' : ''}
       <a href="#chains">Chains</a>
       <a href="#compliance">Compliance</a>
       <a href="#roadmap">Roadmap</a>
@@ -862,6 +896,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
         <span>Scope <b>${s.byKind.source + s.byKind.config} code findings</b></span>
         <span>CRQC <b>${s.crqcYear}</b></span>
         <span>Actionable <b>${s.actionable}</b></span>
+        ${s.capturedSessions ? `<span>Captured <b>${s.capturedSessions} session${s.capturedSessions === 1 ? '' : 's'}</b></span>` : ''}
       </div>
     </div>
     ${renderGauge(s.quantumReadinessIndex)}
@@ -880,6 +915,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     ${renderKpi('Inside the Mosca window', String(s.exposedItems), `of ${s.totalFindings} findings are already exposed`, s.exposedItems > 0 ? 'warn' : 'good')}
     ${renderKpi('Critical findings', String(s.bySeverity.critical), `${s.bySeverity.high} high · ${s.bySeverity.medium} medium`, s.bySeverity.critical > 0 ? 'bad' : 'good')}
     ${renderKpi('Migration effort', `${s.effortDays}d`, 'estimated engineer-days', '')}
+    ${s.capturedHndlApplicable ? renderKpi('HNDL Captured Ratio', `${s.hndlCapturedRatio}%`, `${s.capturedClassicalSessions} of ${s.capturedSessions} recorded sessions classical-only`, s.hndlCapturedRatio > 0 ? 'bad' : 'good') : ''}
   </div>
 
   <section id="timeline">
@@ -929,6 +965,14 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <p>Each server was asked for its <span class="mono">SSH_MSG_KEXINIT</span> with a minimal RFC 4253 exchange. The probe never authenticates and never completes key exchange; the advertised algorithm lists are the evidence.</p>
     </div>
     ${renderSshEndpoints(sshEndpoints)}
+  </section>` : ''}
+
+  ${capturedSessions.length ? `<section id="captures">
+    <div class="sec-head">
+      <h2>Captured sessions (passive PCAP harvest)</h2>
+      <p>These sessions were already recorded in a PCAP/PCAPNG file. Nothing was sent to the servers. Each card shows what the recording actually negotiated and whether the capture date places it inside the Mosca window. HNDL Captured Ratio: <b>${s.hndlCapturedRatio}%</b> classical-only.</p>
+    </div>
+    ${renderCapturedSessions(capturedSessions)}
   </section>` : ''}
 
   <section id="algorithms">

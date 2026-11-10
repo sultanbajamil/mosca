@@ -55,6 +55,8 @@ export const DEFAULT_CONFIG = {
   endpoints: [],
   /** SSH targets to inspect on every scan (`host` or `host:port`). */
   ssh: [],
+  /** PCAP/PCAPNG capture files to harvest on every scan. */
+  pcap: [],
   /** Exit non-zero when a finding at or above this severity exists. */
   failOn: null,
 };

@@ -119,6 +119,8 @@ export function buildSarif({ analysis, root = process.cwd(), toolVersion = '1.0.
         moscaInequality: item.mosca?.inequality ?? null,
         priority: item.priority,
         baselineStatus: item.baselineStatus || 'not-compared',
+        captureTime: item.captureTime || null,
+        capturedProtocol: item.capturedProtocol || null,
         compliance: complianceByFingerprint.get(item.fingerprint) || [],
       },
     });

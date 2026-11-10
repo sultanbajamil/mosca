@@ -6,6 +6,64 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-11-10
+
+The evidence edition: passive capture harvesting, a replayable global benchmark
+and locally generated badges. The zero-dependency, pure-ESM contract is
+unchanged.
+
+### Added
+
+- **Passive PCAP/PCAPNG harvesting** (`src/net/pcap.js`). Reads classic libpcap
+  (big/little endian, microsecond and nanosecond magic) and PCAPNG Section
+  Header, Interface Description, Enhanced Packet and Simple Packet blocks with
+  per-interface timestamp resolution. Decodes Ethernet with stacked 802.1Q
+  tags, Linux SLL/SLL2, BSD NULL and raw IP; parses IPv4/IPv6, TCP reassembly,
+  TLS ClientHello/ServerHello and SSH banners plus `SSH_MSG_KEXINIT`, including
+  first-match KEX agreement between both directions.
+- **`mosca pcap <file...>` and `scan --pcap <file,...>`.** Captured sessions
+  become `captured-session` findings in the unified schema. Exposure is
+  anchored to the **capture year**, not the report date. The terminal, JSON,
+  HTML, CBOM and SARIF surfaces all carry the capture date, negotiated KEX and
+  the Mosca inequality.
+- **HNDL Captured Ratio.** The share of recorded sessions that are
+  classical-only, reported next to the live HNDL exposure. A capture can be
+  audited on an air-gapped host with no reachable endpoint.
+- **Global PQC benchmark** (`src/benchmark.js`, `scripts/benchmark-world.js`).
+  Concurrency capped at 10, 5-second default timeout, TLS + optional SSH,
+  deterministic aggregation by sector, per-sector data lifetime, HNDL
+  exposure, hybrid adoption, key-exchange distribution and classical debt.
+  `mosca benchmark` replays a snapshot or probes live.
+- **State of PQC report** (`src/report/benchmark-html.js`,
+  `docs/state-of-pqc.html`). Self-contained dark page with an A+–F leaderboard,
+  sector filters, a 2027–2045 CRQC slider and shareable insight cards. The
+  static social card is generated as `docs/state-of-pqc.svg`.
+- **Benchmark target set and snapshot** (`benchmarks/targets.json`,
+  `benchmarks/snapshot.json`, `benchmarks/report.json`). 69 named targets
+  across 10 sectors; CI regenerates the published page from the raw handshake
+  snapshot.
+- **SVG badges** (`src/report/badge.js`, `--badge <dir>`). Writes
+  `mosca-qri-badge.svg` and `mosca-hndl-badge.svg` from the scan summary with
+  no network call or third-party badge service.
+- **npm packaging.** `bin`, `exports` (`.`, `./pcap`, `./benchmark`,
+  `./badge`, `./package.json`), `files`, keywords and engines are publication
+  ready; `npx mosca-pqc <command>` is the canonical invocation.
+- **Launch kit** (`docs/launch-kit/`): Show HN post, press release, English and
+  Arabic social threads, and a CISO one-pager.
+- **25 new tests** (231 total) for PCAP/PCAPNG fixtures, the benchmark engine,
+  badge rendering and the self-contained benchmark page.
+
+### Changed
+
+- Version bumped to `3.1.0`.
+- `mosca benchmark` is a first-class command; the GitHub Action gains `pcap`,
+  `badge` and `benchmark-snapshot` inputs plus `badges` and `benchmark` outputs.
+- The README is rebuilt around the executive pitch, the ten-second demos and
+  the benchmark; `examples/vulnerable-app/README.md` uses the npm invocation.
+- Captured sessions participate in compliance controls and the risk engine's
+  surface weighting, but are counted separately from live-endpoint HNDL so a
+  capture-only run cannot be mistaken for an empty estate.
+
 ## [3.0.0] — 2026-11-10
 
 The enterprise and deep-protocol edition. Every new scanner and probe emits the

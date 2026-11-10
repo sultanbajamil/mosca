@@ -85,7 +85,7 @@ export const COMPLIANCE_STANDARDS = {
         requirement: 'TLS, SSH, QUIC, IPsec and application KEMs must negotiate ML-KEM-768/1024, hybrid constructions included.',
         remediation: 'Enable X25519MLKEM768 on the listener or upgrade the protocol library to one that implements FIPS 203.',
         severity: 'required',
-        match: (item) => item.kind === 'endpoint' && item.primitive === 'key-agreement' && item.quantum === 'broken',
+        match: (item) => (item.kind === 'endpoint' || item.kind === 'captured-session') && item.primitive === 'key-agreement' && item.quantum === 'broken',
       },
       {
         id: 'cnsa2-signatures',
@@ -210,7 +210,7 @@ export const COMPLIANCE_STANDARDS = {
         requirement: 'Long-lived cardholder data must not be protected by a quantum-vulnerable key exchange.',
         remediation: 'Enable hybrid ML-KEM key exchange on every internet-facing payment endpoint.',
         severity: 'recommended',
-        match: (item) => isConfidentialityExposure(item) && item.kind === 'endpoint',
+        match: (item) => isConfidentialityExposure(item) && (item.kind === 'endpoint' || item.kind === 'captured-session'),
       },
     ],
   },
@@ -231,7 +231,7 @@ export const COMPLIANCE_STANDARDS = {
         severity: 'required',
         match: (item) =>
           isLegacyTls(item) ||
-          (!item.positive && item.kind === 'endpoint' && item.primitive === 'key-agreement' && item.algorithm === 'rsa'),
+          (!item.positive && (item.kind === 'endpoint' || item.kind === 'captured-session') && item.primitive === 'key-agreement' && item.algorithm === 'rsa'),
       },
       {
         id: 'hipaa-at-rest',

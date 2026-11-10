@@ -1,8 +1,9 @@
 name: MOSCA post-quantum scan
 description: >-
-  Scan source, configuration, live TLS and SSH endpoints for post-quantum
-  exposure. Fails the job only on findings at or above the chosen severity,
-  or only on regressions when a baseline is supplied.
+  Scan source, configuration, live TLS/SSH/STARTTLS/QUIC/IKEv2 endpoints and
+  recorded PCAP captures for post-quantum exposure. Emits CBOM, SARIF, an HTML
+  report and dynamic SVG badges, and fails only on findings at or above the
+  chosen severity or on regressions against a baseline.
 author: sultanbajamil
 
 branding:
@@ -32,6 +33,18 @@ inputs:
     default: ''
   ikev2:
     description: Comma-separated IKEv2 gateways to probe.
+    required: false
+    default: ''
+  pcap:
+    description: Comma-separated PCAP/PCAPNG capture files to harvest for recorded TLS and SSH sessions.
+    required: false
+    default: ''
+  badge:
+    description: Directory for the generated QRI and HNDL SVG badges. Empty disables badge output.
+    required: false
+    default: ''
+  benchmark-snapshot:
+    description: Snapshot file for a reproducible sector readiness benchmark.
     required: false
     default: ''
   compliance:
@@ -71,6 +84,12 @@ outputs:
   report:
     description: Path to the generated HTML report.
     value: ${{ steps.scan.outputs.report }}
+  badges:
+    description: Directory containing mosca-qri-badge.svg and mosca-hndl-badge.svg.
+    value: ${{ steps.scan.outputs.badges }}
+  benchmark:
+    description: Path to the generated benchmark HTML report.
+    value: ${{ steps.benchmark.outputs.report }}
   exit-code:
     description: MOSCA process exit code.
     value: ${{ steps.scan.outputs.exit-code }}
@@ -93,6 +112,8 @@ runs:
         INPUT_STARTTLS: ${{ inputs.starttls }}
         INPUT_QUIC: ${{ inputs.quic }}
         INPUT_IKEV2: ${{ inputs.ikev2 }}
+        INPUT_PCAP: ${{ inputs.pcap }}
+        INPUT_BADGE: ${{ inputs.badge }}
         INPUT_COMPLIANCE: ${{ inputs.compliance }}
         INPUT_FAIL_ON_COMPLIANCE: ${{ inputs.fail-on-compliance }}
         INPUT_BASELINE: ${{ inputs.baseline }}
@@ -108,6 +129,8 @@ runs:
         [ -n "$INPUT_STARTTLS" ] && args+=(--starttls "$INPUT_STARTTLS")
         [ -n "$INPUT_QUIC" ] && args+=(--quic "$INPUT_QUIC")
         [ -n "$INPUT_IKEV2" ] && args+=(--ikev2 "$INPUT_IKEV2")
+        [ -n "$INPUT_PCAP" ] && args+=(--pcap "$INPUT_PCAP")
+        [ -n "$INPUT_BADGE" ] && args+=(--badge "$INPUT_BADGE")
         [ -n "$INPUT_COMPLIANCE" ] && args+=(--compliance "$INPUT_COMPLIANCE")
         [ -n "$INPUT_FAIL_ON_COMPLIANCE" ] && args+=(--fail-on-compliance "$INPUT_FAIL_ON_COMPLIANCE")
         [ -n "$INPUT_BASELINE" ] && args+=(--baseline "$INPUT_BASELINE")
@@ -118,4 +141,19 @@ runs:
         code=$?
         echo "exit-code=$code" >> "$GITHUB_OUTPUT"
         echo "report=$INPUT_OUT/mosca-report.html" >> "$GITHUB_OUTPUT"
+        echo "badges=$INPUT_BADGE" >> "$GITHUB_OUTPUT"
         exit $code
+
+    - name: Benchmark PQC readiness
+      id: benchmark
+      if: inputs.benchmark-snapshot != ''
+      shell: bash
+      env:
+        INPUT_SNAPSHOT: ${{ inputs.benchmark-snapshot }}
+        INPUT_OUT: ${{ inputs.out }}
+      run: |
+        node "${{ github.action_path }}/bin/mosca.js" benchmark \
+          --snapshot "$INPUT_SNAPSHOT" \
+          --out "$INPUT_OUT/benchmark" \
+          --format html,json
+        echo "report=$INPUT_OUT/benchmark/state-of-pqc.html" >> "$GITHUB_OUTPUT"

@@ -15,7 +15,7 @@ const WORDMARK = `
   ██║ ╚═╝ ██║╚██████╔╝███████║╚██████╗██║  ██║
   ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝`;
 
-export function printBanner(version = '3.0.0') {
+export function printBanner(version = '3.1.0') {
   const lines = WORDMARK.split('\n');
   for (const line of lines) {
     // Vertical gradient from cyan to magenta.
@@ -126,6 +126,40 @@ export function printEndpoints(endpoints) {
       `  ${padEnd(host, 30)}${padEnd(ep.protocol || '?', 10)}${padEnd(ep.groupLabel || '—', 24)}${padEnd(ep.certificate?.signature?.name || '—', 24)}${posture}\n`,
     );
   }
+  process.stdout.write('\n');
+}
+
+/** Print the passive PCAP harvest matrix. */
+export function printCaptureSummary(capture, sessions = []) {
+  if (!capture || (!capture.sessionCount && !capture.files?.length)) return;
+  process.stdout.write(c.bold('  CAPTURED SESSIONS') + c.gray(`  ·  ${capture.sessionCount} session${capture.sessionCount === 1 ? '' : 's'} from ${capture.files?.length || 0} file${capture.files?.length === 1 ? '' : 's'}`) + '\n\n');
+  if (capture.sessionCount === 0) {
+    process.stdout.write(c.gray('  No TLS or SSH handshakes were found in the capture.') + '\n\n');
+    return;
+  }
+  const ratio = capture.hndlCapturedRatio;
+  process.stdout.write(
+    `  ${c.gray('HNDL Captured Ratio')}  ${ratio > 0 ? c.red(`${ratio}%`) : c.green('0%')} ${c.gray('of recorded sessions are classical-only')}\n` +
+      `  ${c.gray('Servers recorded')}    ${c.bold(String(capture.servers?.length || 0))} ${c.gray('·')} ${capture.tlsSessions} TLS · ${capture.sshSessions} SSH\n` +
+      `  ${c.gray('Capture window')}     ${capture.firstCapture ? `${capture.firstCapture} → ${capture.lastCapture}` : 'unknown'}\n\n`,
+  );
+  process.stdout.write(
+    `  ${padEnd(c.gray('CAPTURED'), 22)}${padEnd(c.gray('PROTO'), 7)}${padEnd(c.gray('SERVER'), 30)}${padEnd(c.gray('NEGOTIATED'), 30)}${c.gray('HNDL')}\n`,
+  );
+  process.stdout.write('  ' + c.gray('─'.repeat(102)) + '\n');
+  for (const session of sessions.slice(0, 24)) {
+    const when = session.captureTime ? session.captureTime.replace('T', ' ').slice(0, 19) : 'unknown';
+    const proto = session.protocol.toUpperCase();
+    const server = `${session.server?.name || session.server?.ip || 'unknown'}${session.server?.port ? `:${session.server.port}` : ''}`;
+    const negotiated = session.protocol === 'tls'
+      ? session.tls?.groupLabel || session.tls?.protocol || 'unknown'
+      : session.ssh?.agreedKex || session.ssh?.software || 'unknown';
+    const posture = session.hybrid ? c.green('● SAFE') : c.red(`○ ${session.hndl?.exposed ? 'EXPOSED' : 'LEGACY'}`);
+    process.stdout.write(
+      `  ${padEnd(when, 22)}${padEnd(proto, 7)}${padEnd(truncate(server, 28), 30)}${padEnd(truncate(negotiated, 28), 30)}${posture}\n`,
+    );
+  }
+  if (sessions.length > 24) process.stdout.write(c.gray(`  … ${sessions.length - 24} more session(s) in the report`) + '\n');
   process.stdout.write('\n');
 }
 

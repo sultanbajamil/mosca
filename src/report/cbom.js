@@ -243,6 +243,42 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
     });
   }
 
+  // Captured sessions from a passive PCAP harvest. These are protocol assets
+  // too, but the recording is the evidence: the capture timestamp and the
+  // negotiated KEX are properties of the asset.
+  for (const session of analysis.capturedSessions || []) {
+    const server = session.server?.name || session.server?.ip || 'unknown';
+    const port = session.server?.port ?? '';
+    const ref = `crypto/captured-session/${session.protocol}/${server}:${port}/${session.captureTs ?? 'na'}`;
+    const tls = session.tls;
+    const ssh = session.ssh;
+    components.push({
+      type: 'cryptographic-asset',
+      'bom-ref': ref,
+      name: `Captured ${session.protocol.toUpperCase()} session to ${server}${port ? `:${port}` : ''}`,
+      description: `Recorded ${session.captureTime || 'unknown'} from a passive packet capture.`,
+      cryptoProperties: {
+        assetType: 'protocol',
+        protocolProperties: {
+          type: session.protocol,
+          version: session.protocol === 'tls' ? (tls?.protocol || '').replace('TLS ', '') : '2.0',
+          cipherSuites: session.protocol === 'tls'
+            ? tls?.cipherName ? [{ name: tls.cipherName, algorithms: [] }] : []
+            : (ssh?.encryption || []).slice(0, 12).map((name) => ({ name, algorithms: [] })),
+        },
+      },
+      properties: [
+        { name: 'mosca:kind', value: 'captured-session' },
+        { name: 'mosca:captureTime', value: session.captureTime || 'unknown' },
+        { name: 'mosca:server', value: `${server}${port ? `:${port}` : ''}` },
+        { name: 'mosca:keyExchange', value: session.protocol === 'tls' ? (tls?.groupLabel || tls?.groupName || 'unknown') : (ssh?.agreedKex || 'unknown') },
+        { name: 'mosca:hybridKeyExchange', value: String(Boolean(session.hybrid)) },
+        { name: 'mosca:hndlExposed', value: String(Boolean(session.hndl?.exposed)) },
+        { name: 'mosca:moscaInequality', value: session.hndl?.inequality || 'n/a' },
+      ],
+    });
+  }
+
   // Cryptographic libraries discovered in lockfiles. These are ordinary
   // CycloneDX library components: their cryptographic meaning lives in
   // properties, while `dependencies` connects them to the application.
@@ -296,6 +332,10 @@ export function buildCbom({ analysis, projectName = 'scanned-project', version =
         {
           name: 'mosca:harvestNowDecryptLaterExposure',
           value: analysis.summary.hndlApplicable ? `${analysis.summary.hndlExposure}%` : 'n/a',
+        },
+        {
+          name: 'mosca:hndlCapturedRatio',
+          value: analysis.summary.capturedHndlApplicable ? `${analysis.summary.hndlCapturedRatio}%` : 'n/a',
         },
       ],
     },

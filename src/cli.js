@@ -12,11 +12,11 @@ import { scan, exitCode } from './index.js';
 import { buildCbom } from './report/cbom.js';
 import { buildSarif } from './report/sarif.js';
 import { buildHtmlReport } from './report/html.js';
-import { printBanner, printSummary, printFindings, printEndpoints, printSshEndpoints, printRoadmap, printNextSteps } from './report/terminal.js';
+import { printBanner, printSummary, printFindings, printEndpoints, printSshEndpoints, printCaptureSummary, printRoadmap, printNextSteps } from './report/terminal.js';
 import { loadConfig, mergeConfig, CRQC_SCENARIOS } from './config.js';
 import { inspectEndpoint } from './net/tls.js';
 import { probeSsh, deriveSshFindings, parseSshTarget } from './net/ssh.js';
-import { c, quantumColor } from './util/log.js';
+import { c, quantumColor, padEnd } from './util/log.js';
 import { analyse } from './analysis/risk.js';
 import { buildBaseline, loadBaseline, applyBaseline } from './analysis/baseline.js';
 import { COMPLIANCE_IDS, evaluateAllCompliance } from './analysis/compliance.js';
@@ -25,11 +25,15 @@ import { buildMermaid, buildMermaidMarkdown } from './report/mermaid.js';
 import { inspectStarttls } from './net/starttls.js';
 import { inspectQuic } from './net/quic.js';
 import { inspectIkev2 } from './net/ikev2.js';
+import { analysePcapFile, summariseCaptures } from './net/pcap.js';
+import { writeBadges } from './report/badge.js';
+import { runBenchmark, replayBenchmark, expandTargets, liveProbes } from './benchmark.js';
+import { buildBenchmarkHtml } from './report/benchmark-html.js';
 import { RULE_COUNT } from './rules/source.js';
 import { CONFIG_RULES } from './rules/config.js';
 import { ALGORITHMS, lookup } from './rules/algorithms.js';
 
-const VERSION = '3.0.0';
+const VERSION = '3.1.0';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
@@ -57,6 +61,12 @@ export function parseArgs(argv) {
     'fail-on-compliance',
     'fix-out',
     'addke',
+    'pcap',
+    'badge',
+    'targets',
+    'snapshot',
+    'concurrency',
+    'timeout',
   ]);
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -98,6 +108,8 @@ ${c.bold('USAGE')}
   mosca starttls <target...>       Probe SMTP, IMAP, POP3, PostgreSQL and LDAP STARTTLS
   mosca quic <host...>             Probe QUIC / HTTP/3 with a protected Initial packet
   mosca ikev2 <host...>            Probe IPsec gateways for RFC 9370 hybrid key exchange
+  mosca pcap <file.pcap>           Harvest TLS and SSH handshakes from a recorded capture
+  mosca benchmark [options]        Scan the global PQC readiness benchmark
   mosca fix [path]                 Propose a patch for automatic fixes and advisories for the rest
   mosca explain <algorithm>        Explain an algorithm and its migration path
   mosca demo                       Scan the bundled vulnerable example
@@ -110,6 +122,8 @@ ${c.bold('SCAN OPTIONS')}
   --starttls <target,...> STARTTLS targets: smtp://, imap://, pop3://, postgres://, ldap://
   --quic <host,...>       QUIC / HTTP/3 endpoints to inspect
   --ikev2 <host,...>      IKEv2 gateways to inspect for RFC 9370 hybrid KEX
+  --pcap <file,...>       PCAP/PCAPNG captures to harvest for recorded TLS and SSH sessions
+  --badge <dir>           Write mosca-qri-badge.svg and mosca-hndl-badge.svg
   --out <dir>             Output directory (default: ./mosca-report)
   --format <list>         html,json,cbom,sarif,term,mermaid  (default: html,term)
   --fail-on <severity>    Exit 1 at or above: low|medium|high|critical
@@ -128,6 +142,15 @@ ${c.bold('SCAN OPTIONS')}
   --json                  Shorthand for --format json
   --quiet                 Suppress the terminal report
   --no-color              Disable ANSI colour output
+
+${c.bold('BENCHMARK OPTIONS')}
+  --targets <file>        Target document (default: benchmarks/targets.json)
+  --snapshot <file>       Replay recorded results instead of probing live
+  --concurrency <n>       Parallel probes, capped at 10 (default: 10)
+  --timeout <ms>          Per-probe timeout (default: 5000)
+  --crqc-year <year>      CRQC assumption for HNDL exposure
+  --out <dir>             Output directory (default: ./mosca-benchmark)
+  --badge <dir>           Write readiness badges alongside the report
 
 ${c.bold('EXAMPLES')}
   ${c.gray('# scan the current repository')}
@@ -152,6 +175,12 @@ ${c.bold('EXAMPLES')}
   mosca starttls smtp://mail.example.com:587
   mosca quic cloudflare.com
   mosca ikev2 vpn.example.com
+
+  ${c.gray('# read a capture without sending a single packet')}
+  mosca pcap capture.pcap --out capture-report
+
+  ${c.gray('# compare global PQC readiness by sector')}
+  mosca benchmark --out benchmark-report
 `;
 
 export async function main(argv = process.argv.slice(2)) {
@@ -183,6 +212,10 @@ export async function main(argv = process.argv.slice(2)) {
         return await runQuic(args);
       case 'ikev2':
         return await runIkev2(args);
+      case 'pcap':
+        return await runPcap(args);
+      case 'benchmark':
+        return await runBenchmarkCommand(args);
       case 'fix':
         return await runFix(args, args._[1] || '.');
       case 'explain':
@@ -227,12 +260,13 @@ async function runScan(args, target) {
   const starttlsTargets = splitList(args.starttls);
   const quicTargets = splitList(args.quic);
   const ikev2Targets = splitList(args.ikev2);
+  const pcapTargets = splitList(args.pcap);
 
   // Load the baseline before scanning so a typo fails fast instead of after
   // a long network probe.
   const baselineDoc = args.baseline ? loadBaseline(path.resolve(args.baseline)) : null;
 
-  const { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, artifacts, dependencies } = await scan({
+  const { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, captures, capturedSessions, artifacts, dependencies } = await scan({
     root,
     config: overrides,
     endpoints,
@@ -240,6 +274,7 @@ async function runScan(args, target) {
     starttls: starttlsTargets,
     quic: quicTargets,
     ikev2: ikev2Targets,
+    pcap: pcapTargets,
     quiet,
   });
 
@@ -255,6 +290,7 @@ async function runScan(args, target) {
     printSummary(analysis, meta);
     printEndpoints(endpointResults);
     printSshEndpoints(sshEndpoints);
+    printCaptureSummary(analysis.capture, capturedSessions);
     printFindings(analysis.items, { limit: Number(args.top) || 20 });
     printRoadmap(analysis.roadmap);
     printCompliance(compliance);
@@ -301,7 +337,7 @@ async function runScan(args, target) {
     written.push(diagrams);
   }
   if (formats.includes('json')) {
-    const payload = { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, artifacts, dependencies };
+    const payload = { analysis, meta, endpoints: endpointResults, sshEndpoints, starttlsEndpoints, quicEndpoints, ikev2Endpoints, captures, capturedSessions, artifacts, dependencies };
     if (args.json && !args.out) {
       // Stream to stdout for piping.
       console.log(JSON.stringify(payload, null, 2));
@@ -311,6 +347,11 @@ async function runScan(args, target) {
       fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
       written.push(file);
     }
+  }
+
+  if (args.badge) {
+    const badge = writeBadges({ dir: typeof args.badge === 'string' ? args.badge : path.join(outDir, 'badges'), analysis });
+    written.push(badge.qri, badge.hndl);
   }
 
   if (args.fix) {
@@ -601,6 +642,219 @@ async function runIkev2(args) {
   const hybrid = results.filter((result) => result.addke?.supported).length;
   console.log(c.gray(`  ${hybrid} of ${results.length} IKEv2 gateway${results.length === 1 ? '' : 's'} accept hybrid additional key exchange.`));
   console.log('');
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
+// pcap
+// ---------------------------------------------------------------------------
+
+async function runPcap(args) {
+  const files = args._.slice(1).length ? args._.slice(1) : splitList(args.pcap) || [];
+  if (!files.length) {
+    console.error(c.red('  Usage: mosca pcap <file.pcap> [--out dir] [--format html,cbom,sarif,json,term]'));
+    return 2;
+  }
+  for (const file of files) {
+    if (!fs.existsSync(file)) {
+      console.error(c.red(`  Capture not found: ${file}`));
+      return 2;
+    }
+  }
+
+  printBanner(VERSION);
+  const overrides = buildOverrides(args);
+  const { config: baseConfig } = loadConfig(args.config ? path.resolve(args.config) : path.join(process.cwd(), 'mosca.json'));
+  const mergedConfig = mergeConfig(baseConfig, overrides);
+  const formats = args.json ? ['json'] : splitList(args.format) || ['html', 'term'];
+
+  const results = files.map((file) => analysePcapFile(file, { config: mergedConfig }));
+  const capturedSessions = results.flatMap((result) => result.sessions);
+  const findings = results.flatMap((result) => result.findings);
+  const analysis = analyse({ findings, endpoints: [], sshEndpoints: [], capturedSessions, config: mergedConfig });
+  analysis.capturedSessions = capturedSessions;
+  analysis.captures = results;
+  analysis.capture = summariseCaptures(results);
+  analysis.endpoints = [];
+  analysis.sshEndpoints = [];
+  analysis.compliance = evaluateAllCompliance(analysis, selectionValue(args.compliance || args['fail-on-compliance']));
+
+  if (!args.quiet && (formats.includes('term') || formats.length === 0)) {
+    printCaptureSummary(analysis.capture, capturedSessions);
+    printFindings(analysis.items, { limit: Number(args.top) || 20 });
+    printRoadmap(analysis.roadmap);
+    printCompliance(analysis.compliance);
+  }
+
+  const outDir = path.resolve(args.out || 'mosca-pcap-report');
+  const written = [];
+  if (formats.includes('html')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const html = buildHtmlReport({
+      analysis,
+      meta: { durationMs: 0, captureStats: analysis.capture },
+      endpoints: [],
+      projectName: results.length === 1 ? path.basename(results[0].file) : 'packet captures',
+      toolVersion: VERSION,
+    });
+    const file = path.join(outDir, 'mosca-report.html');
+    fs.writeFileSync(file, html, 'utf8');
+    written.push(file);
+  }
+  if (formats.includes('cbom')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const cbom = buildCbom({ analysis, projectName: 'packet-captures', toolVersion: VERSION });
+    const file = path.join(outDir, 'bom.cdx.json');
+    fs.writeFileSync(file, JSON.stringify(cbom, null, 2), 'utf8');
+    written.push(file);
+  }
+  if (formats.includes('sarif')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const sarif = buildSarif({ analysis, root: process.cwd(), toolVersion: VERSION });
+    const file = path.join(outDir, 'mosca.sarif');
+    fs.writeFileSync(file, JSON.stringify(sarif, null, 2), 'utf8');
+    written.push(file);
+  }
+  if (formats.includes('mermaid')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const mmd = path.join(outDir, 'mosca.mmd');
+    fs.writeFileSync(mmd, buildMermaid(analysis) + '\n', 'utf8');
+    written.push(mmd);
+  }
+  if (formats.includes('json')) {
+    const payload = { analysis, meta: { captureStats: analysis.capture }, captures: results, capturedSessions };
+    if (args.json && !args.out) {
+      console.log(JSON.stringify(payload, null, 2));
+    } else {
+      fs.mkdirSync(outDir, { recursive: true });
+      const file = path.join(outDir, 'mosca.json');
+      fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
+      written.push(file);
+    }
+  }
+  if (args.badge) {
+    const badge = writeBadges({ dir: typeof args.badge === 'string' ? args.badge : path.join(outDir, 'badges'), analysis });
+    written.push(badge.qri, badge.hndl);
+  }
+
+  if (!args.quiet && written.length) {
+    console.log(c.gray('  Artefacts written:'));
+    for (const file of written) console.log(`    ${c.cyan('•')} ${file}`);
+    console.log('');
+  }
+
+  let code = exitCode(analysis, args['fail-on']);
+  if (args['fail-on-compliance'] && analysis.compliance.some((result) => result.status === 'fail')) code = 1;
+  return code;
+}
+
+// ---------------------------------------------------------------------------
+// benchmark
+// ---------------------------------------------------------------------------
+
+/** Terminal leaderboard for `mosca benchmark`. */
+function printBenchmarkSummary(result) {
+  const overall = result.overall;
+  const verdict = overall.qri >= 70 ? c.green(overall.grade) : overall.qri >= 50 ? c.yellow(overall.grade) : c.red(overall.grade);
+  console.log(c.bold('  GLOBAL PQC READINESS') + '\n');
+  console.log(`  ${c.bold(String(overall.qri))}${c.gray('/100')}  ${verdict}  ${c.gray(overall.gradeLabel)}`);
+  console.log(
+    `  ${c.gray('hybrid adoption')} ${c.cyan(`${overall.pqcHybridAdoption}%`)}  ` +
+      `${c.gray('· HNDL exposure')} ${overall.hndlExposure > 0 ? c.red(`${overall.hndlExposure}%`) : c.green('0%')}  ` +
+      `${c.gray('· observed')} ${overall.observed}/${overall.total}  ` +
+      `${c.gray('· CRQC')} ${result.crqcYear}\n`,
+  );
+  console.log(
+    `  ${padEnd(c.gray('SECTOR'), 24)}${padEnd(c.gray('QRI'), 8)}${padEnd(c.gray('GRADE'), 7)}${padEnd(c.gray('HYBRID'), 9)}${padEnd(c.gray('HNDL'), 8)}${c.gray('DATA LIFETIME')}`,
+  );
+  console.log('  ' + c.gray('─'.repeat(78)));
+  for (const sector of result.sectors) {
+    const grade = sector.qri >= 70 ? c.green(sector.grade) : sector.qri >= 50 ? c.yellow(sector.grade) : c.red(sector.grade);
+    console.log(
+      `  ${padEnd(sector.name || sector.id, 24)}` +
+        `${padEnd(String(sector.qri), 8)}` +
+        `${padEnd(grade, 7)}` +
+        `${padEnd(`${sector.pqcHybridAdoption}%`, 9)}` +
+        `${padEnd(sector.hndlExposure > 0 ? c.red(`${sector.hndlExposure}%`) : c.green('0%'), 8)}` +
+        `${sector.dataLifetimeYears}y`,
+    );
+  }
+  console.log('');
+}
+
+async function runBenchmarkCommand(args) {
+  const targetsFile = path.resolve(typeof args.targets === 'string' ? args.targets : path.join(PROJECT_ROOT, 'benchmarks', 'targets.json'));
+  if (!fs.existsSync(targetsFile)) {
+    console.error(c.red(`  Benchmark targets not found: ${targetsFile}`));
+    return 2;
+  }
+  const document = JSON.parse(fs.readFileSync(targetsFile, 'utf8').replace(/^\uFEFF/, ''));
+  const quiet = Boolean(args.quiet);
+  if (!quiet) printBanner(VERSION);
+
+  let result;
+  if (args.snapshot && args.snapshot !== true) {
+    const snapshotFile = path.resolve(args.snapshot);
+    const snapshot = JSON.parse(fs.readFileSync(snapshotFile, 'utf8').replace(/^\uFEFF/, ''));
+    if (!quiet) console.log(c.gray(`  Replaying ${snapshotFile} (${snapshot.targets?.length || 0} targets)`));
+    result = await replayBenchmark(snapshot);
+  } else {
+    if (!quiet) {
+      console.log(c.gray(`  Probing ${document.targets?.length || 0} targets · concurrency ${Number(args.concurrency) || 10} · timeout ${Number(args.timeout) || 5000}ms`));
+    }
+    const { probeTls, probeSsh } = liveProbes();
+    result = await runBenchmark({
+      targets: expandTargets(document),
+      probeTls,
+      probeSsh,
+      concurrency: Number(args.concurrency) || 10,
+      timeout: Number(args.timeout) || 5000,
+      crqcYear: Number(args['crqc-year']) || document.crqcYear || 2033,
+      toolVersion: VERSION,
+    });
+  }
+
+  if (!quiet) printBenchmarkSummary(result);
+
+  const formats = args.json ? ['json'] : splitList(args.format) || ['html', 'term'];
+  const outDir = path.resolve(args.out || 'mosca-benchmark');
+  const written = [];
+  if (formats.includes('html')) {
+    fs.mkdirSync(outDir, { recursive: true });
+    const file = path.join(outDir, 'state-of-pqc.html');
+    fs.writeFileSync(
+      file,
+      buildBenchmarkHtml({
+        benchmark: result,
+        title: document.title || 'The State of Post-Quantum Readiness',
+        subtitle: document.subtitle || '',
+        toolVersion: VERSION,
+      }),
+      'utf8',
+    );
+    written.push(file);
+  }
+  if (formats.includes('json')) {
+    const payload = { ...result, source: path.basename(targetsFile) };
+    if (args.json && !args.out) {
+      console.log(JSON.stringify(payload, null, 2));
+    } else {
+      fs.mkdirSync(outDir, { recursive: true });
+      const file = path.join(outDir, 'benchmark.json');
+      fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
+      written.push(file);
+    }
+  }
+  if (args.badge) {
+    const badge = writeBadges({ dir: typeof args.badge === 'string' ? args.badge : path.join(outDir, 'badges'), analysis: { summary: { quantumReadinessIndex: result.overall.qri, hndlApplicable: false, capturedHndlApplicable: false } } });
+    written.push(badge.qri, badge.hndl);
+  }
+
+  if (!quiet && written.length) {
+    console.log(c.gray('  Artefacts written:'));
+    for (const file of written) console.log(`    ${c.cyan('•')} ${file}`);
+    console.log('');
+  }
   return 0;
 }
 

@@ -16,6 +16,7 @@ import { probeSsh, deriveSshFindings, parseSshTarget } from './net/ssh.js';
 import { inspectStarttls } from './net/starttls.js';
 import { inspectQuic } from './net/quic.js';
 import { inspectIkev2 } from './net/ikev2.js';
+import { analysePcapFile, summariseCaptures } from './net/pcap.js';
 import { analyse } from './analysis/risk.js';
 import { buildCbom } from './report/cbom.js';
 import { buildSarif } from './report/sarif.js';
@@ -36,6 +37,7 @@ export async function scan(opts = {}) {
     starttls: extraStarttls = [],
     quic: extraQuic = [],
     ikev2: extraIkev2 = [],
+    pcap: extraPcap = [],
     quiet = false,
   } = opts;
 
@@ -76,6 +78,16 @@ export async function scan(opts = {}) {
     progress('scanning cryptographic dependencies…');
     dependencyResult = scanDependenciesDirectory(root, { ignore: mergedConfig.ignore, maxFiles: 50000 });
   }
+
+  // ----------------------------------------------------------- PCAP harvest
+  const requestedPcap = Array.isArray(extraPcap) ? extraPcap : [];
+  const allPcap = [...(mergedConfig.pcap || []), ...requestedPcap].filter(Boolean);
+  let captureResults = [];
+  if (allPcap.length > 0) {
+    progress(`harvesting ${allPcap.length} packet capture(s)…`);
+    captureResults = allPcap.map((file) => analysePcapFile(file, { config: mergedConfig }));
+  }
+  const capturedSessions = captureResults.flatMap((result) => result.sessions || []);
 
   // ---------------------------------------------------------- endpoint scan
   const requestedEndpoints = Array.isArray(extraEndpoints) ? extraEndpoints : [];
@@ -201,8 +213,9 @@ export async function scan(opts = {}) {
     ...starttlsResults.flatMap((e) => e.findings || []),
     ...quicResults.flatMap((e) => e.findings || []),
     ...ikev2Results.flatMap((e) => e.findings || []),
+    ...captureResults.flatMap((e) => e.findings || []),
   ];
-  const analysis = analyse({ findings: allFindings, endpoints: endpointResults, sshEndpoints: sshResults, config: mergedConfig });
+  const analysis = analyse({ findings: allFindings, endpoints: endpointResults, sshEndpoints: sshResults, capturedSessions, config: mergedConfig });
   analysis.endpoints = endpointResults;
   analysis.sshEndpoints = sshResults;
   analysis.starttlsEndpoints = starttlsResults;
@@ -210,6 +223,9 @@ export async function scan(opts = {}) {
   analysis.ikev2Endpoints = ikev2Results;
   analysis.artifacts = artifactResult;
   analysis.dependencies = dependencyResult;
+  analysis.capturedSessions = capturedSessions;
+  analysis.captures = captureResults;
+  analysis.capture = summariseCaptures(captureResults);
 
   const meta = {
     root,
@@ -218,6 +234,7 @@ export async function scan(opts = {}) {
     artifactStats: artifactResult.stats,
     dependencyStats: dependencyResult.stats,
     dependencyPackages: dependencyResult.packages,
+    captureStats: analysis.capture,
     durationMs: Date.now() - started,
     configPath,
   };
@@ -230,6 +247,8 @@ export async function scan(opts = {}) {
     starttlsEndpoints: starttlsResults,
     quicEndpoints: quicResults,
     ikev2Endpoints: ikev2Results,
+    captures: captureResults,
+    capturedSessions,
     artifacts: artifactResult,
     dependencies: dependencyResult,
   };

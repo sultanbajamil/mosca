@@ -60,15 +60,19 @@ what makes the tool auditable and the tests fast.
 | `src/net/x509-chain.js` | Chain classification, weakest link, long-lived roots, PQC projection |
 | `src/net/tls.js` | Endpoint inspection, chain attachment and endpoint finding derivation |
 | `src/net/ssh.js` | Raw RFC 4253 banner exchange, KEXINIT parser, SSH findings |
+| `src/net/pcap.js` | Classic PCAP and PCAPNG reader, TCP reassembly, TLS/SSH session extraction, capture findings |
 | `src/net/starttls.js` | SMTP, IMAP, POP3, PostgreSQL and LDAP STARTTLS upgrades |
 | `src/net/quic.js` | RFC 9001 Initial packet protection and QUIC response parsing |
 | `src/net/ikev2.js` | IKE_SA_INIT with RFC 9370 ADDKE transforms |
 | `src/analysis/risk.js` | Mosca inequality, scoring, aggregates, unique-site effort, sensitivity, roadmap |
 | `src/analysis/baseline.js` | Stable fingerprints, baseline build/load/apply, diff status |
 | `src/analysis/compliance.js` | CNSA 2.0, NIST 2030, PCI DSS and HIPAA controls |
+| `src/benchmark.js` | Sector benchmark engine, injected probes, HNDL by data lifetime |
 | `src/fix.js` | Fix planner, safe literal swaps, unified diff, advisories |
 | `src/report/terminal.js` | ANSI terminal report |
 | `src/report/html.js` | Self-contained interactive report, simulator and chain tree |
+| `src/report/benchmark-html.js` | Self-contained State of PQC page and social card |
+| `src/report/badge.js` | Local QRI and HNDL SVG badge generator |
 | `src/report/cbom.js` | CycloneDX 1.6 CBOM with library components |
 | `src/report/sarif.js` | SARIF 2.1.0 with compliance properties |
 | `src/report/mermaid.js` | Bounded risk, chain and dependency diagrams |
@@ -80,8 +84,9 @@ what makes the tool auditable and the tests fast.
 1. `cli.js` parses arguments and builds overrides.
 2. `index.js` loads `mosca.json`, then runs the source scanner, the config
    scanner, the artefact scanner, the dependency scanner, and TLS, SSH,
-   STARTTLS, QUIC and IKEv2 endpoint inspection. Network work is parallelised
-   with `Promise.all`; one unreachable host never fails the scan.
+   STARTTLS, QUIC and IKEv2 endpoint inspection plus any requested PCAP
+   harvest. Network work is parallelised with `Promise.all`; one unreachable
+   host never fails the scan.
 3. Every scanner emits the same finding shape:
 
 ```js
@@ -210,6 +215,60 @@ finding. `mlkem768x25519-sha256` and
 `ssh-dss`, SHA-1 group exchange, CBC ciphers and MD5/SHA-1 MACs are exposure.
 SSH key-exchange findings participate in the same HNDL ratio as TLS, because a
 recorded SSH session is just as readable after a CRQC as a recorded TLS one.
+
+## Passive capture harvesting
+
+`src/net/pcap.js` is a reader, not a probe. It never opens a socket:
+
+```
+read file
+  → detect classic PCAP magic vs PCAPNG Section Header
+  → decode link layer (Ethernet/VLAN, SLL/SLL2, NULL, raw IP)
+  → decode IPv4/IPv6 and TCP
+  → group packets into bidirectional flows
+  → reassemble TLS records and SSH packets per direction
+  → parse ClientHello/ServerHello and SSH banner/KEXINIT
+  → emit captured sessions, then findings in the unified schema
+```
+
+Design choices that matter:
+
+- **Timestamp resolution is per file/interface.** Classic magic distinguishes
+  microsecond and nanosecond captures; PCAPNG `if_tsresol` is read from the
+  Interface Description Block.
+- **Flows are keyed by the unordered endpoint pair.** A SYN/SYN-ACK sets the
+  initiator; captures without a handshake fall back to the first payload.
+- **TLS parsing is incremental.** A record split across TCP segments, or a
+  handshake split across records, is buffered until complete rather than
+  discarded.
+- **SSH uses first-match agreement.** The two KEXINIT lists are intersected in
+  client preference order, which is what the recorded session actually used.
+- **No private material.** Only handshake metadata and the negotiated
+  parameters are retained.
+
+The resulting sessions carry `captureYear`, and `deriveCaptureFindings()` maps
+them into the same finding shape as a live endpoint, with
+`kind: 'captured-session'` and an evidence object containing the capture time,
+client, server and offered groups.
+
+## Benchmark engine
+
+`src/benchmark.js` separates measurement from orchestration:
+
+- `pool(items, limit, worker)` is a fixed-width async pool; replayed snapshots
+  and live probes use the same code path.
+- `runBenchmark()` accepts `probeTls` and `probeSsh` as injected functions, so
+  the aggregation, grading and report are testable without a network.
+- `liveProbes()` wires the real TLS ClientHello and SSH KEXINIT probes.
+- `replayBenchmark()` reads `benchmarks/snapshot.json` and reconstructs the
+  exact result from the recorded handshake shapes.
+- `aggregateSector()` computes QRI, hybrid adoption, HNDL exposure and
+  classical-debt distribution from the targets, using each target's sector
+  data lifetime.
+
+`scripts/benchmark-world.js` is the only file that writes the published
+artefacts: `docs/state-of-pqc.html`, `docs/state-of-pqc.svg`,
+`benchmarks/report.json` and, in live mode, `benchmarks/snapshot.json`.
 
 ## Baseline model
 
@@ -456,6 +515,9 @@ not produce an unreadable diagram. Labels are sanitised for Mermaid syntax.
 | `test/compliance.test.js` | Four standards, control evaluation, violation evidence |
 | `test/fix.test.js` | Automatic vs advisory, patch generation, CRLF, protocol demotion |
 | `test/mermaid.test.js` | Determinism, bounds, sanitisation, chain and dependency graphs |
+| `test/pcap.test.js` | Generated binary PCAP/PCAPNG fixtures: TLS, SSH, VLAN/SLL, split records, capture-year anchoring |
+| `test/benchmark.test.js` | Pool bounds, scoring, sector aggregation, HNDL, snapshot replay, self-contained HTML |
+| `test/badge.test.js` | Grade thresholds, SVG shape, QRI/HNDL strings, capture fallback |
 | `test/reports-v3.test.js` | CBOM libraries, SARIF compliance properties, HTML v3 sections |
 | `test/risk.test.js` | Every scoring direction, Mosca inequality, QRI, HNDL n/a semantics, unique-site effort, roadmap phases |
 | `test/report.test.js` | CycloneDX shape, SARIF shape, HTML self-containment and escaping |
@@ -467,7 +529,8 @@ not produce an unreadable diagram. Labels are sanitised for Mermaid syntax.
 | `test/scan.test.js` | End-to-end scan, determinism, exit codes |
 
 The suite runs in well under a second and needs no network access; the only
-network-derived artefact is the committed DER fixture.
+network-derived artefacts are the committed DER fixture and the benchmark
+snapshot, both of which are replayed from disk.
 
 ## Performance
 

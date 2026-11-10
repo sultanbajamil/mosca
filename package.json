@@ -1,21 +1,31 @@
 {
   "name": "mosca-pqc",
-  "version": "3.0.0",
-  "description": "MOSCA — CI-native post-quantum cryptography exposure scanner. Finds quantum-vulnerable crypto in source, config, key artifacts and dependency lockfiles; probes TLS, SSH, STARTTLS, QUIC and IKEv2; analyses X.509 chains; gates on CNSA 2.0, NIST 2030, PCI DSS and HIPAA; proposes reviewable fixes; and emits CycloneDX CBOM, SARIF and Mermaid.",
+  "version": "3.1.0",
+  "description": "MOSCA — CI-native post-quantum exposure scanner. Finds quantum-vulnerable crypto in source, config, artifacts and dependencies; probes TLS, SSH, STARTTLS, QUIC and IKEv2; harvests recorded TLS/SSH handshakes from PCAP/PCAPNG; benchmarks global PQC readiness by sector; gates on CNSA 2.0, NIST 2030, PCI DSS and HIPAA; explains remediations; and emits CycloneDX CBOM, SARIF, Mermaid and dynamic SVG badges.",
   "type": "module",
   "bin": {
     "mosca": "bin/mosca.js"
   },
   "main": "src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./pcap": "./src/net/pcap.js",
+    "./benchmark": "./src/benchmark.js",
+    "./badge": "./src/report/badge.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "bin",
     "src",
     "action.yml",
+    "benchmarks/targets.json",
+    "benchmarks/snapshot.json",
     "docs/METHODOLOGY.md",
     "docs/ARCHITECTURE.md",
+    "docs/logo.svg",
+    "docs/state-of-pqc.html",
+    "docs/state-of-pqc.svg",
+    "docs/launch-kit",
     "README.md",
     "CHANGELOG.md",
     "SECURITY.md",
@@ -41,6 +51,9 @@
     "starttls": "node bin/mosca.js starttls",
     "quic": "node bin/mosca.js quic",
     "ikev2": "node bin/mosca.js ikev2",
+    "pcap": "node bin/mosca.js pcap",
+    "benchmark": "node scripts/benchmark-world.js",
+    "benchmark:replay": "node scripts/benchmark-world.js --snapshot benchmarks/snapshot.json",
     "fix": "node bin/mosca.js fix",
     "explain": "node bin/mosca.js explain",
     "validate": "node scripts/validate-artifacts.js",
@@ -64,8 +77,14 @@
     "quic",
     "starttls",
     "ikev2",
+    "pcap",
+    "pcapng",
+    "packet-capture",
     "x509",
     "baseline",
+    "badge",
+    "benchmark",
+    "quantum-readiness",
     "github-actions",
     "scanner",
     "compliance",
@@ -74,7 +93,7 @@
     "hipaa",
     "mermaid"
   ],
-  "author": "",
+  "author": "sultanbajamil",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {}

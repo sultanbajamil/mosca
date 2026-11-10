@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img" aria-labelledby="title desc">
+  <title id="title">MOSCA — post-quantum exposure scanner</title>
+  <desc id="desc">A dark banner with the MOSCA wordmark, a quantum orbit motif and the tagline: know when the recording becomes readable.</desc>
+  <defs>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.55" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#22d3ee"/>
+      <stop offset="0.8" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="220" rx="18" fill="#05070c"/>
+  <rect x="1" y="1" width="898" height="218" rx="17" fill="none" stroke="#ffffff" stroke-opacity="0.07"/>
+  <ellipse cx="735" cy="96" rx="210" ry="120" fill="url(#glow)"/>
+
+  <!-- quantum orbit motif -->
+  <g transform="translate(748 96)" fill="none" stroke="#22d3ee" stroke-opacity="0.55">
+    <ellipse rx="112" ry="40" transform="rotate(-24)" stroke-width="1.1"/>
+    <ellipse rx="112" ry="40" transform="rotate(36)" stroke-width="1.1" stroke="#a78bfa" stroke-opacity="0.5"/>
+    <ellipse rx="112" ry="40" transform="rotate(96)" stroke-width="1.1" stroke-opacity="0.3"/>
+    <circle r="4.5" fill="#22d3ee" stroke="none"/>
+    <circle cx="102" cy="-18" r="2.6" fill="#a78bfa" stroke="none"/>
+    <circle cx="-98" cy="24" r="2.6" fill="#22d3ee" stroke="none"/>
+  </g>
+
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-weight="700" fill="url(#word)">
+    <text x="64" y="112" font-size="86" letter-spacing="10">MOSCA</text>
+  </g>
+  <rect x="66" y="136" width="420" height="2" fill="url(#line)"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif" fill="#8b9ab5">
+    <text x="66" y="166" font-size="18" letter-spacing="0.3">Know when the recording becomes readable.</text>
+    <text x="66" y="192" font-size="12.5" fill="#5d6a82" letter-spacing="1.6">POST-QUANTUM EXPOSURE SCANNER · ZERO RUNTIME DEPENDENCIES</text>
+  </g>
+</svg>

@@ -32,8 +32,8 @@ import { fingerprint } from './baseline.js';
 export const SEVERITY_ORDER = { info: 0, low: 1, medium: 2, high: 3, critical: 4 };
 export const SEVERITY_LABEL = { 0: 'info', 1: 'low', 2: 'medium', 3: 'high', 4: 'critical' };
 
-const SURFACE = { endpoint: 1, chain: 1, dependency: 0.55, artifact: 0.5, config: 0.6, source: 0.3 };
-const SURFACE_WEIGHT = { endpoint: 3, chain: 3, config: 2, dependency: 2, artifact: 2, source: 1 };
+const SURFACE = { endpoint: 1, 'captured-session': 1, chain: 1, dependency: 0.55, artifact: 0.5, config: 0.6, source: 0.3 };
+const SURFACE_WEIGHT = { endpoint: 3, 'captured-session': 3, chain: 3, config: 2, dependency: 2, artifact: 2, source: 1 };
 
 const QUANTUM_FACTOR = { broken: 1, weakened: 0.5, unknown: 0.4, safe: 0 };
 const CLASSICAL_FACTOR = { broken: 1, weak: 0.6, acceptable: 0.2, strong: 0 };
@@ -97,11 +97,14 @@ function shift(severity, delta) {
  */
 export function migrationSiteKey(item) {
   const location = item.location || {};
-  const where = location.file
-    ? location.file
-    : location.host
-      ? `${location.host}:${location.port ?? ''}`
-      : 'unknown';
+  const preferHost = item.kind === 'endpoint' || item.kind === 'chain' || item.kind === 'captured-session';
+  const where = preferHost && location.host
+    ? `${location.host}:${location.port ?? ''}`
+    : location.file
+      ? location.file
+      : location.host
+        ? `${location.host}:${location.port ?? ''}`
+        : 'unknown';
   const text = String(item.matched || item.snippet || item.id || '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -113,7 +116,7 @@ export function migrationSiteKey(item) {
 /** Effort for a single distinct migration site. */
 export function baseEffortDays(item) {
   const base =
-    item.kind === 'endpoint' || item.kind === 'chain'
+    item.kind === 'endpoint' || item.kind === 'chain' || item.kind === 'captured-session'
       ? 3
       : item.kind === 'config' || item.kind === 'dependency' || item.kind === 'artifact'
         ? 1
@@ -126,7 +129,7 @@ export function baseEffortDays(item) {
  *
  * @param {{findings:object[], endpoints:object[], sshEndpoints?:object[], config:object, now?:Date}} input
  */
-export function analyse({ findings, endpoints = [], sshEndpoints = [], config, now = new Date() }) {
+export function analyse({ findings, endpoints = [], sshEndpoints = [], capturedSessions = [], config, now = new Date() }) {
   const crqcYear = resolveCrqcYear(config);
   const currentYear = now.getUTCFullYear();
   const yearsToCRQC = Math.max(0, crqcYear - currentYear);
@@ -145,13 +148,19 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
     const count = algorithmCounts.get(f.algorithm) || 1;
     // Chain findings describe the certificate hierarchy of a live endpoint,
     // so they inherit the transport-payload shelf life and escalation.
-    const isEndpoint = f.kind === 'endpoint' || f.kind === 'chain';
+    const isEndpoint = f.kind === 'endpoint' || f.kind === 'chain' || f.kind === 'captured-session';
     const shelf = isEndpoint
       ? { years: config.defaultShelfLife, label: 'transport payload' }
       : shelfLifeFor(f.location?.file || '', config.dataClasses, config.defaultShelfLife);
 
+    // A captured session is judged from the day it was recorded. Anchoring to
+    // "today" would flatter old captures: a ten-year secret recorded in 2010
+    // is already outside the window even though a fresh capture would not be.
+    const anchorYear = Number.isFinite(Number(f.captureYear)) ? Number(f.captureYear) : currentYear;
+    const itemYearsToCRQC = Math.max(0, crqcYear - anchorYear);
+
     const lead = migrationLeadTime(count);
-    const exposed = shelf.years + lead > yearsToCRQC;
+    const exposed = shelf.years + lead > itemYearsToCRQC;
     const confidentiality = CONFIDENTIALITY.has(f.primitive);
 
     const enriched = {
@@ -166,13 +175,14 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
       shelfLife: shelf.years,
       dataClass: shelf.label,
       leadTime: Math.round(lead * 10) / 10,
-      yearsToCRQC,
+      yearsToCRQC: itemYearsToCRQC,
       mosca: {
         exposed,
         shelfLife: shelf.years,
         leadTime: Math.round(lead * 10) / 10,
-        yearsToCRQC,
-        inequality: `${shelf.years} + ${Math.round(lead * 10) / 10} ${exposed ? '>' : '≤'} ${yearsToCRQC}`,
+        yearsToCRQC: itemYearsToCRQC,
+        anchorYear,
+        inequality: `${shelf.years} + ${Math.round(lead * 10) / 10} ${exposed ? '>' : '≤'} ${itemYearsToCRQC}`,
         kind: confidentiality ? 'confidentiality' : 'integrity',
       },
     };
@@ -208,7 +218,7 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
   // ------------------------------------------------------------- aggregates
   const bySeverity = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
   const byPrimitive = {};
-  const byKind = { source: 0, config: 0, endpoint: 0, chain: 0, artifact: 0, dependency: 0 };
+  const byKind = { source: 0, config: 0, endpoint: 0, 'captured-session': 0, chain: 0, artifact: 0, dependency: 0 };
   const byAlgorithm = new Map();
   const byFile = new Map();
 
@@ -288,6 +298,14 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
 
   const endpointsWithPqc = liveEndpoints.filter((e) => e.hybrid).length;
 
+  // Captured sessions are counted independently of live endpoints: a PCAP can
+  // be inspected on an air-gapped laptop with no reachable host at all.
+  const capturedHybrid = capturedSessions.filter((s) => s.hybrid).length;
+  const capturedClassical = capturedSessions.length - capturedHybrid;
+  const capturedServers = new Set(
+    capturedSessions.map((s) => `${s.server?.name || s.server?.ip || 'unknown'}:${s.server?.port ?? ''}`),
+  );
+
   const summary = {
     generatedAt: now.toISOString(),
     crqcYear,
@@ -301,6 +319,12 @@ export function analyse({ findings, endpoints = [], sshEndpoints = [], config, n
     quantumReadinessIndex,
     hndlExposure,
     hndlApplicable: liveEndpoints.length > 0,
+    capturedSessions: capturedSessions.length,
+    capturedHndlApplicable: capturedSessions.length > 0,
+    hndlCapturedRatio: capturedSessions.length === 0 ? 0 : Math.round((capturedClassical / capturedSessions.length) * 1000) / 10,
+    capturedHybridSessions: capturedHybrid,
+    capturedClassicalSessions: capturedClassical,
+    capturedServers: [...capturedServers],
     endpointsInspected: liveEndpoints.length,
     tlsEndpoints: endpoints.length,
     sshEndpoints: sshEndpoints.length,
@@ -347,7 +371,10 @@ export function computeSensitivity(items, currentYear) {
   const actionable = items.filter((i) => !i.positive && i.severity !== 'info');
   return years.map((year) => {
     const yearsToCRQC = Math.max(0, year - currentYear);
-    const exposed = actionable.filter((i) => i.shelfLife + i.leadTime > yearsToCRQC).length;
+    const exposed = actionable.filter((i) => {
+      const anchor = Number.isFinite(Number(i.mosca?.anchorYear)) ? Number(i.mosca.anchorYear) : currentYear;
+      return i.shelfLife + i.leadTime > Math.max(0, year - anchor);
+    }).length;
     return {
       year,
       yearsToCRQC,
@@ -441,7 +468,7 @@ export function buildRoadmap(items) {
       count: list.length,
       items: list.slice(0, 50),
       effortDays: Math.round(
-        list.reduce((sum, i) => sum + (i.kind === 'endpoint' ? 3 : i.kind === 'config' ? 1 : 0.5), 0),
+        list.reduce((sum, i) => sum + (i.kind === 'endpoint' || i.kind === 'captured-session' ? 3 : i.kind === 'config' ? 1 : 0.5), 0),
       ),
     };
   });

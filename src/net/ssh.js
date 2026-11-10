@@ -232,7 +232,7 @@ export function parseSshTarget(target) {
  * @param {{host:string, port?:number, timeout?:number, clientVersion?:string}} opts
  * @returns {Promise<object>}
  */
-export function probeSsh({ host, port = 22, timeout = 8000, clientVersion = 'MOSCA_3.0' } = {}) {
+export function probeSsh({ host, port = 22, timeout = 8000, clientVersion = 'MOSCA_3.1' } = {}) {
   return new Promise((resolve, reject) => {
     const socket = net.connect({ host, port });
     const base = {

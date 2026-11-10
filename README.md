@@ -1,26 +1,93 @@
-# MOSCA
+<p align="center">
+  <img src="docs/logo.svg" alt="MOSCA — post-quantum exposure scanner" width="820">
+</p>
 
-**CI-native post-quantum exposure scanner for code, configuration, keys, dependencies and live TLS, SSH, STARTTLS, QUIC and IKEv2 endpoints.**
+<p align="center">
+  <a href="https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="scripts/check-zero-deps.js"><img alt="runtime dependencies: 0" src="https://img.shields.io/badge/dependencies-0-brightgreen"></a>
+  <a href="test/"><img alt="tests: 231" src="https://img.shields.io/badge/tests-231-brightgreen"></a>
+  <a href="package.json"><img alt="node: >= 20" src="https://img.shields.io/badge/node-%E2%89%A520-339933"></a>
+  <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <a href="https://sultanbajamil.github.io/mosca/"><img alt="live report" src="https://img.shields.io/badge/live%20report-open-8b5cf6"></a>
+  <a href="https://sultanbajamil.github.io/mosca/state-of-pqc.html"><img alt="state of PQC" src="https://img.shields.io/badge/state%20of%20PQC-benchmark-22d3ee"></a>
+</p>
 
-[![CI](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml/badge.svg)](https://github.com/sultanbajamil/mosca/actions/workflows/ci.yml)
-[![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen)](scripts/check-zero-deps.js)
-[![tests: 206](https://img.shields.io/badge/tests-206-brightgreen)](test/)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![live report](https://img.shields.io/badge/live%20report-open-8b5cf6)](https://sultanbajamil.github.io/mosca/)
+**MOSCA is the CI-native post-quantum exposure scanner.** It finds quantum-vulnerable cryptography in source, configuration, artefacts and dependencies; probes TLS, SSH, STARTTLS, QUIC and IKEv2; harvests recorded TLS and SSH handshakes from PCAP/PCAPNG; benchmarks global readiness by sector; and emits the artefacts an auditor, a CISO and a build pipeline each need.
 
-MOSCA answers one question that most security tools avoid:
+```text
+  ███╗   ███╗ ██████╗ ███████╗ ██████╗ █████╗
+  ████╗ ████║██╔═══██╗██╔════╝██╔════╝██╔══██╗
+  ██╔████╔██║██║   ██║███████╗██║     ███████║
+  ██║╚██╔╝██║██║   ██║╚════██║██║     ██╔══██║
+  ██║ ╚═╝ ██║╚██████╔╝███████║╚██████╗██║  ██║
+  ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝╚═╝  ╚═╝
+  post-quantum exposure scanner · zero runtime dependencies · Node ≥ 20
+```
 
-> If an adversary records my traffic today, when does the data become readable?
+---
 
-It does that by applying **Mosca's inequality** to a real cryptographic inventory:
-*the time your data must stay secret plus the time it takes to migrate must be
-shorter than the time until a cryptographically relevant quantum computer
-(CRQC) exists.* When the sum is larger, the data is **already exposed** —
-harvest-now-decrypt-later is not a future risk, it is a disclosure in progress.
+## Why It Matters Today (The 30-Second Executive Pitch)
+
+Your adversaries are not waiting for the quantum computer. They are **recording now** — TLS sessions, SSH handshakes, backups, API traffic — and storing the ciphertext until the machine arrives. That attack has a name: **harvest now, decrypt later**.
+
+The only question that matters is temporal:
+
+> **If an adversary records this traffic today, when does it become readable?**
+
+MOSCA answers it with **Mosca's inequality**:
+
+```text
+exposed  ⇔  data shelf life + migration lead time  >  years until a CRQC
+```
+
+If a hospital must keep patient records secret for 25 years, and a cryptographically relevant quantum computer (CRQC) arrives in 7, the data is **already exposed** — even if every server negotiates TLS 1.3 with a perfect classical cipher. A vendor roadmap does not fix the recording that was made last Tuesday.
+
+MOSCA turns that theorem into an operating system for migration: a score, a ranked inventory, a baseline gate, a bill of materials, a fix plan, a passive capture audit, and a sector benchmark you can put in front of a board.
+
+**The uncomfortable headline from our own benchmark:** across **68 publicly reachable endpoints in 10 sectors**, only **60.3%** negotiate a post-quantum hybrid key exchange. At a 2033 CRQC, **41.2%** of observed endpoints carry data that stays secret longer than the machine takes to arrive. Energy trails at **C**; technology leads at **A+**. [Read the full benchmark →](https://sultanbajamil.github.io/mosca/state-of-pqc.html)
+
+---
+
+## What makes MOSCA different
+
+| Capability | Typical crypto inventory | Typical TLS scanner | MOSCA |
+| --- | --- | --- | --- |
+| Source + config + artefacts + dependencies + live endpoints in one report | partial | no | **yes** |
+| Raw TLS ClientHello that offers `X25519MLKEM768` and reports the server's choice | no | only if linked OpenSSL supports it | **yes** |
+| SSH hybrid KEX and full host-key/cipher/MAC inventory from raw `SSH_MSG_KEXINIT` | no | no | **yes** |
+| Passive PCAP/PCAPNG harvesting with capture-date-anchored HNDL exposure | no | no | **yes** |
+| Mosca-inequality exposure per finding, not just a severity label | no | no | **yes** |
+| Baseline diff that fails only on regressions | no | rarely | **yes** |
+| CycloneDX 1.6 CBOM + SARIF 2.1.0 + Mermaid + self-contained HTML | sometimes | no | **yes** |
+| Global sector benchmark with an interactive CRQC slider | no | no | **yes** |
+| Dynamic QRI/HNDL SVG badges generated locally | no | no | **yes** |
+| Zero runtime dependencies, pure ESM, Node ≥ 20 | rarely | rarely | **yes** |
+
+### What v3.1 adds
+
+| Area | What it does |
+| --- | --- |
+| **`mosca pcap`** | Reads classic PCAP (micro/nanosecond, both endiannesses) and PCAPNG (SHB/IDB/EPB/SPB). Decodes Ethernet, 802.1Q, Linux SLL/SLL2, NULL and raw IP; reassembles TCP; parses TLS ClientHello/ServerHello and SSH banners + KEXINIT. Reports the **HNDL Captured Ratio** and anchors exposure to the recording date, not today. |
+| **`mosca benchmark`** | Probes a curated global target set across 10 sectors with concurrency ≤ 10 and a 5-second timeout. Produces sector QRI, hybrid adoption, HNDL exposure at the sector's data lifetime, key-exchange distribution and classical debt. Reproducible from a snapshot. |
+| **State of PQC page** | A self-contained dark report with an A+–F leaderboard, sector filters, a 2027–2045 CRQC slider and screenshot-ready insight cards: [`docs/state-of-pqc.html`](docs/state-of-pqc.html). |
+| **SVG badges** | `--badge <dir>` writes `mosca-qri-badge.svg` and `mosca-hndl-badge.svg` from the scan itself. No third-party badge service, no network call. |
+| **npm packaging** | `bin`, `exports`, `files`, `engines` and keywords are ready for publication, so `npx mosca-pqc scan .` works without a clone. |
+
+---
+
+## Try It in 10 Seconds
+
+No install, no build step, no `node_modules`.
+
+### 1. Scan a repository
+
+```bash
+npx mosca-pqc scan .
+# or, before the npm release:
+npx github:sultanbajamil/mosca scan .
+```
 
 ```console
-$ npx github:sultanbajamil/mosca scan . --tls example.com --ssh bastion.example.com
-
    30.8 / 100   █████████░░░░░░░░░░░░░░░░░░░░░░░░
 
   Mosca window   7 years to a CRQC (2033)
@@ -29,144 +96,105 @@ $ npx github:sultanbajamil/mosca scan . --tls example.com --ssh bastion.example.
   Surface        10 source files · 3 config files · 1 TLS · 1 SSH
 ```
 
-- **Zero runtime dependencies.** Node.js ≥ 20, ESM, no `node_modules`.
-- **Finds crypto the way it is actually written** — 148 rules across 16
-  languages, 62 configuration/IaC rules for nginx, Apache, OpenSSH, OpenSSL,
-  Java, Kubernetes, Terraform, Istio, Envoy, HAProxy, Caddy, Traefik,
-  Cloudflare and Dockerfiles, and 92 classified algorithms.
-- **Follows constants.** `const HASH = 'md5'; crypto.createHash(HASH)` is a
-  finding, not a blind spot; reassigned or interpolated constants stay
-  unresolved.
-- **Reads the artefacts and the supply chain.** PEM, DER, JWK/JWKS,
-  `authorized_keys`, `known_hosts`, plus eight lockfile formats with a
-  cryptographic package intelligence table.
-- **Analyzes the whole X.509 chain**, not just the leaf: weakest link,
-  long-lived classical roots, SHA-1 signatures, and a projected ML-DSA/SLH-DSA
-  handshake against the 14 KB initial congestion window.
-- **Probes TLS with a hand-built ClientHello** that offers
-  `X25519MLKEM768` (0x11EC) and reports the group the *server* selected.
-  Node's own TLS stack cannot do this, so neither can tools that inherit it.
-- **Probes SSH with a hand-built `SSH_MSG_KEXINIT`**, reading the server's
-  advertised KEX, host-key, cipher and MAC lists — including
-  `mlkem768x25519-sha256` and `sntrup761x25519-sha512@openssh.com`.
-- **Probes STARTTLS, QUIC and IKEv2.** SMTP, IMAP, POP3, PostgreSQL and LDAP
-  upgrades; RFC 9001 Initial packet protection built by hand; and RFC 9370
-  ADDKE transforms against IPsec gateways.
-- **Gates on named standards.** CNSA 2.0, NIST IR 8547's 2030 transition,
-  PCI DSS v4.0 and the HIPAA Security Rule, with per-control evidence.
-- **Proposes fixes.** `mosca fix` emits a reviewable patch for hash, MAC and
-  AES key-size swaps, and numbered advisories for everything that is a
-  protocol or trust-chain migration. It never applies a change.
-- **Diffs against a baseline.** Accept the debt you already have, then fail CI
-  only when a change introduces a new exposure.
-- **Emits artefacts**: an interactive self-contained HTML report with a
-  crypto-agility simulator and certificate-chain tree, a CycloneDX 1.6
-  **CBOM** with library dependencies, **SARIF 2.1.0** for GitHub code
-  scanning, and **Mermaid** diagrams for review notes.
+### 2. Probe TLS endpoints
+
+```bash
+npx mosca-pqc tls cloudflare.com github.com
+```
+
+```console
+  ✓ cloudflare.com
+      protocol   TLS 1.3
+      key xchg   ● X25519+ML-KEM-768  (post-quantum hybrid)
+  ✓ github.com
+      key xchg   ○ X25519  (breaks under Shor)
+```
+
+The probe writes the ClientHello by hand, so it can test `X25519MLKEM768` even when the local OpenSSL cannot negotiate it.
+
+### 3. Probe SSH servers
+
+```bash
+npx mosca-pqc ssh git.example.com:2222 bastion.example.com
+```
+
+It exchanges identification strings, sends a minimal `SSH_MSG_KEXINIT`, and reports the server's advertised KEX, host-key, cipher and MAC lists. It never authenticates and never completes key exchange.
+
+### 4. Audit a capture without sending a packet
+
+```bash
+npx mosca-pqc pcap capture.pcap --out capture-report
+```
+
+```console
+  CAPTURED SESSIONS  ·  1 session from 1 file
+
+  HNDL Captured Ratio  100% of recorded sessions are classical-only
+  Servers recorded    1 · 1 TLS · 0 SSH
+
+  CAPTURED              PROTO  SERVER                        NEGOTIATED                    HNDL
+  ──────────────────────────────────────────────────────────────────────────────────────────────
+  2016-05-01 00:00:00   TLS    bank.example:443              X25519                        ○ EXPOSED
+```
+
+Point it at an old packet capture and the report tells you whether the recording is already a disclosure in progress.
+
+### 5. Benchmark the world
+
+```bash
+npx mosca-pqc benchmark --out benchmark-report
+# reproducible replay used by the published page:
+npx mosca-pqc benchmark --snapshot benchmarks/snapshot.json --out benchmark-report
+```
+
+```console
+  83.4/100  A  Strong
+  hybrid adoption 60.3%  ·  HNDL exposure 41.2%  ·  observed 68/69  ·  CRQC 2033
+```
+
+Open `benchmark-report/state-of-pqc.html` and move the CRQC slider.
 
 ---
 
-## Why this exists
-
-NIST finalised ML-KEM (FIPS 203), ML-DSA (FIPS 204) and SLH-DSA (FIPS 205) in
-August 2024. CNSA 2.0 gives organisations a 2030–2033 migration window. Yet
-most inventories still answer "which algorithms do we use?" and stop there.
-That is the wrong question.
-
-The right question is temporal. A patient attacker records TLS sessions today
-and waits for the machine. If the recorded data must remain confidential for
-ten years and a CRQC arrives in seven, the attacker already has the plaintext
-— the only remaining step is computation. Mosca's theorem makes this precise:
-
-```
-exposed  ⇔  shelfLife + migrationLeadTime > yearsToCRQC
-```
-
-MOSCA turns that theorem into an operational score, a migration roadmap, and
-a bill of materials you can hand to an auditor.
-
-## What makes it different
-
-| Capability | Typical crypto inventory | Typical TLS scanner | MOSCA |
-| --- | --- | --- | --- |
-| Source + config + live endpoints in one report | partial | no | **yes** |
-| SSH hybrid KEX and host-key inventory | no | no | **yes, raw KEXINIT** |
-| Baseline diff that gates only on regressions | no | rarely | **yes** |
-| CycloneDX 1.6 CBOM | sometimes | no | **yes** |
-| Server's chosen PQ hybrid group | no | only if linked OpenSSL supports it | **yes, raw ClientHello** |
-| Mosca-inequality exposure per finding | no | no | **yes** |
-| Zero runtime dependencies | rarely | rarely | **yes** |
-
-### What v3 adds
-
-v3 is the enterprise and deep-protocol edition. It keeps the zero-dependency
-contract and extends the same unified finding schema to areas a source scan
-cannot see:
-
-| Area | What it does |
-| --- | --- |
-| X.509 chain analysis | Classifies every certificate in the peer chain, finds the weakest link, flags long-lived classical roots and SHA-1 signatures, and projects a post-quantum chain against the 14 KB initial congestion window. |
-| STARTTLS | Negotiates SMTP, IMAP, POP3, PostgreSQL and LDAP upgrades, then sends the same raw ClientHello and closes the socket. |
-| QUIC / HTTP/3 | Builds an RFC 9001 Initial packet with HKDF-SHA256, AES-128-GCM and AES-ECB header protection, then parses the server Initial, Retry and Version Negotiation. Pinned to RFC 9001 Appendix A.1 vectors. |
-| IKEv2 | Sends `IKE_SA_INIT` with RFC 9370 ADDKE transforms and reports whether the gateway understands hybrid key exchange. |
-| Artefacts | Reads metadata from PEM, DER, JWK/JWKS, `authorized_keys`, `known_hosts` and `*.pub` files; never emits private key material. |
-| Supply chain | Parses npm, yarn, pnpm, Cargo, Go, Poetry, requirements.txt and Maven lockfiles against a curated cryptographic package table. |
-| Context | Propagates single-assignment string constants into crypto APIs, and separates raw occurrences from unique migration sites. |
-| IaC and edge proxies | 62 config rules covering Terraform, cert-manager, Istio, HAProxy, Envoy, Caddy, Traefik, Cloudflare and Dockerfiles. |
-| Compliance | `--compliance` and `--fail-on-compliance` for CNSA 2.0, NIST 2030, PCI DSS v4.0 and HIPAA. |
-| Fix and diagrams | `mosca fix` produces a patch plus advisories; `--format mermaid` produces review-ready graphs. |
-
-The key-exchange probe is the part that cannot be copied from a library call.
-MOSCA writes the TLS record by hand, generates a *canonical* ML-KEM-768
-encapsulation key (coefficients reduced mod 3329, so servers accept it),
-places the ML-KEM key **before** the X25519 share as
-`draft-ietf-tls-ecdhe-mlkem` requires, and reads the selected group from the
-ServerHello. It never completes a handshake or exchanges application data.
-
-The SSH probe is the same idea at a different layer. MOSCA exchanges
-identification strings, sends a minimal `SSH_MSG_KEXINIT`, and parses the
-server's KEXINIT name-lists directly from the binary packet. It never
-authenticates, never offers a credential and never completes key exchange.
-That is how it can tell you a bastion already advertises
-`mlkem768x25519-sha256` while still offering `ssh-rsa` host keys.
-
-## Install and run
+## Install
 
 ```bash
-# run directly from GitHub — no clone, no npm publish required
-npx github:sultanbajamil/mosca scan .
+# one-off
+npx mosca-pqc scan .
 
-# or clone and run the source
+# global CLI
+npm install -g mosca-pqc
+mosca scan .
+
+# clone and run the source
 git clone https://github.com/sultanbajamil/mosca.git
 cd mosca
 node bin/mosca.js scan /path/to/repo --tls example.com,github.com --out report
 ```
 
-An npm release (`npx mosca-pqc`) is planned; until then the GitHub form above
-is the canonical one-liner. A generated example report is published at
-**https://sultanbajamil.github.io/mosca/**.
+Requires **Node.js 20 or newer**. Pure ESM. **Zero runtime dependencies** — enforced in CI by [`scripts/check-zero-deps.js`](scripts/check-zero-deps.js).
 
-The scan writes `mosca-report/mosca-report.html` by default. Open it in any
-browser: it is a single file with no external fonts, scripts or images, so it
-can be attached to an email or published to GitHub Pages unchanged.
+The scan writes `mosca-report/mosca-report.html` by default: one file, no external fonts, scripts or images, safe to email or publish to GitHub Pages. A generated example is live at **https://sultanbajamil.github.io/mosca/**.
 
 ### Commands
 
 ```bash
-mosca scan [path] [options]     # source + config + artefacts + deps + TLS/SSH/STARTTLS/QUIC/IKEv2
+mosca scan [path] [options]     # source + config + artefacts + deps + live endpoints
 mosca tls <host...>             # probe live TLS endpoints only
 mosca ssh <host...>             # probe SSH servers only
 mosca starttls <target...>      # probe SMTP/IMAP/POP3/PostgreSQL/LDAP STARTTLS
 mosca quic <host...>            # probe QUIC / HTTP/3
 mosca ikev2 <host...>           # probe IPsec gateways for RFC 9370 hybrid KEX
-mosca fix [path]                # propose a patch and print manual advisories
-mosca explain <algorithm>       # why an algorithm is exposed, and what replaces it
+mosca pcap <file...>            # harvest recorded TLS/SSH sessions from PCAP/PCAPNG
+mosca benchmark [options]       # global sector readiness benchmark
+mosca fix [path]                # propose a patch, plus manual advisories
+mosca explain <algorithm>       # why an algorithm is exposed and what replaces it
 mosca demo                      # scan the bundled vulnerable estate
 mosca init                      # write a starter mosca.json
 mosca rules                     # show the rule inventory
 ```
 
-Common options:
+### Common options
 
 | Flag | Meaning |
 | --- | --- |
@@ -175,6 +203,8 @@ Common options:
 | `--starttls <target,...>` | STARTTLS targets (`smtp://`, `imap://`, `pop3://`, `postgres://`, `ldap://`) |
 | `--quic <host,...>` | QUIC / HTTP/3 endpoints |
 | `--ikev2 <host,...>` | IKEv2 gateways |
+| `--pcap <file,...>` | PCAP/PCAPNG captures to harvest |
+| `--badge <dir>` | Write `mosca-qri-badge.svg` and `mosca-hndl-badge.svg` |
 | `--compliance <id>` | `cnsa2`, `nist-2030`, `pci-dss`, `hipaa` or `all` |
 | `--fail-on-compliance <id>` | Exit 1 when the selected standard fails |
 | `--fix` | Write `<out>/mosca-fix.patch` and print the fix plan |
@@ -186,31 +216,92 @@ Common options:
 | `--scenario <name>` | `aggressive` (2029), `moderate` (2033), `conservative` (2038) |
 | `--crqc-year <year>` | Explicit CRQC assumption |
 | `--shelf-life <years>` | Default confidentiality lifetime |
+| `--top <n>` | Findings shown in the terminal (default 20) |
 | `--quiet` | Suppress the terminal report |
 | `--no-color` | Disable ANSI colour |
 
-### CI gating and baseline mode
+Benchmark-specific options: `--targets <file>`, `--snapshot <file>`, `--concurrency <n>` (capped at 10), `--timeout <ms>` (default 5000), `--crqc-year <year>`.
 
-A gate that fails on every historical finding gets switched off. Record the
-current estate once, commit the baseline, then fail only on regressions:
+---
+
+## Passive capture harvesting (`mosca pcap`)
+
+Most PQC tools ask what a server supports **now**. A capture answers a harder question: what did this session actually negotiate **when it was recorded**?
+
+```bash
+mosca pcap capture.pcap --out capture-report --format html,cbom,sarif,json
+mosca scan . --pcap capture.pcap --badge badges
+```
+
+What is parsed, with no native packet library:
+
+- **Formats:** classic libpcap (big/little endian, microsecond and nanosecond magic) and PCAPNG Section Header, Interface Description, Enhanced Packet and Simple Packet blocks, including per-interface `if_tsresol`.
+- **Link layers:** Ethernet with stacked 802.1Q/802.1ad VLAN tags, Linux SLL and SLL2, BSD NULL/loopback and raw IP.
+- **Network/transport:** IPv4 and IPv6 (including extension headers and first-fragment handling), TCP payload reassembly across segments and records.
+- **TLS:** ClientHello (SNI, offered groups, key shares, ALPN, supported versions) and ServerHello (selected version, cipher suite, group). That yields the **negotiated** hybrid posture, not the server's advertised list.
+- **SSH:** identification banners and `SSH_MSG_KEXINIT` name-lists, with **first-match agreement** between the two directions. Hybrid KEX is recognised (`mlkem768x25519-sha256`, `sntrup761x25519-sha512@openssh.com`) along with legacy host keys, weak KEX, CBC ciphers and MD5/SHA-1 MACs.
+- **Exposure:** the Mosca inequality is anchored to `captureYear`. A ten-year secret recorded in 2010 is judged against 23 years to a 2033 CRQC, not the seven years a fresh scan would show.
+
+The capture is opened read-only. The command sends **zero packets**, performs **no authentication**, and never writes private key material. Captured sessions become `captured-session` assets in the HTML report, CBOM and SARIF, and contribute the **HNDL Captured Ratio** — the share of recorded sessions that are classical-only.
+
+---
+
+## Global benchmark (`mosca benchmark`)
+
+A single scan says whether one host is ready. A benchmark says whether a **sector** is ready, and how long its data stays secret after the recording.
+
+```bash
+mosca benchmark --out benchmark-report
+mosca benchmark --snapshot benchmarks/snapshot.json --out benchmark-report
+node scripts/benchmark-world.js --live --write-snapshot benchmarks/snapshot.json
+```
+
+- Target set: [`benchmarks/targets.json`](benchmarks/targets.json) — 69 named organisations across finance, healthcare, government, technology, cloud, telecom, retail, energy, aviation and education.
+- Probing: TLS ClientHello + optional SSH KEXINIT, concurrency capped at **10**, per-probe timeout **5 s**, no authentication.
+- Scoring: start at 100; `−40` TLS without hybrid KEX, `−20` legacy TLS, `−15` weak cipher, `−15` SSH without hybrid KEX, `−5` per additional classical-debt signal (capped at `−20`). Grades: A+ ≥ 90, A ≥ 80, B ≥ 70, C ≥ 60, D ≥ 50, E ≥ 40, F < 40.
+- HNDL: a sector is exposed when `data lifetime + 1-year migration lead > years to CRQC`. Healthcare and government use a 25-year lifetime; technology and cloud use 7.
+- Reproducibility: [`benchmarks/snapshot.json`](benchmarks/snapshot.json) stores the raw handshake shapes, so CI and the published page replay exactly the same numbers.
+
+The HTML report is self-contained: an A+–F leaderboard you can sort, per-sector filters, a **2027–2045 CRQC slider**, and insight cards built to be screenshotted:
+
+[![State of Post-Quantum Readiness](docs/state-of-pqc.svg)](docs/state-of-pqc.html)
+
+> The preview above is rendered from the current snapshot. The interactive version is [`docs/state-of-pqc.html`](docs/state-of-pqc.html).
+
+---
+
+## Badges that are evidence, not decoration
+
+```bash
+mosca scan . --badge badges
+```
+
+```html
+<img src="badges/mosca-qri-badge.svg" alt="MOSCA QRI">
+<img src="badges/mosca-hndl-badge.svg" alt="HNDL exposure">
+```
+
+The QRI badge shows `94/100 (A+)`; the HNDL badge shows `0% SAFE` or the percentage of classical-only exposure. Both are generated locally from the scan summary — no shields.io, no token, no telemetry. The GitHub Action exposes `badges` as an output, so a workflow can commit them to a `badges/` branch or attach them to a release.
+
+---
+
+## CI gating and baseline mode
+
+A gate that fails on every historical finding gets switched off. Record the estate once, commit the baseline, then fail only on regressions:
 
 ```bash
 # once, on the current commit
-npx github:sultanbajamil/mosca scan . --write-baseline .mosca-baseline.json
+mosca scan . --write-baseline .mosca-baseline.json
 
 # in CI: existing debt is accepted, new exposure fails the build
-npx github:sultanbajamil/mosca scan . \
+mosca scan . \
   --baseline .mosca-baseline.json \
   --format sarif --out out --fail-on high
 ```
 
-Fingerprints exclude line numbers, so moving a function does not manufacture
-a "new" finding. Every result still carries a stable SARIF
-`partialFingerprints.moscaFingerprint`, and the HTML report marks regressions
-with a `new` badge and a one-click filter. A rendered example is at
-[`docs/baseline-demo.html`](docs/baseline-demo.html).
+Fingerprints exclude line numbers, so moving a function does not manufacture a new finding. Every SARIF result carries a stable `partialFingerprints.moscaFingerprint`; the HTML report marks regressions with a `new` badge and a one-click filter. A rendered example is at [`docs/baseline-demo.html`](docs/baseline-demo.html).
 
-A composite GitHub Action is included:
+### GitHub Action
 
 ```yaml
 - name: MOSCA
@@ -222,11 +313,14 @@ A composite GitHub Action is included:
     starttls: smtp://mail.example.com:587
     quic: example.com
     ikev2: vpn.example.com
+    pcap: captures/edge.pcap
+    badge: badges
     compliance: cnsa2
     fail-on-compliance: cnsa2
     baseline: .mosca-baseline.json
     fail-on: high
     format: html,sarif,json,cbom,mermaid
+    benchmark-snapshot: benchmarks/snapshot.json
 
 - name: Upload SARIF
   if: always()
@@ -235,11 +329,11 @@ A composite GitHub Action is included:
     sarif_file: mosca-report/mosca.sarif
 ```
 
-### Compliance gates
+---
 
-A readiness score is useful for prioritisation but useless in an audit. The
-compliance engine maps each enriched finding onto named controls and reports
-pass, partial or fail per standard:
+## Compliance gates
+
+A readiness score is useful for prioritisation but useless in an audit. The compliance engine maps each enriched finding onto named controls and reports pass, partial or fail per standard:
 
 ```bash
 mosca scan . --compliance cnsa2
@@ -253,26 +347,20 @@ mosca scan . --compliance all --fail-on-compliance pci-dss
 | `pci-dss` | TLS 1.2+, no RC4/3DES/DES, RSA-2048+, no MD5/SHA-1, HNDL |
 | `hipaa` | ePHI in transit and at rest, integrity, long-retention HNDL |
 
-Each violation carries the finding fingerprint, algorithm and location, so the
-SARIF result itself names the control it breaks.
+Each violation carries the finding fingerprint, algorithm and location, so the SARIF result itself names the control it breaks. Captured sessions are evaluated as protocol assets, which makes a PCAP audit usable as evidence rather than an anecdote.
 
-### Fix plans
+---
 
-`mosca fix` is deliberately conservative. It only generates a textual hunk
-when the change is a literal swap of a hash, MAC or AES key size — and never
-inside a protocol implementation or a test vector, where the algorithm is part
-of the wire format. Everything else becomes an advisory:
+## Fix plans and diagrams
+
+`mosca fix` is deliberately conservative. It only generates a textual hunk when the change is a literal swap of a hash, MAC or AES key size — never inside a protocol implementation or a test vector. Everything else becomes an advisory:
 
 ```bash
 mosca fix .
 # out/mosca-fix.patch — review with `git apply --check`, then apply deliberately
 ```
 
-Signatures, key agreement, certificates, configuration, lockfiles and live
-listeners are always manual: those are trust-chain or protocol migrations, not
-find-and-replace. MOSCA never edits a file in the `fix` command.
-
-### Mermaid diagrams
+Signatures, key agreement, certificates, configuration, lockfiles and live listeners are always manual: those are trust-chain or protocol migrations, not find-and-replace. MOSCA never edits a file in the `fix` command.
 
 ```bash
 mosca scan . --format mermaid --out out
@@ -280,13 +368,13 @@ mosca scan . --format mermaid --out out
 # out/mosca-diagrams.md    risk graph, certificate chains and supply chain
 ```
 
-Diagrams are bounded and deterministic, so a committed diagram does not churn
-on every scan. Labels are sanitised before they reach Mermaid syntax.
+Diagrams are bounded and deterministic, so a committed diagram does not churn on every scan.
 
-### Configuration
+---
 
-`mosca init` writes a starter file. Everything that shapes the model is
-configurable:
+## Configuration
+
+`mosca init` writes a starter file. Everything that shapes the model is configurable:
 
 ```json
 {
@@ -294,6 +382,7 @@ configurable:
   "defaultShelfLife": 7,
   "endpoints": ["example.com", "api.example.com:8443"],
   "ssh": ["bastion.example.com", "git.example.com:2222"],
+  "pcap": ["captures/edge.pcap"],
   "dataClasses": [
     { "pattern": "**/health/**", "years": 25, "label": "health records" },
     { "pattern": "**/billing/**", "years": 10, "label": "billing records" }
@@ -302,14 +391,9 @@ configurable:
 }
 ```
 
-Data classes are matched against file paths and directly change the exposure
-calculation: the same MD5 in `health/` and in `util/` is not the same risk.
+Data classes are matched against file paths and directly change the exposure calculation: the same MD5 in `health/` and in `util/` is not the same risk.
 
 ### Suppressing findings
-
-A scanner is only trusted if it can be told "this one is intentional". MOSCA
-supports the same inline directives in every language, with an optional reason
-that is kept in the scan statistics:
 
 ```js
 // mosca-ignore-line -- legacy detector, not a policy
@@ -321,17 +405,15 @@ crypto.createHash('md5');
 // mosca-ignore-file -- generated compatibility shim
 ```
 
-Suppressed findings never reach the report, and the terminal output shows how
-many were suppressed, so a clean scan cannot hide a pile of exceptions. Use a
-reason: the next reader needs to know why the line is safe, not just that
-someone silenced it.
+Suppressed findings never reach the report, and the terminal output shows how many were suppressed, so a clean scan cannot hide a pile of exceptions. Use a reason: the next reader needs to know why the line is safe, not just that someone silenced it.
+
+---
 
 ## Output
 
 ### Terminal
 
-Ranked findings with severity, priority, location, replacement and the Mosca
-inequality behind each one:
+Ranked findings with severity, priority, location, replacement and the Mosca inequality behind each one:
 
 ```text
   SEV         PRI  NEW  ALGORITHM             LOCATION                          REPLACE WITH
@@ -344,8 +426,7 @@ inequality behind each one:
   CRQC sensitivity  2029: 48  ·  2033: 48  ·  2038: 8  ·  2045: 0  exposed findings
 ```
 
-`mosca explain <algorithm>` turns the registry into a one-screen migration
-brief:
+`mosca explain <algorithm>` turns the registry into a one-screen migration brief:
 
 ```console
 $ mosca explain rsa
@@ -360,24 +441,14 @@ $ mosca explain rsa
 
 ### Interactive HTML
 
-The report renders Mosca's inequality as a timeline. Drag the CRQC line and
-every bar is re-evaluated in the browser — no server, no JavaScript bundle,
-no network access. It also contains:
+The report renders Mosca's inequality as a timeline. Drag the CRQC line and every bar is re-evaluated in the browser — no server, no JavaScript bundle, no network access. It also contains:
 
-- a **crypto-agility simulator** that re-scores the estate as you move the
-  CRQC year, scale migration speed and assume a hybrid-key-exchange rollout;
-- an **X.509 chain tree** for every inspected TLS endpoint, with the weakest
-  link highlighted and the projected post-quantum flight size against the
-  14 KB initial congestion window;
-- **compliance cards** for CNSA 2.0, NIST 2030, PCI DSS and HIPAA, naming each
-  failed control and its remediation;
-- a **cryptographic supply-chain table** of lockfile packages and an
-  **on-disk artefact table** (PEM, DER, JWK, OpenSSH);
-- the findings table with severity and "new since baseline" filters, TLS,
-  SSH, STARTTLS, QUIC and IKEv2 endpoint cards, a CRQC sensitivity strip, the
-  algorithm inventory and the phased roadmap.
-
-A generated example is committed at [`docs/index.html`](docs/index.html).
+- a **crypto-agility simulator** that re-scores the estate as you move the CRQC year, scale migration speed and assume a hybrid-key-exchange rollout;
+- an **X.509 chain tree** for every inspected TLS endpoint, with the weakest link highlighted and the projected post-quantum flight size against the 14 KB initial congestion window;
+- **compliance cards** for CNSA 2.0, NIST 2030, PCI DSS and HIPAA, naming each failed control and its remediation;
+- a **captured-session section** with the recording time, negotiated KEX and the Mosca inequality anchored to that date;
+- a **cryptographic supply-chain table** of lockfile packages and an **on-disk artefact table** (PEM, DER, JWK, OpenSSH);
+- the findings table with severity and "new since baseline" filters, TLS, SSH, STARTTLS, QUIC and IKEv2 endpoint cards, a CRQC sensitivity strip, the algorithm inventory and the phased roadmap.
 
 ### CBOM (CycloneDX 1.6)
 
@@ -386,19 +457,16 @@ mosca scan . --format cbom --out out
 # out/bom.cdx.json — cryptographic-asset components with
 # cryptoProperties.algorithmProperties, NIST quantum level, and
 # mosca:* properties (status, replacement, inequality, location).
-# TLS and SSH servers appear as protocol assets with their KEX lists.
+# TLS, SSH and captured sessions appear as protocol assets.
 # Lockfile packages appear as library components, and the top-level
 # `dependencies` graph connects them to the application.
 ```
 
 ### SARIF 2.1.0
 
-Every actionable code finding becomes a SARIF result with a stable,
-line-independent `partialFingerprints.moscaFingerprint`, so GitHub code
-scanning tracks an issue across commits instead of re-opening it. Baseline
-runs also set `baselineState` to `new` or `unchanged`. With `--compliance`,
-each result gains a `properties.compliance` list naming the standards and
-controls it violates, and the run carries an estate-wide compliance summary.
+Every actionable code finding becomes a SARIF result with a stable, line-independent `partialFingerprints.moscaFingerprint`, so GitHub code scanning tracks an issue across commits instead of re-opening it. Baseline runs also set `baselineState` to `new` or `unchanged`. With `--compliance`, each result gains a `properties.compliance` list naming the standards and controls it violates.
+
+---
 
 ## How the score works
 
@@ -412,74 +480,68 @@ Each finding is scored 0–100 from five normalised factors:
 | Classical | 0.15 | Whether it is broken *today* |
 | Surface | 0.10 | Internet-facing endpoint vs. config vs. source |
 
-Severity bands are deliberately asymmetric: anything classically broken is
-**critical** regardless of the numeric score, because it is exploitable now,
-not in 2033. The full model, including every constant and its justification,
-is in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
+Severity bands are deliberately asymmetric: anything classically broken is **critical** regardless of the numeric score, because it is exploitable now, not in 2033. Captured sessions inherit the transport-payload shelf life but anchor the inequality to the capture year. The full model, including every constant and its justification, is in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
+
+The benchmark uses a separate readiness score (documented in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md#benchmark-scoring)) because "how ready is this endpoint?" and "how exposed is this finding?" are different questions.
+
+---
 
 ## Demo
 
-The repository ships an intentionally insecure estate — Node, Python, Go,
-Java, nginx, sshd, OpenSSL and a shell deployment script — so the scanner can
-be evaluated without pointing it at real code.
+The repository ships an intentionally insecure estate — Node, Python, Go, Java, nginx, sshd, OpenSSL and a shell deployment script — so the scanner can be evaluated without pointing it at real code.
 
 ```bash
 npm run demo
 ```
 
-Expected result: **56 findings** (source, configuration, one on-disk RSA
-artefact and two lockfile packages), QRI **23.9/100**, ~27 engineer-days of
-estimated migration effort across **51 unique migration sites**, in under a
-second. Add live endpoints for the full picture:
+Expected result: **56 findings** (source, configuration, one on-disk RSA artefact and two lockfile packages), QRI **23.9/100**, roughly **27 engineer-days** of estimated migration effort across **51 unique migration sites**, in under a second. Add live endpoints for the full picture:
 
 ```bash
 node bin/mosca.js demo --tls cloudflare.com,github.com,en.wikipedia.org,example.com \
   --ssh github.com --starttls smtp://gmail-smtp-in.l.google.com:25 --quic cloudflare.com
 ```
 
+---
+
 ## Development
 
 ```bash
-npm run check   # zero-dependency guard + 206 tests
+npm run check   # zero-dependency guard + 231 tests
 npm test        # node:test only
 npm run demo
+npm run benchmark:replay
 ```
 
-No build step, no transpiler, no test framework to install. The test suite
-covers the algorithm registry invariants, rule true/false positives, DER X.509
-parsing against a real Cloudflare certificate, ClientHello construction and
-ServerHello parsing, RFC 9001 QUIC Initial key derivation against the Appendix
-A.1 vectors, the STARTTLS and IKEv2 wire formats, X.509 chain analysis,
-lockfile parsing, artefact scanning, constant propagation, all four compliance
-standards, the fix planner, the risk model, every report format and an
-end-to-end scan.
+No build step, no transpiler, no test framework to install. The suite covers the algorithm registry invariants, rule true/false positives, DER X.509 parsing against a real certificate, ClientHello construction and ServerHello parsing, RFC 9001 QUIC Initial key derivation against the Appendix A.1 vectors, the STARTTLS and IKEv2 wire formats, X.509 chain analysis, lockfile parsing, artefact scanning, constant propagation, all four compliance standards, the fix planner, the risk model, PCAP/PCAPNG parsing with generated binary fixtures, the benchmark engine, badge rendering, every report format and an end-to-end scan.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the module map and the
-wire-format details, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to add a
-rule.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the module map and wire-format details, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to add a rule.
+
+---
 
 ## Honest limitations
 
-- **Planning model, not prophecy.** The CRQC year is an assumption you choose,
-  not a prediction. The report exposes the assumption rather than hiding it.
-- **Static analysis has false positives.** Rules are regex-based for speed and
-  zero dependencies. Confidence levels are reported and low-confidence findings
-  are downgraded one severity band.
-- **The probe measures the selected group, not full PQC readiness.** A hybrid
-  key exchange does not fix a classical certificate signature; the report keeps
-  those as separate findings.
-- **SSH results describe advertised algorithms, not the negotiated ones.** The
-  probe reads the server's KEXINIT and hangs up; it does not authenticate or
-  complete key exchange, so the client's own preference order still decides
-  what a real session uses.
-- **Baseline fingerprints are content-based.** Two identical calls on two
-  identical lines in the same file collapse into one baseline entry. That is
-  intentional: the baseline records the defect, not the line count.
-- **No authenticated scanning.** `mosca` does not log in, crawl authenticated
-  pages, or test application logic.
-- **TLS 1.0/1.1 acceptance is probed with a raw ClientHello.** Some CDNs answer
-  legacy probes even when the property's policy claims otherwise; treat the
-  finding as "this edge still negotiates legacy TLS" and verify at the origin.
+- **Planning model, not prophecy.** The CRQC year is an assumption you choose, not a prediction. The report exposes the assumption rather than hiding it.
+- **Static analysis has false positives.** Rules are regex-based for speed and zero dependencies. Confidence levels are reported and low-confidence findings are downgraded one severity band.
+- **The probe measures the selected group, not full PQC readiness.** A hybrid key exchange does not fix a classical certificate signature; the report keeps those as separate findings.
+- **SSH live results describe advertised algorithms, not the negotiated ones.** The probe reads the server's KEXINIT and hangs up. A captured session is different: `mosca pcap` performs first-match agreement between both KEXINIT lists, which is what the recording actually used.
+- **A capture only contains what it contains.** Missing packets, TLS 1.3 encrypted handshakes after the ServerHello, and non-TCP transports are reported as unobserved rather than guessed.
+- **The benchmark measures publicly reachable endpoints.** It is a floor, not an estate census: internal services, authenticated APIs and configuration drift are out of scope.
+- **Baseline fingerprints are content-based.** Two identical calls on two identical lines in the same file collapse into one baseline entry. That is intentional: the baseline records the defect, not the line count.
+- **No authenticated scanning.** `mosca` does not log in, crawl authenticated pages, or test application logic.
+- **TLS 1.0/1.1 acceptance is probed with a raw ClientHello.** Some CDNs answer legacy probes even when the property's policy claims otherwise; treat the finding as "this edge still negotiates legacy TLS" and verify at the origin.
+
+---
+
+## Launch kit
+
+The narrative around the release lives in [`docs/launch-kit/`](docs/launch-kit/):
+
+- [`hacker-news-show-hn.md`](docs/launch-kit/hacker-news-show-hn.md)
+- [`state-of-pqc-press-release.md`](docs/launch-kit/state-of-pqc-press-release.md)
+- [`social-threads-ar-en.md`](docs/launch-kit/social-threads-ar-en.md)
+- [`ciso-one-pager.md`](docs/launch-kit/ciso-one-pager.md)
+
+---
 
 ## License
 
@@ -487,6 +549,4 @@ MIT. See [`LICENSE`](LICENSE).
 
 ## References
 
-FIPS 203, FIPS 204, FIPS 205 · NIST IR 8547 (draft) · RFC 8446, RFC 8996 ·
-`draft-ietf-tls-ecdhe-mlkem` · CycloneDX 1.6 · CNSA 2.0 · Mosca, *Cybersecurity,
-an adversary's view* (2018).
+FIPS 203, FIPS 204, FIPS 205 · NIST IR 8547 (draft) · RFC 8446, RFC 8996 · `draft-ietf-tls-ecdhe-mlkem` · RFC 4253, RFC 8308 · RFC 9001 · RFC 9370 · CycloneDX 1.6 · SARIF 2.1.0 · CNSA 2.0 · Mosca, *Cybersecurity, an adversary's view* (2018).
