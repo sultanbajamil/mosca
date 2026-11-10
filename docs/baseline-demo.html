@@ -253,8 +253,56 @@ table.findings tbody tr:hover{background:rgba(255,255,255,.025)}
 footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:var(--faint);font-size:12px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
 .footer-brand{display:flex;align-items:center;gap:10px;letter-spacing:.1em;font-weight:600;color:var(--text);font-size:11px}
 
+/* ---------- v3: simulator, chains, compliance, tables ---------- */
+.sim{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;border:1px solid var(--border);background:var(--panel);border-radius:16px;padding:26px}
+.sim-controls{display:flex;flex-direction:column;gap:18px}
+.sim-controls label{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+.sim-controls output{color:var(--accent);font-size:15px}
+.sim-controls input[type=range]{accent-color:var(--accent);width:100%}
+.sim-check{flex-direction:row!important;align-items:center;gap:10px!important}
+.sim-output{display:flex;flex-direction:column;justify-content:center;gap:8px;border-left:1px solid var(--border);padding-left:28px}
+.sim-number{font-size:44px;font-weight:700;line-height:1;color:var(--text)}
+.sim-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.sim-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--yellow),var(--red));border-radius:999px;transition:width .3s}
+.chain-card{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:20px;margin-bottom:16px}
+.chain-card header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px}
+.chain-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.chain-node{display:grid;grid-template-columns:110px 1fr;gap:4px 14px;border-left:2px solid var(--border-2);padding:8px 0 8px 14px}
+.chain-node.broken{border-left-color:var(--red)}
+.chain-node.weakened{border-left-color:var(--yellow)}
+.chain-node.safe{border-left-color:var(--green)}
+.chain-role{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);grid-row:span 2;align-self:center}
+.chain-subject{font-weight:600;font-size:14px;word-break:break-word}
+.chain-meta{font-size:11.5px;color:var(--muted);grid-column:2}
+.chain-pqc{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.chain-pqc.bad{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:#fecaca}
+.chain-pqc.good{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);color:#a7f3d0}
+.comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.comp-card{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:20px}
+.comp-card.good{border-color:rgba(52,211,153,.3)}
+.comp-card.warn{border-color:rgba(251,191,36,.3)}
+.comp-card.bad{border-color:rgba(248,113,113,.3)}
+.comp-card header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.comp-card h3{margin:0;font-size:15px}
+.comp-score{font-size:24px;font-weight:700;margin:10px 0 2px}
+.comp-score span{font-size:12px;color:var(--faint);font-weight:400}
+.comp-card p{font-size:12px;margin:0 0 12px}
+.ctl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+.ctl{display:flex;gap:8px;align-items:flex-start}
+.ctl-mark{font-weight:700}
+.ctl.pass .ctl-mark{color:var(--green)}
+.ctl.fail .ctl-mark{color:var(--red)}
+.ctl-count{color:var(--red);margin-left:6px;font-size:11px}
+.ctl .muted{font-size:11.5px}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-table th{text-align:left;color:var(--faint);font-weight:600;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:0 12px 10px 0;border-bottom:1px solid var(--border)}
+.data-table td{padding:9px 12px 9px 0;border-bottom:1px solid var(--border);vertical-align:top}
+
 @media (max-width:900px){
   .hero{grid-template-columns:1fr;gap:28px;padding-top:44px}
+  .sim{grid-template-columns:1fr}
+  .sim-output{border-left:0;border-top:1px solid var(--border);padding:20px 0 0}
+  .comp-grid{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .meth{grid-template-columns:1fr}
   .tl-row{grid-template-columns:1fr;gap:6px}
@@ -278,9 +326,12 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     <div class="brand"><span class="brand-mark"></span> MOSCA <small>post-quantum exposure scanner</small></div>
     <nav>
       <a href="#timeline">Timeline</a>
+      <a href="#simulator">Simulator</a>
       <a href="#findings">Findings</a>
       <a href="#endpoints">Endpoints</a>
-      
+
+      <a href="#chains">Chains</a>
+      <a href="#compliance">Compliance</a>
       <a href="#roadmap">Roadmap</a>
       <a href="#methodology">Method</a>
     </nav>
@@ -295,13 +346,13 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h1>mosca-baseline-demo is <em>critically exposed</em>.</h1>
       <p class="lede">Most of the cryptographic estate falls to a quantum computer, and some of it is already broken.</p>
       <div class="hero-meta">
-        <span>Generated <b>2026-11-09 13:51:19 UTC</b></span>
+        <span>Generated <b>2026-11-10 01:31:48 UTC</b></span>
         <span>Scope <b>2 code findings</b></span>
         <span>CRQC <b>2033</b></span>
         <span>Actionable <b>2</b></span>
       </div>
     </div>
-    
+
   <div class="gauge-wrap tone-bad">
     <svg class="gauge" viewBox="0 0 200 200" role="img" aria-label="Quantum readiness index 0 out of 100">
       <defs>
@@ -325,32 +376,32 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 
   <div class="baseline-note bad">
     <b>Baseline comparison.</b>
-    1 new finding since 2026-11-09T13:51:19.636Z ·
+    1 new finding since 2026-11-10T01:31:48.348Z ·
     1 existing ·
     0 resolved.
     Regressions are marked <span class="pill new">new</span>.
   </div>
 
   <div class="kpis">
-    
+
   <div class="kpi ">
     <div class="kpi-value">n/a</div>
     <div class="kpi-label">Harvest-now-decrypt-later</div>
     <div class="kpi-sub">no live endpoints inspected</div>
   </div>
-    
+
   <div class="kpi warn">
     <div class="kpi-value">2</div>
     <div class="kpi-label">Inside the Mosca window</div>
     <div class="kpi-sub">of 2 findings are already exposed</div>
   </div>
-    
+
   <div class="kpi bad">
     <div class="kpi-value">2</div>
     <div class="kpi-label">Critical findings</div>
     <div class="kpi-sub">0 high · 0 medium</div>
   </div>
-    
+
   <div class="kpi ">
     <div class="kpi-value">1d</div>
     <div class="kpi-label">Migration effort</div>
@@ -363,7 +414,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <h2>Mosca's inequality, on your estate</h2>
       <p>Each bar is an algorithm in use. The solid section is how long the data it protects must stay secret; the hatched section is the time a migration is expected to take. When the bar crosses the red line, the data is already exposed — an adversary who recorded it today can read it later. Move the line to test the assumption.</p>
     </div>
-    
+
   <div class="timeline-controls">
     <div class="scenario-buttons">
       <button class="scenario" data-year="2029">Aggressive <span>2029</span></button>
@@ -381,7 +432,7 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       <span class="tl-axis-crqc" id="crqc-label">2033</span>
       <span class="tl-axis-end">+20y</span>
     </div>
-    
+
       <div class="tl-row" data-shelf="7" data-lead="1.5">
         <div class="tl-label">
           <span class="tl-name">MD5</span>
@@ -436,12 +487,35 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
       </div><div class="sens-note">Findings inside the Mosca window under each CRQC assumption.</div></div>
   </section>
 
+  <section id="simulator">
+    <div class="sec-head">
+      <h2>Crypto-agility simulator</h2>
+      <p>The Mosca window is not a fixed fact; it is a set of assumptions about the adversary and about how fast you can migrate. Move the CRQC year and the migration speed to see which findings cross the line. This is scenario planning, not a prediction.</p>
+    </div>
+    <div class="sim" id="sim">
+    <div class="sim-controls">
+      <label>CRQC year <output class="mono" id="sim-year">2033</output>
+        <input type="range" id="sim-crqc" min="2029" max="2045" step="1" value="2033">
+      </label>
+      <label>Migration speed <output class="mono" id="sim-speed">1.0×</output>
+        <input type="range" id="sim-lead" min="50" max="200" step="10" value="100">
+      </label>
+      <label class="sim-check"><input type="checkbox" id="sim-hybrid"> Assume hybrid key exchange lands this quarter</label>
+    </div>
+    <div class="sim-output">
+      <div class="sim-number mono" id="sim-exposed">2</div>
+      <div class="muted">of 2 actionable findings still inside the Mosca window</div>
+      <div class="sim-bar"><span id="sim-bar-fill" style="width:100%"></span></div>
+    </div>
+  </div>
+  </section>
+
   <section id="findings">
     <div class="sec-head">
       <h2>Findings</h2>
       <p>Ranked by severity and by the Mosca score. The <span class="mono">Mosca</span> column shows the inequality behind each item: <span class="mono">shelf life + lead time vs. years to CRQC</span>.</p>
     </div>
-    
+
   <div class="toolbar">
     <div class="filters">
       <button class="chip active" data-filter="all">All <span>2</span></button>
@@ -493,14 +567,22 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     <div class="empty">No live endpoints were inspected. Add hosts with <code>--tls</code> or in <code>mosca.json</code>.</div>
   </section>
 
-  
+  <section id="chains">
+    <div class="sec-head">
+      <h2>Certificate chains</h2>
+      <p>Every certificate in the peer chain, not just the leaf. A modern leaf signed by a long-lived RSA intermediate is a chain problem: rotating the leaf does not remove the exposure.</p>
+    </div>
+    <div class="empty">No certificate chains were captured. Add TLS hosts with <code>--tls</code>.</div>
+  </section>
+
+
 
   <section id="algorithms">
     <div class="sec-head">
       <h2>Cryptographic inventory</h2>
       <p>Every primitive observed, with its occurrence count and the recommended replacement.</p>
     </div>
-    
+
   <div class="algo-head">
     <span>Algorithm</span><span>Occurrences</span><span>Count</span><span>Replace with</span>
   </div>
@@ -518,12 +600,119 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
     </div>
   </section>
 
+  <section id="compliance">
+    <div class="sec-head">
+      <h2>Compliance gates</h2>
+      <p>A named standard is a better audit artefact than a score. Each control names the finding and the remediation an auditor will ask for.</p>
+    </div>
+    <div class="comp-grid"><article class="comp-card bad">
+        <header>
+          <div><h3>CNSA 2.0</h3><span class="muted">NSA / CISA</span></div>
+          <span class="pill sev-critical">FAIL</span>
+        </header>
+        <div class="comp-score mono">75<span>/100</span> · 2 violations</div>
+        <p class="muted">2030 for software and firmware signing; 2033 for networking equipment</p>
+        <ul class="ctl-list"><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Key establishment uses ML-KEM</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Signatures use ML-DSA</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Symmetric encryption uses AES-256</b></span>
+          </li><li class="ctl fail">
+            <span class="ctl-mark">✕</span>
+            <span><b>Hashing uses SHA-384 or stronger</b><span class="ctl-count mono">2</span><br><span class="muted">Replace MD5/SHA-1 with SHA-384 (or SHA-512) and re-issue dependent signatures.</span></span>
+          </li></ul>
+      </article><article class="comp-card bad">
+        <header>
+          <div><h3>NIST 2030 transition</h3><span class="muted">NIST IR 8547</span></div>
+          <span class="pill sev-critical">FAIL</span>
+        </header>
+        <div class="comp-score mono">75<span>/100</span> · 2 violations</div>
+        <p class="muted">2030: deprecate RSA/ECC in new systems; 2035: disallow entirely</p>
+        <ul class="ctl-list"><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Classical asymmetric algorithms have a migration plan</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Symmetric strength is at least 128 bits</b></span>
+          </li><li class="ctl fail">
+            <span class="ctl-mark">✕</span>
+            <span><b>Hash strength is at least 256 bits</b><span class="ctl-count mono">2</span><br><span class="muted">Replace with SHA-256 or SHA-384 and re-sign affected artifacts.</span></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>At least one FIPS 203/204/205 capability is deployed</b></span>
+          </li></ul>
+      </article><article class="comp-card bad">
+        <header>
+          <div><h3>PCI DSS v4.0</h3><span class="muted">PCI SSC</span></div>
+          <span class="pill sev-critical">FAIL</span>
+        </header>
+        <div class="comp-score mono">80<span>/100</span> · 2 violations</div>
+        <p class="muted">Continuous; v4.0 future-dated requirements effective 31 March 2025</p>
+        <ul class="ctl-list"><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>TLS 1.2 or higher</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>No RC4, 3DES, DES or NULL ciphers</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>RSA keys are at least 2048 bits</b></span>
+          </li><li class="ctl fail">
+            <span class="ctl-mark">✕</span>
+            <span><b>No MD5 or SHA-1</b><span class="ctl-count mono">2</span><br><span class="muted">Move to SHA-256 or SHA-384 for integrity and signatures.</span></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Cardholder traffic resists harvest-now-decrypt-later</b></span>
+          </li></ul>
+      </article><article class="comp-card bad">
+        <header>
+          <div><h3>HIPAA Security Rule</h3><span class="muted">HHS / OCR</span></div>
+          <span class="pill sev-critical">FAIL</span>
+        </header>
+        <div class="comp-score mono">75<span>/100</span> · 2 violations</div>
+        <p class="muted">Continuous</p>
+        <ul class="ctl-list"><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>ePHI in transit uses TLS 1.2+ with forward secrecy</b></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>ePHI at rest uses AES-256</b></span>
+          </li><li class="ctl fail">
+            <span class="ctl-mark">✕</span>
+            <span><b>ePHI integrity does not rely on MD5 or SHA-1</b><span class="ctl-count mono">2</span><br><span class="muted">Replace MD5/SHA-1 with SHA-256 or SHA-384 and re-baseline stored digests.</span></span>
+          </li><li class="ctl pass">
+            <span class="ctl-mark">✓</span>
+            <span><b>Long-lived ePHI is not exposed to HNDL</b></span>
+          </li></ul>
+      </article></div>
+  </section>
+
+  <section id="supply-chain">
+    <div class="sec-head">
+      <h2>Cryptographic supply chain</h2>
+      <p>Lockfile packages that fix an algorithm on your behalf. A quantum-vulnerable TLS library is a finding even when your own code calls the right API.</p>
+    </div>
+    <div class="empty">No cryptographic lockfile packages matched.</div>
+  </section>
+
+  <section id="artifacts">
+    <div class="sec-head">
+      <h2>On-disk key and certificate artefacts</h2>
+      <p>PEM, DER, JWK and OpenSSH material found in the repository. Only metadata is read; private key bodies are never emitted.</p>
+    </div>
+    <div class="empty">No on-disk key or certificate artifacts were found.</div>
+  </section>
+
   <section id="roadmap">
     <div class="sec-head">
       <h2>Migration roadmap</h2>
       <p>Ordered by dependency, not just severity. Key exchange comes before signatures because harvest-now-decrypt-later is the only exposure that cannot be repaired after the fact.</p>
     </div>
-    
+
     <article class="phase">
       <div class="phase-num">01</div>
       <div class="phase-body">
@@ -576,13 +765,13 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
 
   <footer>
     <div class="footer-brand"><span class="brand-mark" style="width:16px;height:16px"></span> MOSCA</div>
-    <div>Generated by MOSCA v2.0.0 · 2 findings · scan completed in 27 ms</div>
+    <div>Generated by MOSCA v3.0.0 · 2 findings · scan completed in 29 ms</div>
     <div><a href="#" id="download-cbom">Download CBOM (CycloneDX 1.6)</a></div>
   </footer>
 </main>
 
-<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-09T13:51:19.812Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":2,"actionable":2,"bySeverity":{"critical":2,"high":0,"medium":0,"low":0,"info":0},"byPrimitive":{"hash":2},"byKind":{"source":2,"config":0,"endpoint":0},"quantumReadinessIndex":0,"hndlExposure":0,"hndlApplicable":false,"endpointsInspected":0,"tlsEndpoints":0,"sshEndpoints":0,"endpointsWithPqc":0,"exposedItems":2,"effortDays":1,"sensitivity":[{"year":2029,"yearsToCRQC":3,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2033,"yearsToCRQC":7,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2038,"yearsToCRQC":12,"exposedItems":0,"exposedShare":0,"totalActionable":2},{"year":2045,"yearsToCRQC":19,"exposedItems":0,"exposedShare":0,"totalActionable":2}],"topRisk":{"id":"js-createHash","kind":"source","title":"MD5 — hashing","algorithm":"md5","algorithmLabel":"MD5","primitive":"hash","location":{"file":"src\\legacy.js","line":2,"column":23},"snippet":"const digest = crypto.createHash('md5').update(payload).digest('hex');","matched":"createHash('md5'","confidence":"high","note":"Practical collisions since 2004. Never use for security.","language":"javascript","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":1,"shelfLife":7,"dataClass":"general","leadTime":1.5,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":7,"leadTime":1.5,"yearsToCRQC":7,"inequality":"7 + 1.5 > 7","kind":"integrity"},"fingerprint":"82faa558d1826030dc428ea54592a00d","positive":false,"score":65.2,"severity":"critical","priority":"P0","replacementLabel":"SHA-256","baselineStatus":"existing"},"baseline":{"supplied":true,"createdAt":"2026-11-09T13:51:19.636Z","toolVersion":"2.0.0","recorded":1,"newFindings":1,"newActionable":1,"existingFindings":1,"resolvedFindings":0,"highestNewSeverity":"critical"}},"items":[{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\legacy.js","line":2,"column":23},"fingerprint":"82faa558d1826030dc428ea54592a00d","baselineStatus":"existing","isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\regression.js","line":2,"column":22},"fingerprint":"aff173e2bc11bfb133fd42a5d3b9b0d0","baselineStatus":"new","isNew":true}]}</script>
-<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:0d7d770d-e76a-4e35-8804-cc08f2953f85","version":1,"metadata":{"timestamp":"2026-11-09T13:51:19.812Z","tools":{"components":[{"type":"application","name":"mosca","version":"2.0.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","name":"mosca-baseline-demo","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"0"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"n/a"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\regression.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}}]}</script>
+<script id="mosca-data" type="application/json">{"summary":{"generatedAt":"2026-11-10T01:31:48.491Z","crqcYear":2033,"yearsToCRQC":7,"currentYear":2026,"totalFindings":2,"actionable":2,"bySeverity":{"critical":2,"high":0,"medium":0,"low":0,"info":0},"byPrimitive":{"hash":2},"byKind":{"source":2,"config":0,"endpoint":0,"chain":0,"artifact":0,"dependency":0},"quantumReadinessIndex":0,"hndlExposure":0,"hndlApplicable":false,"endpointsInspected":0,"tlsEndpoints":0,"sshEndpoints":0,"endpointsWithPqc":0,"exposedItems":2,"effortDays":1,"rawOccurrences":2,"uniqueMigrationSites":2,"duplicateOccurrences":0,"migrationSpread":1,"sensitivity":[{"year":2029,"yearsToCRQC":3,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2033,"yearsToCRQC":7,"exposedItems":2,"exposedShare":100,"totalActionable":2},{"year":2038,"yearsToCRQC":12,"exposedItems":0,"exposedShare":0,"totalActionable":2},{"year":2045,"yearsToCRQC":19,"exposedItems":0,"exposedShare":0,"totalActionable":2}],"topRisk":{"id":"js-createHash","kind":"source","title":"MD5 — hashing","algorithm":"md5","algorithmLabel":"MD5","primitive":"hash","location":{"file":"src\\legacy.js","line":2,"column":23},"snippet":"const digest = crypto.createHash('md5').update(payload).digest('hex');","matched":"createHash('md5'","confidence":"high","note":"Practical collisions since 2004. Never use for security.","language":"javascript","quantum":"broken","classical":"broken","replacement":"sha256","standard":null,"hybrid":null,"count":1,"shelfLife":7,"dataClass":"general","leadTime":1.5,"yearsToCRQC":7,"mosca":{"exposed":true,"shelfLife":7,"leadTime":1.5,"yearsToCRQC":7,"inequality":"7 + 1.5 > 7","kind":"integrity"},"fingerprint":"82faa558d1826030dc428ea54592a00d","positive":false,"score":65.2,"severity":"critical","priority":"P0","replacementLabel":"SHA-256","baselineStatus":"existing"},"baseline":{"supplied":true,"createdAt":"2026-11-10T01:31:48.348Z","toolVersion":"3.0.0","recorded":1,"newFindings":1,"newActionable":1,"existingFindings":1,"resolvedFindings":0,"highestNewSeverity":"critical"}},"items":[{"algorithm":"md5","algorithmLabel":"MD5","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\legacy.js","line":2,"column":23},"fingerprint":"82faa558d1826030dc428ea54592a00d","baselineStatus":"existing","isNew":false},{"algorithm":"sha1","algorithmLabel":"SHA-1","quantum":"broken","classical":"broken","severity":"critical","score":65.2,"shelfLife":7,"leadTime":1.5,"priority":"P0","primitive":"hash","kind":"source","location":{"file":"src\\regression.js","line":2,"column":23},"fingerprint":"815cd723c9f18e78010cf9dee4397ffb","baselineStatus":"new","isNew":true}]}</script>
+<script id="mosca-cbom" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.6","serialNumber":"urn:uuid:6f445006-fa6c-4355-b171-09ac76a1c982","version":1,"metadata":{"timestamp":"2026-11-10T01:31:48.491Z","tools":{"components":[{"type":"application","name":"mosca","version":"3.0.0","description":"Post-quantum cryptography exposure scanner"}]},"component":{"type":"application","bom-ref":"application","name":"mosca-baseline-demo","version":"1.0.0"},"properties":[{"name":"mosca:quantumReadinessIndex","value":"0"},{"name":"mosca:crqcYear","value":"2033"},{"name":"mosca:harvestNowDecryptLaterExposure","value":"n/a"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/md5","name":"MD5","description":"Practical collisions since 2004. Never use for security.","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\legacy.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"MD5"}}},{"type":"cryptographic-asset","bom-ref":"crypto/algorithm/sha1","name":"SHA-1","description":"SHAttered (2017) and chosen-prefix collisions (2020).","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","executionEnvironment":"software-plain-software","implementationPlatform":"javascript","certificationLevel":[],"padding":"none","cryptoFunctions":["digest"],"classicalSecurityLevel":0,"nistQuantumSecurityLevel":0}},"properties":[{"name":"mosca:quantumStatus","value":"broken"},{"name":"mosca:classicalStatus","value":"broken"},{"name":"mosca:severity","value":"critical"},{"name":"mosca:primitive","value":"hash"},{"name":"mosca:replacement","value":"sha256"},{"name":"mosca:moscaInequality","value":"7 + 1.5 > 7"},{"name":"mosca:location","value":"src\\regression.js"}],"evidence":{"occurrences":1,"identity":{"field":"name","confidence":0.9,"concludedValue":"SHA-1"}}}],"dependencies":[{"ref":"application","dependsOn":[]}]}</script>
 <script>
 (function(){
   var data = JSON.parse(document.getElementById('mosca-data').textContent);
@@ -667,6 +856,41 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding:34px 0;color:v
   });
   if (search) search.addEventListener('input', applyFilter);
   applyFilter();
+
+  /* ---------------- crypto-agility simulator ---------------- */
+  (function(){
+    var crqc = document.getElementById('sim-crqc');
+    var lead = document.getElementById('sim-lead');
+    if (!crqc || !lead) return;
+    var hybrid = document.getElementById('sim-hybrid');
+    var yearOut = document.getElementById('sim-year');
+    var speedOut = document.getElementById('sim-speed');
+    var exposedOut = document.getElementById('sim-exposed');
+    var fill = document.getElementById('sim-bar-fill');
+    var items = (data.items || []).filter(function(i){ return i.quantum !== 'safe'; });
+    var currentYear = (data.summary && data.summary.currentYear) || new Date().getFullYear();
+
+    function run() {
+      var year = Number(crqc.value);
+      var scale = Number(lead.value) / 100;
+      if (yearOut) yearOut.textContent = String(year);
+      if (speedOut) speedOut.textContent = scale.toFixed(1) + '×';
+      var exposed = 0;
+      items.forEach(function(item){
+        if (hybrid && hybrid.checked && item.primitive === 'key-agreement') return;
+        var shelf = Number(item.shelfLife) || 0;
+        var leadTime = Number(item.leadTime) || 0;
+        if (shelf + leadTime * scale > year - currentYear) exposed++;
+      });
+      if (exposedOut) exposedOut.textContent = String(exposed);
+      if (fill) fill.style.width = (items.length ? (exposed / items.length) * 100 : 0) + '%';
+    }
+
+    crqc.addEventListener('input', run);
+    lead.addEventListener('input', run);
+    if (hybrid) hybrid.addEventListener('change', run);
+    run();
+  })();
 
   /* ---------------- CBOM download ---------------- */
   var dl = document.getElementById('download-cbom');
